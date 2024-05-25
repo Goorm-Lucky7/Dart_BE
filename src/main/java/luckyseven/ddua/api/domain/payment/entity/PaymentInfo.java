@@ -16,7 +16,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import luckyseven.ddua.api.domain.member.entity.Member;
-import luckyseven.ddua.api.global.common.BaseTimeEntity;
 
 @Entity
 @Getter

@@ -13,7 +13,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import luckyseven.ddua.api.global.common.BaseTimeEntity;
 
 @Entity
 @Getter
