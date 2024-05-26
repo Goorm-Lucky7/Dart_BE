@@ -193,12 +193,11 @@ gradle-app.setting
 *.hprof
 
 # Yml
-*/application-dev.yml
-/src/main/resources/application-dev.yml
+src/main/resources/application-dev.yml
 
 # Env
-/.env
+.env
 
-/db/*
+db/*
 
-/tmp
+tmp/
