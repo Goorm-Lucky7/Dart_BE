@@ -7,7 +7,7 @@ on:
     branches: [ "develop" ]
 
 env:
-  PROJECT_NAME: Dart_BE
+  PROJECT_NAME: dart
   BUCKET_NAME: luckyseven-ddua-bucket
   CODE_DEPLOY_APP_NAME: luckyseven-ddua-application
   DEPLOYMENT_GROUP_NAME: luckyseven-ddua-instance-group
