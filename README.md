@@ -2,7 +2,7 @@
 
 ## 🗂️ 패키지 구조
 ```text
-ddua/
+dart/
 ├─ api/
 │  ├─ application/
 │  │  ├─ member/
@@ -48,7 +48,7 @@ ddua/
 │  ├─ auth/
 │  ├─ common/
 │  ├─ config/
-│  └─ error/-> dduaException
+│  └─ error/-> dartException
 │
 └─ admin/ (optional)
 ```
