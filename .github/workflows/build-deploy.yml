@@ -2,16 +2,15 @@ name: DDU-A Build and Deploy to EC2
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
   pull_request:
-    branches: [ "develop" ]
+    branches: ["develop"]
 
 permissions:
   contents: read
 
 jobs:
   build-docker-image:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -48,22 +47,14 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-
           script: |
-            sudo docker network create dart-network || true
-            sudo docker rm -f ${{ secrets.PROJECT_NAME }} || true
-            sudo docker rmi -f ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
-            
-            if ! sudo docker ps | grep mysql-container; then
-              sudo docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }} -e MYSQL_DATABASE=${{ secrets.DB_NAME }} -e MYSQL_USER=${{ secrets.DB_USERNAME }} -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} -p 3306:3306 -d mysql:8.4.0
-            fi
-            
-            sudo docker run -d -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
-            --name ${{ secrets.PROJECT_NAME }} \
-            --network dart-network \
-            -e SPRING_PROFILES_ACTIVE=dev \
-            -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
-            -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
-            -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
+            cd /path/to/project # Change to the appropriate path on your EC2 instance
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+            echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d
