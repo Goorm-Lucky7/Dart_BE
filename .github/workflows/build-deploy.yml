@@ -51,6 +51,7 @@ jobs:
           source: './docker-compose.yml'
           target: ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
           key: ${{ secrets.EC2_KEY }}
+          port: 22
 
       - name: EC2 Docker Run
         uses: appleboy/ssh-action@master
