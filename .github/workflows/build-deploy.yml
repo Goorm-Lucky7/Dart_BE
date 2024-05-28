@@ -49,6 +49,11 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ec2-user/moduform
+            
+            if [ ! -f docker-compose.yml ]; then
+              echo "docker-compose.yml not found!"
+              exit 1
+            fi
 
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" | sudo tee .env
             echo "DB_NAME=${{ secrets.DB_NAME }}" | sudo tee -a .env
