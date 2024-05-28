@@ -15,6 +15,6 @@ public class DartApplication {
 
 	@GetMapping("/health")
 	public String healthCheck() {
-		return "Application is up and running!";
+		return "[✅ SUCCESS] Application is up and running!";
 	}
 }
