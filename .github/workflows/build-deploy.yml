@@ -23,16 +23,6 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
-      - name: Gradle Caching
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -52,6 +42,8 @@ jobs:
           target: ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
           key: ${{ secrets.EC2_KEY }}
           port: 22
+          timeout: 120s
+          debug: true
 
       - name: EC2 Docker Run
         uses: appleboy/ssh-action@master
