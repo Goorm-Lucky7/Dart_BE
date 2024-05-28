@@ -2,9 +2,9 @@ name: DDU-A Build and Deploy to EC2
 
 on:
   push:
-    branches: ["develop"]
+    branches: [ "develop" ]
   pull_request:
-    branches: ["develop"]
+    branches: [ "develop" ]
 
 permissions:
   contents: read
@@ -23,61 +23,44 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
+      - name: Gradle Caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: DockerHub Login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build Docker Image
+        run: |
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
-      - name: Docker Image Build
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} -f infra/Dockerfile .
-
-      - name: DockerHub Push
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
-
-      - name: Copy docker-compose.yml to EC2
+      - name: Copy Docker Compose file to EC2
         uses: appleboy/scp-action@v0.1.1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          source: './docker-compose.yml'
+          target: ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
           key: ${{ secrets.EC2_KEY }}
-          source: "infra/docker-compose.yml"
-          target: "/home/ec2-user/myproject/docker-compose.yml"
 
-      - name: Copy .env to EC2
-        uses: appleboy/scp-action@v0.1.1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "infra/.env"
-          target: "/home/ec2-user/myproject/.env"
-
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.6
+      - name: EC2 Docker Run
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /home/ec2-user/myproject
-            
-            if [ ! -f docker-compose.yml ]; then
-              echo "docker-compose.yml not found!"
-              exit 1
-            fi
-
-            if [ ! -f .env ]; then
-              echo ".env file not found!"
-              exit 1
-            fi
-
-            sudo /usr/local/bin/docker-compose down
-            sudo /usr/local/bin/docker-compose pull
-            sudo /usr/local/bin/docker-compose up -d
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+            docker rm -f $(docker ps -qa)
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
+            docker-compose -f /home/ec2-user/docker-compose.yml up -d
