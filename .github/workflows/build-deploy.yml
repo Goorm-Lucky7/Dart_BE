@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             CONTAINER_NAME=${{ secrets.PROJECT_NAME }}
-            CONTAINER_ID=$(sudo docker ps -q --filter "name=$CONTAINER_NAME")
+            CONTAINER_ID=$(sudo docker ps -a -q --filter "name=$CONTAINER_NAME")
 
             if [ ! -z "$CONTAINER_ID" ]; then
               sudo docker stop $CONTAINER_ID
