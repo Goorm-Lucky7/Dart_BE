@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  build-docker-image:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up JDK 17
@@ -35,11 +35,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Docker Image Build
+      - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} -f infra/Dockerfile .
 
-      - name: DockerHub Push
+      - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
+
+      - name: Create directory on EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: mkdir -p /home/ec2-user/myproject
 
       - name: Copy docker-compose.yml to EC2
         uses: appleboy/scp-action@v0.1.1
@@ -48,7 +56,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           source: "infra/docker-compose.yml"
-          target: "/home/ec2-user/moduform/docker-compose.yml"
+          target: "/home/ec2-user/myproject/docker-compose.yml"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
@@ -57,8 +65,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /home/ec2-user/moduform
-            
+            cd /home/ec2-user/myproject
+
             if [ ! -f docker-compose.yml ]; then
               echo "docker-compose.yml not found!"
               exit 1
