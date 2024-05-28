@@ -2,9 +2,9 @@ name: DDU-A Build and Deploy to EC2
 
 on:
   push:
-    branches: ["develop"]
+    branches: [ "develop" ]
   pull_request:
-    branches: ["develop"]
+    branches: [ "develop" ]
 
 permissions:
   contents: read
@@ -48,7 +48,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /path/to/project # Change to the appropriate path on your EC2 instance
+            cd /home/ec2-user/moduform
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
