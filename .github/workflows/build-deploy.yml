@@ -2,9 +2,9 @@ name: DDU-A Build and Deploy to EC2
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
   pull_request:
-    branches: [ "develop" ]
+    branches: ["develop"]
 
 permissions:
   contents: read
@@ -49,12 +49,14 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ec2-user/moduform
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
-            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
-            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-            echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d
+
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" | sudo tee .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" | sudo tee -a .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" | sudo tee -a .env
+            echo "DB_URL=${{ secrets.DB_URL }}" | sudo tee -a .env
+            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" | sudo tee -a .env
+            echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" | sudo tee -a .env
+
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d
