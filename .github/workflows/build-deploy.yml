@@ -57,6 +57,6 @@ jobs:
             echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" | sudo tee -a .env
             echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" | sudo tee -a .env
 
-            sudo docker-compose down
-            sudo docker-compose pull
-            sudo docker-compose up -d
+            sudo /usr/local/bin/docker-compose down
+            sudo /usr/local/bin/docker-compose pull
+            sudo /usr/local/bin/docker-compose up -d
