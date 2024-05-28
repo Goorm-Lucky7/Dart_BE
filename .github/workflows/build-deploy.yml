@@ -64,13 +64,16 @@ jobs:
               exit 1
             fi
 
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" | sudo tee .env
-            echo "DB_NAME=${{ secrets.DB_NAME }}" | sudo tee -a .env
-            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" | sudo tee -a .env
-            echo "DB_URL=${{ secrets.DB_URL }}" | sudo tee -a .env
-            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" | sudo tee -a .env
-            echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" | sudo tee -a .env
-
-            sudo /usr/local/bin/docker-compose down
-            sudo /usr/local/bin/docker-compose pull
-            sudo /usr/local/bin/docker-compose up -d
+            # Create .env file
+            sudo tee .env <<EOF
+  DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+  DB_NAME=${{ secrets.DB_NAME }}
+  DB_USERNAME=${{ secrets.DB_USERNAME }}
+  DB_URL=${{ secrets.DB_URL }}
+  DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+  PROJECT_NAME=${{ secrets.PROJECT_NAME }}
+  EOF
+  
+  sudo /usr/local/bin/docker-compose down
+  sudo /usr/local/bin/docker-compose pull
+  sudo /usr/local/bin/docker-compose up -d
