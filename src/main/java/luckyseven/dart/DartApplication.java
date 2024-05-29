@@ -1,9 +1,10 @@
 package luckyseven.dart;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import luckyseven.dart.global.config.DotenvEnvironmentLoader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import io.github.cdimascio.dotenv.Dotenv;
+import luckyseven.dart.global.config.DotenvEnvironmentLoader;
 
 @SpringBootApplication
 public class DartApplication {
