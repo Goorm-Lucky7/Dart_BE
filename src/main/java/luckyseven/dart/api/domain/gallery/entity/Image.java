@@ -27,8 +27,11 @@ public class Image {
 	@Column(name = "image_uri", nullable = false)
 	private String imageUri;
 
-	@Column(name = "thumbnail_uri")
-	private String thumbnailUri;
+	@Column(name = "image_title")
+	private String imageTitle;
+
+	@Column(name = "description")
+	private String description;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "gallery_id")
@@ -37,9 +40,13 @@ public class Image {
 	@Builder
 	private Image(
 		String imageUri,
-		String thumbnailUri
+		String imageTitle,
+		String description,
+		Gallery gallery
 	) {
 		this.imageUri = imageUri;
-		this.thumbnailUri = thumbnailUri;
+		this.imageTitle = imageTitle;
+		this.description = description;
+		this.gallery = gallery;
 	}
 }
