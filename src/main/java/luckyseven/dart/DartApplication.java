@@ -2,10 +2,12 @@ package luckyseven.dart;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import luckyseven.dart.global.config.DotenvEnvironmentLoader;
 
+@EnableJpaAuditing
 @SpringBootApplication
 public class DartApplication {
 
