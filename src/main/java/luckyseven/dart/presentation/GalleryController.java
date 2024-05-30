@@ -1,9 +1,7 @@
 package luckyseven.dart.presentation;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -32,20 +30,8 @@ public class GalleryController {
 		@RequestPart("gallery") @Validated CreateGalleryDto createGalleryDto,
 		@RequestPart("thumbnail") MultipartFile thumbnail,
 		@RequestPart("images") List<MultipartFile> imageFiles) {
-		try {
-			if (createGalleryDto.images().size() > 20) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("[❎ ERROR] 전시 작품은 최대 20개까지 생성 가능합니다.");
-			}
-			if (createGalleryDto.images().size() != imageFiles.size()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("[❎ ERROR] 전시 작품에 대한 정보를 잘못 입력하셨습니다.");
-			}
-			galleryService.createGallery(createGalleryDto, thumbnail, imageFiles);
-			return ResponseEntity.ok("ok");
-		} catch (IOException e) {
-			return ResponseEntity.status(500).body("File upload error: " + e.getMessage());
-		}
+		galleryService.createGallery(createGalleryDto, thumbnail, imageFiles);
+		return ResponseEntity.ok("ok");
 	}
 
 	@DeleteMapping
