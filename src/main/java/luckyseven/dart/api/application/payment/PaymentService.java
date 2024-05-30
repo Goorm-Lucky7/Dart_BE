@@ -1,0 +1,114 @@
+package luckyseven.dart.api.application.payment;
+
+import static luckyseven.dart.global.common.PaymentConstant.*;
+
+import java.time.LocalDateTime;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import lombok.RequiredArgsConstructor;
+import luckyseven.dart.api.domain.gallery.entity.Gallery;
+import luckyseven.dart.api.domain.gallery.repo.GalleryRepository;
+import luckyseven.dart.api.domain.member.entity.Member;
+import luckyseven.dart.api.domain.member.repo.MemberRepository;
+import luckyseven.dart.api.domain.payment.entity.Payment;
+import luckyseven.dart.api.domain.payment.repo.PaymentRepository;
+import luckyseven.dart.dto.payment.request.PaymentCreateDto;
+import luckyseven.dart.dto.payment.response.PaymentApproveDto;
+import luckyseven.dart.dto.payment.response.PaymentReadyDto;
+import luckyseven.dart.global.config.PaymentProperties;
+import luckyseven.dart.global.error.exception.NotFoundException;
+import luckyseven.dart.global.error.model.ErrorCode;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class PaymentService {
+	private final GalleryRepository galleryRepository;
+	private final MemberRepository memberRepository;
+	private final PaymentRepository paymentRepository;
+	private final PaymentProperties paymentProperties;
+	private PaymentReadyDto paymentReadyDto;
+
+	public PaymentReadyDto ready(PaymentCreateDto dto) {
+		final MultiValueMap<String, String> params = readyToBody(dto);
+		final HttpHeaders headers = setHeaders();
+		final HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
+		final RestTemplate restTemplate = new RestTemplate();
+
+		return paymentReadyDto = restTemplate.postForObject(
+			READY_URL,
+			requestEntity,
+			PaymentReadyDto.class);
+	}
+
+	public PaymentApproveDto approve(String token, Long id, String order) {
+		final MultiValueMap<String, String> params = approveToBody(token);
+		final HttpHeaders headers = setHeaders();
+		final RestTemplate restTemplate = new RestTemplate();
+		final HttpEntity<MultiValueMap<String, String>> body = new HttpEntity<>(params, headers);
+		final PaymentApproveDto paymentApproveDto = restTemplate.postForObject(
+			APPROVE_URL,
+			body,
+			PaymentApproveDto.class);
+		final Member member = memberRepository.findById(id)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_USER_NOT_FOUND));
+		final Gallery gallery = galleryRepository.findById(Long.parseLong(paymentApproveDto.item_code()))
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_POST_NOT_FOUND));
+		final LocalDateTime approveAt = paymentApproveDto.approved_at();
+		final Payment payment = Payment.create(member, gallery, approveAt, order);
+
+		paymentRepository.save(payment);
+
+		return paymentApproveDto;
+	}
+
+	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto) {
+		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+		final Gallery gallery = galleryRepository.findById(dto.galleryId())
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_POST_NOT_FOUND));
+
+		params.add("cid", CID);
+		params.add("partner_order_id", PARTNER_ORDER);
+		params.add("partner_user_id", PARTNER_USER);
+		params.add("item_name", gallery.getTitle());
+		params.add("item_code", gallery.getId().toString());
+		params.add("quantity", QUANTITY);
+		params.add("total_amount", String.valueOf(gallery.getFee()));
+		params.add("tax_free_amount", TAX);
+		params.add("approval_url", APPROVE_URL);
+		params.add("cancel_url", CANCEL_URL);
+		params.add("fail_url", FAIL_URL);
+
+		return params;
+	}
+
+	private MultiValueMap<String, String> approveToBody(String token) {
+		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+		params.add("cid", CID);
+		params.add("tid", paymentReadyDto.tid());
+		params.add("partner_order_id", PARTNER_ORDER);
+		params.add("partner_user_id", PARTNER_USER);
+		params.add("pg_token", token);
+
+		return params;
+	}
+
+	private HttpHeaders setHeaders() {
+		final HttpHeaders headers = new HttpHeaders();
+
+		headers.add("Authorization", "KakaoAK " + paymentProperties.getAdminKey());
+		headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
+
+		return headers;
+	}
+}
