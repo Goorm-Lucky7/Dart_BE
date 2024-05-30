@@ -32,7 +32,7 @@ public enum ErrorCode {
 	FAIL_COMMENT_DELETION_FORBIDDEN("[❎ ERROR] 댓글 삭제 권한이 없습니다."),
 
 	// 404 Not Found
-	FAIL_POST_NOT_FOUND("[❎ ERROR] 요청하신 게시글을 찾을 수 없습니다."),
+	FAIL_GALLERY_NOT_FOUND("[❎ ERROR] 요청하신 전시관을 찾을 수 없습니다."),
 	FAIL_USER_NOT_FOUND("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다."),
 	FAIL_COMMENT_NOT_FOUND("[❎ ERROR] 요청하신 댓글을 찾을 수 없습니다."),
 	FAIL_TOKEN_NOT_FOUND("[❎ ERROR] 요청하신 토큰을 찾을 수 없습니다."),
@@ -44,7 +44,6 @@ public enum ErrorCode {
 
 	// 500 Server Error
 	FAIL_INTERNAL_SERVER_ERROR("[❎ ERROR] 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-
 
 	private String message;
 }

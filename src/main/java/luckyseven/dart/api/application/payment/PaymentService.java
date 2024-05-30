@@ -61,7 +61,7 @@ public class PaymentService {
 		final Member member = memberRepository.findById(id)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_USER_NOT_FOUND));
 		final Gallery gallery = galleryRepository.findById(Long.parseLong(paymentApproveDto.item_code()))
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_POST_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 		final LocalDateTime approveAt = paymentApproveDto.approved_at();
 		final Payment payment = Payment.create(member, gallery, approveAt, order);
 
@@ -73,7 +73,7 @@ public class PaymentService {
 	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_POST_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 
 		params.add("cid", CID);
 		params.add("partner_order_id", PARTNER_ORDER);
