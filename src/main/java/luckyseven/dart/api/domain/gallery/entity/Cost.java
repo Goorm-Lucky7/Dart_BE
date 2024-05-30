@@ -1,8 +1,10 @@
 package luckyseven.dart.api.domain.gallery.entity;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public enum Cost {
 	ALL("전체", "all"),
@@ -17,32 +19,25 @@ public enum Cost {
 		this.value = value;
 	}
 
-	private static Map<String, Cost> names = new HashMap<>();
-	private static Map<String, Cost> valuesMap = new HashMap<>();
+	private static final Map<String, Cost> names = Collections.unmodifiableMap(Stream.of(values())
+		.collect(Collectors.toMap(Cost::getName, Function.identity())));
 
-	static {
-		for (Cost cost : Cost.values()) {
-			names.put(cost.name, cost);
-			valuesMap.put(cost.value, cost);
-		}
-		names = Collections.unmodifiableMap(names);
-		valuesMap = Collections.unmodifiableMap(valuesMap);
+	private static final Map<String, Cost> valuesMap = Collections.unmodifiableMap(Stream.of(values())
+		.collect(Collectors.toMap(Cost::getValue, Function.identity())));
+
+	private String getName() {
+		return name;
 	}
 
 	private String getValue() {
 		return value;
 	}
 
-	public static Cost fromValue(String value) {
-		return valuesMap.get(value);
+	public static boolean isValidCost(String value) {
+		return valuesMap.containsKey(value);
 	}
 
-	public static boolean isValidCost(String value) {
-		for (Cost cost : Cost.values()) {
-			if (cost.getValue().equalsIgnoreCase(value)) {
-				return true;
-			}
-		}
-		return false;
+	public static Cost fromValue(String value) {
+		return valuesMap.get(value);
 	}
 }
