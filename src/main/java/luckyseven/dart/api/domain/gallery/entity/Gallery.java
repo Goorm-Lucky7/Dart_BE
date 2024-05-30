@@ -15,12 +15,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import luckyseven.dart.api.dto.gallery.request.CreateGalleryDto;
+import luckyseven.dart.global.common.BaseTimeEntity;
 
 @Entity
 @Getter
 @Table(name = "tbl_gallery")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Gallery {
+public class Gallery extends BaseTimeEntity {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
