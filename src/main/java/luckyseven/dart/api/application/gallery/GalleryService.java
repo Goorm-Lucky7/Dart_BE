@@ -66,7 +66,7 @@ public class GalleryService {
 		if (hashTags != null) {
 			validateHashtagsSize(hashTags);
 			validateHashTagsLength(hashTags);
-			List<Hashtag> hashtags = hashTags.stream()
+			final List<Hashtag> hashtags = hashTags.stream()
 				.map(tag -> Hashtag.builder().tag(tag).gallery(gallery).build())
 				.collect(Collectors.toList());
 			hashtagRepository.saveAll(hashtags);
@@ -134,7 +134,7 @@ public class GalleryService {
 	}
 
 	private void validateHashTagsLength(List<String> hashTags) {
-		Pattern pattern = Pattern.compile("^[^\\s]{1,10}$");
+		final Pattern pattern = Pattern.compile("^[^\\s]{1,10}$");
 		boolean invalidTagFound = hashTags.parallelStream().anyMatch(tag -> !pattern.matcher(tag).matches());
 		if (invalidTagFound) {
 			throw new BadRequestException(ErrorCode.FAIL_TAG_CONTAINS_SPACE_OR_INVALID_LENGTH);
