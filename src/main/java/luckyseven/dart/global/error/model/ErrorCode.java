@@ -33,7 +33,7 @@ public enum ErrorCode {
 
 	// 404 Not Found
 	FAIL_GALLERY_NOT_FOUND("[❎ ERROR] 요청하신 전시관을 찾을 수 없습니다."),
-	FAIL_USER_NOT_FOUND("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다."),
+	FAIL_MEMBER_NOT_FOUND("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다."),
 	FAIL_COMMENT_NOT_FOUND("[❎ ERROR] 요청하신 댓글을 찾을 수 없습니다."),
 	FAIL_TOKEN_NOT_FOUND("[❎ ERROR] 요청하신 토큰을 찾을 수 없습니다."),
 	FAIL_REGISTRATION_NOT_FOUND("[❎ ERROR] 요청하신 서비스 제공자를 찾을 수 없습니다."),
