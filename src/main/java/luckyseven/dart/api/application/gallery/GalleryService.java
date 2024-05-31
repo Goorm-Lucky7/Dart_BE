@@ -86,7 +86,7 @@ public class GalleryService {
 	private void processImage(ImageInfoDto imageInfoDto, MultipartFile imageFile, Gallery gallery) {
 		try {
 			String imageUrl = s3Service.uploadFile(imageFile);
-			Image image = createImageEntity(imageInfoDto, imageUrl, gallery);
+			final Image image = createImageEntity(imageInfoDto, imageUrl, gallery);
 			imageRepository.save(image);
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
