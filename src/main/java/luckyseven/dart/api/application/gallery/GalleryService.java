@@ -103,14 +103,14 @@ public class GalleryService {
 	}
 
 	private Cost determineCost(CreateGalleryDto createGalleryDto) {
-		if (createGalleryDto.fee() == ZERO) {
+		if (createGalleryDto.fee() == PAYMENT_REQUIRED) {
 			return Cost.FREE;
 		}
 		return Cost.PAY;
 	}
 
 	private void validateImageCount(CreateGalleryDto createGalleryDto) {
-		if (createGalleryDto.images().size() > TWENTY) {
+		if (createGalleryDto.images().size() > MAX_IMAGE_SIZE) {
 			throw new BadRequestException(ErrorCode.FAIL_EXHIBITION_ITEM_LIMIT_EXCEEDED);
 		}
 	}
@@ -128,7 +128,7 @@ public class GalleryService {
 	}
 
 	private void validateHashtagsSize(List<String> hashTags) {
-		if (hashTags.size() > FIVE) {
+		if (hashTags.size() > MAX_HASHTAG_SIZE) {
 			throw new BadRequestException(ErrorCode.FAIL_HASHTAG_SIZE_EXCEEDED);
 		}
 	}
