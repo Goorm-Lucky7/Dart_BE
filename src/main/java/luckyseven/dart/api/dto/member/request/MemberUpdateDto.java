@@ -19,9 +19,9 @@ public record MemberUpdateDto(
 	)
 	String password,
 
+	String profileImage,
 	String bank,
 	String account,
-	String introduce,
-	String profileImage
+	String introduce
 ) {
 }

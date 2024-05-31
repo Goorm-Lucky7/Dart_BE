@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import luckyseven.dart.api.domain.auth.AuthUser;
 import luckyseven.dart.api.dto.member.request.LoginReqDto;
 import luckyseven.dart.api.dto.member.request.MemberUpdateDto;
+import luckyseven.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import luckyseven.dart.api.dto.member.request.SignUpDto;
 import luckyseven.dart.api.dto.member.response.LoginResDto;
 import luckyseven.dart.api.application.auth.AuthenticationService;
@@ -60,4 +61,12 @@ public class MemberController {
 		return ResponseEntity.ok("OK");
 	}
 
+	@PostMapping("/members/nickname/check")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> checkNicknameDuplication(
+		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
+
+		return ResponseEntity.ok("OK");
+	}
 }
