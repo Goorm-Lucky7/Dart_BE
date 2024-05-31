@@ -16,12 +16,14 @@ import lombok.NoArgsConstructor;
 import luckyseven.dart.api.domain.gallery.entity.Gallery;
 import luckyseven.dart.api.domain.member.entity.Member;
 import luckyseven.dart.dto.review.request.ReviewCreateDto;
+import luckyseven.dart.dto.review.response.ReviewReadDto;
+import luckyseven.dart.global.common.BaseTimeEntity;
 
 @Entity
 @Getter
 @Table(name = "tbl_review")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review {
+public class Review extends BaseTimeEntity {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,6 +56,16 @@ public class Review {
 			.content(dto.content())
 			.score(Score.fromValue(dto.score()))
 			.gallery(gallery)
+			.build();
+	}
+
+	public ReviewReadDto toReviewReadDto() {
+		return ReviewReadDto.builder()
+			.reviewId(this.id)
+			.content(this.content)
+			.score(this.score.getValue())
+			.createAt(this.getCreatedAt())
+			.nickname(this.member.getNickname())
 			.build();
 	}
 }
