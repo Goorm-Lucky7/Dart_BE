@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.member.response;
+package luckyseven.dart.dto.member.response;
 
 public record LoginResDto(
 	String accessToken

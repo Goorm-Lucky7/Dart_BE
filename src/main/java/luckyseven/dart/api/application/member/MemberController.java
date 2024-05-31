@@ -15,13 +15,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import luckyseven.dart.api.domain.auth.AuthUser;
-import luckyseven.dart.api.dto.member.request.LoginReqDto;
-import luckyseven.dart.api.dto.member.request.MemberUpdateDto;
-import luckyseven.dart.api.dto.member.request.NicknameDuplicationCheckDto;
-import luckyseven.dart.api.dto.member.request.SignUpDto;
-import luckyseven.dart.api.dto.member.response.LoginResDto;
+import luckyseven.dart.dto.member.request.LoginReqDto;
+import luckyseven.dart.dto.member.request.MemberUpdateDto;
+import luckyseven.dart.dto.member.request.NicknameDuplicationCheckDto;
+import luckyseven.dart.dto.member.request.SignUpDto;
+import luckyseven.dart.dto.member.response.LoginResDto;
 import luckyseven.dart.api.application.auth.AuthenticationService;
-import luckyseven.dart.api.dto.member.response.MemberProfileResDto;
+import luckyseven.dart.dto.member.response.MemberProfileResDto;
 import luckyseven.dart.global.auth.annotation.Auth;
 
 @RestController

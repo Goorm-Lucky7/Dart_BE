@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.auth;
+package luckyseven.dart.dto.auth;
 
 import lombok.Builder;
 
