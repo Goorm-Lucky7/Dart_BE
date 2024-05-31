@@ -14,8 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import luckyseven.dart.api.domain.auth.OAuthProvider;
-import luckyseven.dart.api.dto.auth.OAuthProviderUpdateDto;
 import luckyseven.dart.api.dto.member.request.SignUpDto;
 import luckyseven.dart.global.common.entity.BaseTimeEntity;
 
