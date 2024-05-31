@@ -87,8 +87,8 @@ public class Member extends BaseTimeEntity {
 	public void updateMemberProfile(MemberUpdateDto memberUpdateDto, String password) {
 		this.nickname = memberUpdateDto.nickname();
 		this.password = password;
-		this.bank = bank;
-		this.account = account;
-		this.introduce = introduce;
+		this.bank = memberUpdateDto.bank();
+		this.account = memberUpdateDto.account();
+		this.introduce = memberUpdateDto.introduce();
 	}
 }
