@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import luckyseven.dart.api.dto.member.request.MemberUpdateDto;
 
 @Entity
 @Getter
@@ -45,4 +46,7 @@ public class ProfileImage {
 			.build();
 	}
 
+	public void updateProfileImage(MemberUpdateDto memberUpdateDto) {
+		this.profileImage = memberUpdateDto.profileImage();
+	}
 }

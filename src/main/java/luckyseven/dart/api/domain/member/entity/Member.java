@@ -14,8 +14,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import luckyseven.dart.api.domain.auth.OAuthProvider;
-import luckyseven.dart.api.dto.auth.OAuthProviderUpdateDto;
+import luckyseven.dart.api.dto.member.request.MemberUpdateDto;
 import luckyseven.dart.api.dto.member.request.SignUpDto;
 import luckyseven.dart.global.common.entity.BaseTimeEntity;
 
@@ -41,14 +40,14 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "birthday", nullable = true)
 	private LocalDate birthday;
 
-	@Column(name = "introduce", nullable = true)
-	private String introduce;
-
 	@Column(name = "bank", nullable = true)
 	private String bank;
 
 	@Column(name = "account", nullable = true)
 	private String account;
+
+	@Column(name = "introduce", nullable = true)
+	private String introduce;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "oauth_provider", nullable = true)
@@ -60,17 +59,17 @@ public class Member extends BaseTimeEntity {
 		String nickname,
 		String password,
 		LocalDate birthday,
-		String introduce,
 		String bank,
-		String account
+		String account,
+		String introduce
 	) {
 		this.email = email;
 		this.nickname = nickname;
 		this.password = password;
 		this.birthday = birthday;
-		this.introduce = introduce;
 		this.bank = bank;
 		this.account = account;
+		this.introduce = introduce;
 	}
 
 	public static Member signup(SignUpDto signUpDto, String password) {
@@ -79,10 +78,17 @@ public class Member extends BaseTimeEntity {
 			.nickname(signUpDto.nickname())
 			.password(password)
 			.birthday(signUpDto.birthday())
-			.introduce(signUpDto.introduce())
 			.bank(signUpDto.bank())
 			.account(signUpDto.account())
+			.introduce(signUpDto.introduce())
 			.build();
 	}
 
+	public void updateMemberProfile(MemberUpdateDto memberUpdateDto, String password) {
+		this.nickname = memberUpdateDto.nickname();
+		this.password = password;
+		this.bank = bank;
+		this.account = account;
+		this.introduce = introduce;
+	}
 }
