@@ -1,4 +1,4 @@
-package luckyseven.dart.global.common;
+package luckyseven.dart.global.common.entity;
 
 import java.time.LocalDateTime;
 
