@@ -18,7 +18,7 @@ public record SignUpDto(
 
 	@NotBlank(message = "[❎ ERROR] 닉네임을 입력해주세요.")
 	@Size(min = 2, max = 10, message = "[❎ ERROR] 닉네임은 2글자에서 10글자 사이여야 합니다.")
-	@Pattern(regexp = "^[A-Za-z\\d가-힣]+$", message = "[❎ ERROR] 닉네임은 영문과 숫자만 사용가능합니다.")
+	@Pattern(regexp = "^[A-Za-z\\d가-힣]+$", message = "[❎ ERROR] 닉네임은 한글과 영어만 사용가능합니다.")
 	String nickname,
 
 	@NotBlank(message = "[❎ ERROR] 비밀번호를 입력해주세요.")
