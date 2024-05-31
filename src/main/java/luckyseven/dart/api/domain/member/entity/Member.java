@@ -1,5 +1,7 @@
 package luckyseven.dart.api.domain.member.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,7 +14,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import luckyseven.dart.global.common.BaseTimeEntity;
+import luckyseven.dart.api.domain.auth.OAuthProvider;
+import luckyseven.dart.api.dto.auth.OAuthProviderUpdateDto;
+import luckyseven.dart.api.dto.member.request.SignUpDto;
+import luckyseven.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
@@ -33,11 +38,14 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "password", nullable = false)
 	private String password;
 
-	@Column(name = "age", nullable = true)
-	private int age;
+	@Column(name = "birthday", nullable = true)
+	private LocalDate birthday;
 
 	@Column(name = "introduce", nullable = true)
 	private String introduce;
+
+	@Column(name = "bank", nullable = true)
+	private String bank;
 
 	@Column(name = "account", nullable = true)
 	private String account;
@@ -51,15 +59,30 @@ public class Member extends BaseTimeEntity {
 		String email,
 		String nickname,
 		String password,
-		int age,
+		LocalDate birthday,
 		String introduce,
+		String bank,
 		String account
 	) {
 		this.email = email;
 		this.nickname = nickname;
 		this.password = password;
-		this.age = age;
+		this.birthday = birthday;
 		this.introduce = introduce;
+		this.bank = bank;
 		this.account = account;
 	}
+
+	public static Member signup(SignUpDto signUpDto, String password) {
+		return Member.builder()
+			.email(signUpDto.email())
+			.nickname(signUpDto.nickname())
+			.password(password)
+			.birthday(signUpDto.birthday())
+			.introduce(signUpDto.introduce())
+			.bank(signUpDto.bank())
+			.account(signUpDto.account())
+			.build();
+	}
+
 }

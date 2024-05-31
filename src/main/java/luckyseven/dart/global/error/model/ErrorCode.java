@@ -17,8 +17,8 @@ public enum ErrorCode {
 	FAIL_POST_LENGTH_EXCEEDED("[❎ ERROR] 게시글 제목 작성 길이를 초과하였습니다."),
 	FAIL_COMMENT_LENGTH_EXCEEDED("[❎ ERROR] 댓글 작성 길이를 초과하였습니다."),
 	FAIL_INVALID_EMAIL_FORMAT("[❎ ERROR] 잘못된 형식의 이메일입니다. 올바른 이메일을 입력해 주세요."),
-	FAIL_INVALID_PASSWORD_FORMAT("[❎ ERROR] 잘못된 형식의 비밀번호입니다. 비밀번호 규칙을 확인해 주세요."),
 	FAIL_INVALID_NICKNAME_FORMAT("[❎ ERROR] 잘못된 형식의 닉네임입니다. 닉네임 규칙을 확인해 주세요."),
+	FAIL_INVALID_PASSWORD_FORMAT("[❎ ERROR] 잘못된 형식의 비밀번호입니다. 비밀번호 규칙을 확인해 주세요."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
@@ -33,7 +33,8 @@ public enum ErrorCode {
 
 	// 404 Not Found
 	FAIL_POST_NOT_FOUND("[❎ ERROR] 요청하신 게시글을 찾을 수 없습니다."),
-	FAIL_USER_NOT_FOUND("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다."),
+	FAIL_MEMBER_NOT_FOUND("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다."),
+	FAIL_IMAGE_NOT_FOUND("[❎ ERROR] 요청하신 이미지를 찾을 수 없습니다."),
 	FAIL_COMMENT_NOT_FOUND("[❎ ERROR] 요청하신 댓글을 찾을 수 없습니다."),
 	FAIL_TOKEN_NOT_FOUND("[❎ ERROR] 요청하신 토큰을 찾을 수 없습니다."),
 	FAIL_REGISTRATION_NOT_FOUND("[❎ ERROR] 요청하신 서비스 제공자를 찾을 수 없습니다."),
