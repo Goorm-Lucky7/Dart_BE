@@ -34,6 +34,9 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
+	@Column(name = "profile_image", nullable = true)
+	private String profileImage;
+
 	@Column(name = "password", nullable = false)
 	private String password;
 
@@ -87,6 +90,7 @@ public class Member extends BaseTimeEntity {
 	public void updateMemberProfile(MemberUpdateDto memberUpdateDto, String password) {
 		this.nickname = memberUpdateDto.nickname();
 		this.password = password;
+		this.profileImage = memberUpdateDto.profileImage();
 		this.bank = memberUpdateDto.bank();
 		this.account = memberUpdateDto.account();
 		this.introduce = memberUpdateDto.introduce();
