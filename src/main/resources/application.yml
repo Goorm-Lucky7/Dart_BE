@@ -2,8 +2,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
   config:
-    activate:
-      on-profile: secret
+    import:
+      - file:/config/application-dev.yml
+      - file:/config/application-secret.yml
 
 server:
   port: 8080
