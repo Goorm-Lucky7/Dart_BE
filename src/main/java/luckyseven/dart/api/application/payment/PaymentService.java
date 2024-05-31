@@ -59,7 +59,7 @@ public class PaymentService {
 			body,
 			PaymentApproveDto.class);
 		final Member member = memberRepository.findById(id)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_USER_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 		final Gallery gallery = galleryRepository.findById(Long.parseLong(paymentApproveDto.item_code()))
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 		final LocalDateTime approveAt = paymentApproveDto.approved_at();
