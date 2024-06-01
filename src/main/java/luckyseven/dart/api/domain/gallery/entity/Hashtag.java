@@ -32,7 +32,8 @@ public class Hashtag {
 	private Gallery gallery;
 
 	@Builder
-	private Hashtag(
-		String tag
-	) { this.tag = tag; }
+	private Hashtag(String tag, Gallery gallery) {
+		this.tag = tag;
+		this.gallery = gallery;
+	}
 }
