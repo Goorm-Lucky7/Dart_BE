@@ -10,10 +10,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import luckyseven.dart.api.domain.gallery.entity.Gallery;
 import luckyseven.dart.api.domain.member.entity.Member;
+import luckyseven.dart.dto.review.request.ReviewCreateDto;
 
 @Entity
 @Getter
@@ -29,7 +31,7 @@ public class Review {
 	private String content;
 
 	@Column(name = "score")
-	private int score;
+	private Score score;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "gallery_id")
@@ -39,4 +41,19 @@ public class Review {
 	@JoinColumn(name = "member_id")
 	private Member member;
 
+	@Builder
+	private Review(String content, Score score, Gallery gallery, Member member) {
+		this.content = content;
+		this.score = score;
+		this.gallery = gallery;
+		this.member = member;
+	}
+
+	public static Review create(ReviewCreateDto dto, Gallery gallery) {
+		return Review.builder()
+			.content(dto.content())
+			.score(Score.fromValue(dto.score()))
+			.gallery(gallery)
+			.build();
+	}
 }
