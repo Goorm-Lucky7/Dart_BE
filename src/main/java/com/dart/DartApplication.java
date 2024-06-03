@@ -1,13 +1,14 @@
 package com.dart;
 
+
 import io.github.cdimascio.dotenv.Dotenv;
 import com.dart.global.config.DotenvEnvironmentLoader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication
 @EnableJpaAuditing
+@SpringBootApplication
 public class DartApplication {
 
 	public static void main(String[] args) {

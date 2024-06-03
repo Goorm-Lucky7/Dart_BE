@@ -194,6 +194,7 @@ gradle-app.setting
 
 # Yml
 src/main/resources/application-dev.yml
+src/main/resources/application-secret.yml
 
 # Env
 .env
