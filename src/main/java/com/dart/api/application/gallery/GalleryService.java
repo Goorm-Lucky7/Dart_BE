@@ -16,15 +16,12 @@ import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Hashtag;
-import com.dart.api.domain.gallery.entity.Image;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
 import com.dart.api.domain.gallery.repo.HashtagRepository;
-import com.dart.api.domain.gallery.repo.ImageRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repo.MemberRepository;
 import com.dart.dto.gallery.request.CreateGalleryDto;
 import com.dart.dto.gallery.request.DeleteGalleryDto;
-import com.dart.dto.gallery.request.ImageInfoDto;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -41,7 +38,7 @@ public class GalleryService {
 	private final MemberRepository memberRepository;
 	private final GalleryRepository galleryRepository;
 	private final HashtagRepository hashtagRepository;
-	private final ImageRepository imageRepository;
+	private final ImageService imageService;
 	private final S3Service s3Service;
 
 	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -56,7 +53,7 @@ public class GalleryService {
 			final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
 			galleryRepository.save(gallery);
 			saveHashtags(createGalleryDto.hashTags(), gallery);
-			saveImages(createGalleryDto.images(), imageFiles, gallery);
+			imageService.saveImages(createGalleryDto.images(), imageFiles, gallery);
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}
@@ -66,10 +63,10 @@ public class GalleryService {
 		final Member member = findMemberByEmail(authUser.email());
 		Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
 		validateUserOwnership(member, gallery);
-		deleteImagesByGallery(gallery);
-		deleteThumbnail(gallery);
+		imageService.deleteImagesByGallery(gallery);
+		imageService.deleteThumbnail(gallery);
 		deleteHashtagsByGallery(gallery);
-		deleteGalleryEntity(gallery);
+		deleteGallery(gallery);
 	}
 
 	private void saveHashtags(List<String> hashTags, Gallery gallery) {
@@ -81,35 +78,6 @@ public class GalleryService {
 				.collect(Collectors.toList());
 			hashtagRepository.saveAll(hashtags);
 		}
-	}
-
-	private void saveImages(List<ImageInfoDto> imageInfoDtos, List<MultipartFile> imageFiles, Gallery gallery) {
-		if (imageInfoDtos != null && !imageInfoDtos.isEmpty()) {
-			for (int i = 0; i < imageInfoDtos.size(); i++) {
-				ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
-				MultipartFile imageFile = imageFiles.get(i);
-				processImage(imageInfoDto, imageFile, gallery);
-			}
-		}
-	}
-
-	private void processImage(ImageInfoDto imageInfoDto, MultipartFile imageFile, Gallery gallery) {
-		try {
-			String imageUrl = s3Service.uploadFile(imageFile);
-			final Image image = createImageEntity(imageInfoDto, imageUrl, gallery);
-			imageRepository.save(image);
-		} catch (IOException e) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
-		}
-	}
-
-	private Image createImageEntity(ImageInfoDto imageInfoDto, String imageUrl, Gallery gallery) {
-		return Image.builder()
-			.imageUri(imageUrl)
-			.imageTitle(imageInfoDto.imageTitle())
-			.description(imageInfoDto.description())
-			.gallery(gallery)
-			.build();
 	}
 
 	private Cost determineCost(CreateGalleryDto createGalleryDto) {
@@ -156,24 +124,12 @@ public class GalleryService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 	}
 
-	private void deleteImagesByGallery(Gallery gallery) {
-		List<Image> images = imageRepository.findByGallery(gallery);
-		for (Image image : images) {
-			s3Service.deleteFile(image.getImageUri());
-			imageRepository.delete(image);
-		}
-	}
-
-	private void deleteThumbnail(Gallery gallery) {
-		s3Service.deleteFile(gallery.getThumbnail());
-	}
-
 	private void deleteHashtagsByGallery(Gallery gallery) {
 		List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
 		hashtagRepository.deleteAll(hashtags);
 	}
 
-	private void deleteGalleryEntity(Gallery gallery) {
+	private void deleteGallery(Gallery gallery) {
 		galleryRepository.delete(gallery);
 	}
 
