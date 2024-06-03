@@ -9,7 +9,7 @@ import luckyseven.dart.api.domain.member.entity.ProfileImage;
 import luckyseven.dart.api.domain.member.entity.Member;
 import luckyseven.dart.api.domain.member.repo.MemberRepository;
 import luckyseven.dart.api.domain.member.repo.ProfileImageRepository;
-import luckyseven.dart.api.dto.member.request.SignUpDto;
+import luckyseven.dart.dto.member.request.SignUpDto;
 
 @Service
 @RequiredArgsConstructor

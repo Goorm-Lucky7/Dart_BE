@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.gallery.request;
+package luckyseven.dart.dto.gallery.request;
 
 import java.time.LocalDateTime;
 import java.util.List;

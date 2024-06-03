@@ -15,7 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import luckyseven.dart.api.dto.gallery.request.CreateGalleryDto;
+import luckyseven.dart.dto.gallery.request.CreateGalleryDto;
 import luckyseven.dart.global.common.BaseTimeEntity;
 
 @Entity

@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import luckyseven.dart.api.application.member.MemberService;
-import luckyseven.dart.api.dto.member.request.LoginReqDto;
-import luckyseven.dart.api.dto.member.request.SignUpDto;
-import luckyseven.dart.api.dto.member.response.LoginResDto;
+import luckyseven.dart.dto.member.request.LoginReqDto;
+import luckyseven.dart.dto.member.request.SignUpDto;
+import luckyseven.dart.dto.member.response.LoginResDto;
 import luckyseven.dart.api.application.auth.AuthenticationService;
 
 @RestController

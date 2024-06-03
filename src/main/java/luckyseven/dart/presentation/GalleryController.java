@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import luckyseven.dart.api.application.gallery.GalleryService;
-import luckyseven.dart.api.dto.gallery.request.CreateGalleryDto;
-import luckyseven.dart.api.dto.gallery.request.DeleteGalleryDto;
+import luckyseven.dart.dto.gallery.request.CreateGalleryDto;
+import luckyseven.dart.dto.gallery.request.DeleteGalleryDto;
 
 @RestController
 @RequestMapping("/api/galleries")

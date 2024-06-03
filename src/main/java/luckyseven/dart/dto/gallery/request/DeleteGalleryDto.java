@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.gallery.request;
+package luckyseven.dart.dto.gallery.request;
 
 import jakarta.validation.constraints.NotNull;
 

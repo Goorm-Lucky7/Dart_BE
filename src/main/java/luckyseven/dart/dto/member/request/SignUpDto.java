@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.member.request;
+package luckyseven.dart.dto.member.request;
 
 import java.time.LocalDate;
 
