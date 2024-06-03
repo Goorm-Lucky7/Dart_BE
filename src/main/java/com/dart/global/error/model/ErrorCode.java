@@ -32,7 +32,7 @@ public enum ErrorCode {
 	FAIL_INVALID_TOKEN("[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요."),
 
 	// 403 Forbidden
-	FAIL_GALLERY_CREATION_FORBIDDEN("[❎ ERROR] 게시글 작성 권한이 없습니다."),
+	FAIL_GALLERY_CREATION_FORBIDDEN("[❎ ERROR] 전시 생성 권한이 없습니다."),
 	FAIL_COMMENT_CREATION_FORBIDDEN("[❎ ERROR] 댓글 작성 권한이 없습니다."),
 	FAIL_GALLERY_DELETION_FORBIDDEN("[❎ ERROR] 전시 삭제 권한이 없습니다."),
 	FAIL_COMMENT_DELETION_FORBIDDEN("[❎ ERROR] 댓글 삭제 권한이 없습니다."),
