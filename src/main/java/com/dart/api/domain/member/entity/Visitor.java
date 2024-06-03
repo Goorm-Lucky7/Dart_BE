@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.gallery.entity.Gallery;
 
 @Entity
