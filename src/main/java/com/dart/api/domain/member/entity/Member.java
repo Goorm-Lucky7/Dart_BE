@@ -14,8 +14,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.dart.dto.member.request.MemberUpdateDto;
 import com.dart.dto.member.request.SignUpDto;
+import com.dart.dto.member.request.MemberUpdateDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
@@ -34,11 +34,11 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@Column(name = "profile_image", nullable = true)
-	private String profileImage;
-
 	@Column(name = "password", nullable = false)
 	private String password;
+
+	@Column(name = "profile_image", nullable = true)
+	private String profileImage;
 
 	@Column(name = "birthday", nullable = true)
 	private LocalDate birthday;
