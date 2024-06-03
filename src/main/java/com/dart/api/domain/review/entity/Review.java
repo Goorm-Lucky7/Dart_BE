@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.dto.review.request.ReviewCreateDto;
-
+import com.dart.dto.review.response.ReviewReadDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
