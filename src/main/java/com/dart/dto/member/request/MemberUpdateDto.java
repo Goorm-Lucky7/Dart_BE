@@ -1,4 +1,4 @@
-package luckyseven.dart.api.dto.member.request;
+package com.dart.dto.member.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -19,9 +19,9 @@ public record MemberUpdateDto(
 	)
 	String password,
 
+	String profileImage,
 	String bank,
 	String account,
-	String introduce,
-	String profileImage
+	String introduce
 ) {
 }
