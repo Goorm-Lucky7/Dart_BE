@@ -1,4 +1,4 @@
-package com.dart.presentation;
+package com.dart.api.application.member;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,21 +11,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dart.api.application.auth.AuthenticationService;
-import com.dart.api.application.member.MemberService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import com.dart.api.domain.auth.AuthUser;
 import com.dart.dto.member.request.LoginReqDto;
 import com.dart.dto.member.request.MemberUpdateDto;
 import com.dart.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.dto.member.request.SignUpDto;
 import com.dart.dto.member.response.LoginResDto;
+import com.dart.api.application.auth.AuthenticationService;
 import com.dart.dto.member.response.MemberProfileResDto;
 import com.dart.global.auth.annotation.Auth;
-
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
 
 @RestController
 @RequiredArgsConstructor
