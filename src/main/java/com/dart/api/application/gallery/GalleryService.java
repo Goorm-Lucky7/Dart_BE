@@ -4,6 +4,7 @@ import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
+import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Hashtag;
@@ -19,33 +20,40 @@ import com.dart.api.domain.gallery.entity.Image;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
 import com.dart.api.domain.gallery.repo.HashtagRepository;
 import com.dart.api.domain.gallery.repo.ImageRepository;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repo.MemberRepository;
 import com.dart.dto.gallery.request.CreateGalleryDto;
 import com.dart.dto.gallery.request.DeleteGalleryDto;
 import com.dart.dto.gallery.request.ImageInfoDto;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
+import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class GalleryService {
 
+	private final MemberRepository memberRepository;
 	private final GalleryRepository galleryRepository;
 	private final HashtagRepository hashtagRepository;
 	private final ImageRepository imageRepository;
 	private final S3Service s3Service;
 
 	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
-		List<MultipartFile> imageFiles) {
+		List<MultipartFile> imageFiles, AuthUser authUser) {
+		final Member member = findMemberByEmail(authUser.email());
 		try {
 			validateImageCount(createGalleryDto);
 			validateImageFileCount(createGalleryDto, imageFiles);
 			final Cost cost = determineCost(createGalleryDto);
 			validateEndDateForPay(cost, createGalleryDto);
 			String thumbnailUrl = s3Service.uploadFile(thumbnail);
-			final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost);
+			final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
 			galleryRepository.save(gallery);
 			saveHashtags(createGalleryDto.hashTags(), gallery);
 			saveImages(createGalleryDto.images(), imageFiles, gallery);
@@ -54,8 +62,10 @@ public class GalleryService {
 		}
 	}
 
-	public void deleteGallery(DeleteGalleryDto deleteGalleryDto) {
+	public void deleteGallery(DeleteGalleryDto deleteGalleryDto, AuthUser authUser) {
+		final Member member = findMemberByEmail(authUser.email());
 		Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
+		validateUserOwnership(member, gallery);
 		deleteImagesByGallery(gallery);
 		deleteThumbnail(gallery);
 		deleteHashtagsByGallery(gallery);
@@ -111,13 +121,13 @@ public class GalleryService {
 
 	private void validateImageCount(CreateGalleryDto createGalleryDto) {
 		if (createGalleryDto.images().size() > MAX_IMAGE_SIZE) {
-			throw new BadRequestException(ErrorCode.FAIL_EXHIBITION_ITEM_LIMIT_EXCEEDED);
+			throw new BadRequestException(ErrorCode.FAIL_GALLERY_ITEM_LIMIT_EXCEEDED);
 		}
 	}
 
 	private void validateImageFileCount(CreateGalleryDto createGalleryDto, List<MultipartFile> imageFiles) {
 		if (createGalleryDto.images().size() != imageFiles.size()) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_EXHIBITION_ITEM_INFO);
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_GALLERY_ITEM_INFO);
 		}
 	}
 
@@ -165,5 +175,16 @@ public class GalleryService {
 
 	private void deleteGalleryEntity(Gallery gallery) {
 		galleryRepository.delete(gallery);
+	}
+
+	private Member findMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
+	}
+
+	private void validateUserOwnership(Member member, Gallery gallery) {
+		if (!Objects.equals(member.getId(), gallery.getMember().getId())) {
+			throw new BadRequestException(ErrorCode.FAIL_GALLERY_DELETION_FORBIDDEN);
+		}
 	}
 }
