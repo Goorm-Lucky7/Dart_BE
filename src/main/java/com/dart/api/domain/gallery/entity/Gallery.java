@@ -2,21 +2,25 @@ package com.dart.api.domain.gallery.entity;
 
 import java.time.LocalDateTime;
 
+import com.dart.api.domain.member.entity.Member;
+import com.dart.dto.gallery.request.CreateGalleryDto;
+import com.dart.global.common.entity.BaseTimeEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import com.dart.dto.gallery.request.CreateGalleryDto;
-import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
@@ -56,17 +60,13 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "is_paid")
 	private boolean isPaid;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "meber_id")
+	private Member member;
+
 	@Builder
-	private Gallery(
-		String title,
-		String content,
-		String thumbnail,
-		LocalDateTime startDate,
-		LocalDateTime endDate,
-		Cost cost,
-		int fee,
-		float reviewAverage
-	) {
+	private Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
+		Cost cost, int fee, float reviewAverage, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
@@ -76,9 +76,10 @@ public class Gallery extends BaseTimeEntity {
 		this.fee = fee;
 		this.reviewAverage = reviewAverage;
 		this.isPaid = !Cost.PAY.equals(cost);
+		this.member = member;
 	}
 
-	public static Gallery create(CreateGalleryDto createGalleryDto, String thumbnailUrl, Cost cost) {
+	public static Gallery create(CreateGalleryDto createGalleryDto, String thumbnailUrl, Cost cost, Member member) {
 		return Gallery.builder()
 			.title(createGalleryDto.title())
 			.content(createGalleryDto.content())
@@ -88,6 +89,7 @@ public class Gallery extends BaseTimeEntity {
 			.fee(createGalleryDto.fee())
 			.reviewAverage(0.0f)
 			.thumbnail(thumbnailUrl)
+			.member(member)
 			.build();
 	}
 }
