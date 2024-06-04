@@ -13,10 +13,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
 import com.dart.api.application.gallery.GalleryService;
+import com.dart.api.domain.auth.AuthUser;
 import com.dart.dto.gallery.request.CreateGalleryDto;
 import com.dart.dto.gallery.request.DeleteGalleryDto;
+import com.dart.global.auth.annotation.Auth;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/galleries")
@@ -29,14 +32,16 @@ public class GalleryController {
 	public ResponseEntity<String> createGallery(
 		@RequestPart("gallery") @Validated CreateGalleryDto createGalleryDto,
 		@RequestPart("thumbnail") MultipartFile thumbnail,
-		@RequestPart("images") List<MultipartFile> imageFiles) {
-		galleryService.createGallery(createGalleryDto, thumbnail, imageFiles);
+		@RequestPart("images") List<MultipartFile> imageFiles,
+		@Auth AuthUser authUser) {
+		galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
 		return ResponseEntity.ok("ok");
 	}
 
 	@DeleteMapping
-	public ResponseEntity<String> deleteGalley(@RequestBody @Validated DeleteGalleryDto deleteGalleryDto) {
-		galleryService.deleteGallery(deleteGalleryDto);
+	public ResponseEntity<String> deleteGalley(@RequestBody @Validated DeleteGalleryDto deleteGalleryDto,
+		@Auth AuthUser authUser) {
+		galleryService.deleteGallery(deleteGalleryDto, authUser);
 		return ResponseEntity.ok("ok");
 	}
 
