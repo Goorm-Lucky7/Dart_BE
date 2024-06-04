@@ -35,10 +35,7 @@ public class ChatRoom extends BaseTimeEntity {
 	private Gallery gallery;
 
 	@Builder
-	private ChatRoom(
-		String title,
-		Gallery gallery
-	) {
+	private ChatRoom(String title, Gallery gallery) {
 		this.title = title;
 		this.gallery = gallery;
 	}
