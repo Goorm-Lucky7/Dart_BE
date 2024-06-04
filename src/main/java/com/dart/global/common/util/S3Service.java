@@ -15,6 +15,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,14 +31,30 @@ public class S3Service {
 
 	public String uploadFile(MultipartFile multipartFile) throws IOException {
 		String originalFilename = multipartFile.getOriginalFilename();
-		String fileName = UUID.randomUUID().toString() + "_" + originalFilename;
+		String fileName = generateUniqueFilename(originalFilename);
+
+		if (!isValidImageFile(fileName)) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_IMAGE_EXTENSION);
+		}
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(multipartFile.getSize());
-		metadata.setContentType(multipartFile.getContentType());
+
+		String contentType;
+		if (fileName.contains(".")) {
+			contentType = getContentTypeFromExtension(fileName);
+			if (contentType != null) {
+				metadata.setContentType(contentType);
+			}
+		}
 
 		amazonS3.putObject(new PutObjectRequest(bucket, fileName, multipartFile.getInputStream(), metadata));
 		return amazonS3.getUrl(bucket, fileName).toString();
+	}
+
+	private boolean isValidImageFile(String fileName) {
+		String ext = getFileExtension(fileName);
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png");
 	}
 
 	public void deleteFile(String fileUrl) {
@@ -51,7 +69,36 @@ public class S3Service {
 			String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
 			return decodedPath.substring(1);
 		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException("Invalid file URL: " + fileUrl, e);
+			throw new BadRequestException(ErrorCode.FAIL_INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	private String generateUniqueFilename(String originalFilename) {
+		String uuid = UUID.randomUUID().toString();
+		if (originalFilename.contains(".")) {
+			String extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+			return uuid + extension;
+		} else {
+			return uuid;
+		}
+	}
+
+	private String getContentTypeFromExtension(String filename) {
+		String ext = getFileExtension(filename);
+		return switch (ext.toLowerCase()) {
+			case "jpg", "jpeg" -> "image/jpeg";
+			case "png" -> "image/png";
+			default -> null;
+		};
+	}
+
+	private String getFileExtension(String filename) {
+		int lastIndex = filename.lastIndexOf('.');
+		if (lastIndex == -1) {
+			return "";
+		}
+		return filename.substring(lastIndex + 1);
+	}
 }
+
+

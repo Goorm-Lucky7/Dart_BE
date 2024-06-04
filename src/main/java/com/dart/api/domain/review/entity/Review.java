@@ -1,7 +1,15 @@
 package com.dart.api.domain.review.entity;
 
+import com.dart.api.domain.gallery.entity.Gallery;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.review.request.ReviewCreateDto;
+import com.dart.api.dto.review.response.ReviewReadDto;
+import com.dart.global.common.entity.BaseTimeEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,11 +21,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.dto.review.request.ReviewCreateDto;
-import com.dart.dto.review.response.ReviewReadDto;
-import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
@@ -33,6 +36,7 @@ public class Review extends BaseTimeEntity {
 	private String content;
 
 	@Column(name = "score")
+	@Enumerated(EnumType.STRING)
 	private Score score;
 
 	@OneToOne(fetch = FetchType.LAZY)
@@ -51,11 +55,12 @@ public class Review extends BaseTimeEntity {
 		this.member = member;
 	}
 
-	public static Review create(ReviewCreateDto dto, Gallery gallery) {
+	public static Review create(ReviewCreateDto dto, Gallery gallery, Member member) {
 		return Review.builder()
 			.content(dto.content())
 			.score(Score.fromValue(dto.score()))
 			.gallery(gallery)
+			.member(member)
 			.build();
 	}
 

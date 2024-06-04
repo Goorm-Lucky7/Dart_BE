@@ -8,10 +8,10 @@ import lombok.RequiredArgsConstructor;
 import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repo.MemberRepository;
-import com.dart.dto.member.request.MemberUpdateDto;
-import com.dart.dto.member.request.NicknameDuplicationCheckDto;
-import com.dart.dto.member.request.SignUpDto;
-import com.dart.dto.member.response.MemberProfileResDto;
+import com.dart.api.dto.member.request.MemberUpdateDto;
+import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
+import com.dart.api.dto.member.request.SignUpDto;
+import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
