@@ -1,7 +1,7 @@
 package com.dart.api.domain.chat.entity;
 
-import org.hibernate.annotations.ColumnDefault;
-
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -31,10 +31,6 @@ public class ChatMessage extends BaseTimeEntity {
 	@Column(name = "content", nullable = false)
 	private String content;
 
-	@Column(name = "is_blinded", nullable = false)
-	@ColumnDefault("false")
-	private boolean isBlinded;
-
 	@Column(name = "sender", nullable = false)
 	private String sender;
 
@@ -43,15 +39,19 @@ public class ChatMessage extends BaseTimeEntity {
 	private ChatRoom chatroom;
 
 	@Builder
-	private ChatMessage(
-		String content,
-		boolean isBlinded,
-		String sender,
-		ChatRoom chatroom
-	) {
+	private ChatMessage(String content, String sender, ChatRoom chatroom) {
 		this.content = content;
-		this.isBlinded = isBlinded;
 		this.sender = sender;
 		this.chatroom = chatroom;
+	}
+
+	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
+		ChatMessageCreateDto chatMessageCreateDto
+	) {
+		return ChatMessage.builder()
+			.chatroom(chatRoom)
+			.sender(member.getNickname())
+			.content(chatMessageCreateDto.content())
+			.build();
 	}
 }
