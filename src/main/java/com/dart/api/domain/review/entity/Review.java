@@ -55,11 +55,12 @@ public class Review extends BaseTimeEntity {
 		this.member = member;
 	}
 
-	public static Review create(ReviewCreateDto dto, Gallery gallery) {
+	public static Review create(ReviewCreateDto dto, Gallery gallery, Member member) {
 		return Review.builder()
 			.content(dto.content())
 			.score(Score.fromValue(dto.score()))
 			.gallery(gallery)
+			.member(member)
 			.build();
 	}
 
