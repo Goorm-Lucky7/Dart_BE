@@ -13,7 +13,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.RequiredArgsConstructor;
+import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
@@ -27,9 +27,13 @@ import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PaymentService {
 	private final GalleryRepository galleryRepository;
 	private final MemberRepository memberRepository;
@@ -37,8 +41,10 @@ public class PaymentService {
 	private final PaymentProperties paymentProperties;
 	private PaymentReadyDto paymentReadyDto;
 
-	public PaymentReadyDto ready(PaymentCreateDto dto) {
-		final MultiValueMap<String, String> params = readyToBody(dto);
+	public PaymentReadyDto ready(PaymentCreateDto dto, AuthUser authUser) {
+		final Member member = memberRepository.findByEmail(authUser.email())
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+		final MultiValueMap<String, String> params = readyToBody(dto, member.getId());
 		final HttpHeaders headers = setHeaders();
 		final HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
 		final RestTemplate restTemplate = new RestTemplate();
@@ -65,12 +71,13 @@ public class PaymentService {
 		final LocalDateTime approveAt = paymentApproveDto.approved_at();
 		final Payment payment = Payment.create(member, gallery, approveAt, order);
 
+		gallery.pay();
 		paymentRepository.save(payment);
 
 		return paymentApproveDto;
 	}
 
-	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto) {
+	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
@@ -83,7 +90,7 @@ public class PaymentService {
 		params.add("quantity", QUANTITY);
 		params.add("total_amount", String.valueOf(gallery.getFee()));
 		params.add("tax_free_amount", TAX);
-		params.add("approval_url", APPROVE_URL);
+		params.add("approval_url", SUCCESS_URL + "/" + memberId + "/" + dto.order());
 		params.add("cancel_url", CANCEL_URL);
 		params.add("fail_url", FAIL_URL);
 
