@@ -45,6 +45,7 @@ public enum ErrorCode {
 	FAIL_COMMENT_NOT_FOUND("[❎ ERROR] 요청하신 댓글을 찾을 수 없습니다."),
 	FAIL_TOKEN_NOT_FOUND("[❎ ERROR] 요청하신 토큰을 찾을 수 없습니다."),
 	FAIL_REGISTRATION_NOT_FOUND("[❎ ERROR] 요청하신 서비스 제공자를 찾을 수 없습니다."),
+	FAIL_CHAT_ROOM_NOT_FOUND("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다."),
 
 	// 409 Conflict
 	FAIL_EMAIL_CONFLICT("[❎ ERROR] 이미 존재하는 이메일입니다."),
