@@ -28,12 +28,10 @@ import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class PaymentService {
 	private final GalleryRepository galleryRepository;
 	private final MemberRepository memberRepository;
