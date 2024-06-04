@@ -3,7 +3,7 @@ package com.dart.api.domain.gallery.entity;
 import java.time.LocalDateTime;
 
 import com.dart.api.domain.member.entity.Member;
-import com.dart.dto.gallery.request.CreateGalleryDto;
+import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;

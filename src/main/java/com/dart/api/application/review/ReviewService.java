@@ -11,9 +11,9 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
 import com.dart.api.domain.review.entity.Review;
 import com.dart.api.domain.review.repo.ReviewRepository;
-import com.dart.dto.review.request.ReviewCreateDto;
-import com.dart.dto.review.response.PageInfo;
-import com.dart.dto.review.response.PageResponse;
+import com.dart.api.dto.review.request.ReviewCreateDto;
+import com.dart.api.dto.review.response.PageInfo;
+import com.dart.api.dto.review.response.PageResponse;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
