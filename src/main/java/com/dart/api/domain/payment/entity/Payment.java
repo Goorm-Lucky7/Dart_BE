@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.payment.response.PaymentReadDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -71,6 +72,16 @@ public class Payment {
 			.approvedAt(approvedAt)
 			.order(Order.fromValue(order))
 			.amount(gallery.getFee())
+			.build();
+	}
+
+	public PaymentReadDto toReadDto() {
+		return PaymentReadDto.builder()
+			.paymentId(this.id)
+			.amount(this.amount)
+			.approvedAt(this.approvedAt)
+			.order(this.order.getValue())
+			.galleryName(this.gallery.getTitle())
 			.build();
 	}
 }

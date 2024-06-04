@@ -1,4 +1,4 @@
-package com.dart.api.dto.review.response;
+package com.dart.api.dto.page;
 
 public record PageInfo(
 	int pageIndex,
