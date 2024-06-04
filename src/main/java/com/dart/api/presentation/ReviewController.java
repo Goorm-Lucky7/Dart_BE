@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.review.ReviewService;
+import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.review.request.ReviewCreateDto;
 import com.dart.api.dto.review.response.ReviewReadDto;
+import com.dart.global.auth.annotation.Auth;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,8 @@ public class ReviewController {
 	private final ReviewService reviewService;
 
 	@PostMapping
-	public ResponseEntity<String> create(@RequestBody @Valid ReviewCreateDto dto) {
-		reviewService.create(dto);
+	public ResponseEntity<String> create(@RequestBody @Valid ReviewCreateDto dto, @Auth AuthUser authUser) {
+		reviewService.create(dto, authUser);
 
 		return ResponseEntity.ok("OK");
 	}

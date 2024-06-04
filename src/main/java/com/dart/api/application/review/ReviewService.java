@@ -6,8 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repo.MemberRepository;
 import com.dart.api.domain.review.entity.Review;
 import com.dart.api.domain.review.repo.ReviewRepository;
 import com.dart.api.dto.page.PageInfo;
@@ -25,11 +28,14 @@ import lombok.RequiredArgsConstructor;
 public class ReviewService {
 	private final ReviewRepository reviewRepository;
 	private final GalleryRepository galleryRepository;
+	private final MemberRepository memberRepository;
 
-	public void create(ReviewCreateDto dto) {
+	public void create(ReviewCreateDto dto, AuthUser authUser) {
+		final Member member = memberRepository.findByEmail(authUser.email())
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
-		final Review review = Review.create(dto, gallery);
+		final Review review = Review.create(dto, gallery, member);
 
 		reviewRepository.save(review);
 	}
