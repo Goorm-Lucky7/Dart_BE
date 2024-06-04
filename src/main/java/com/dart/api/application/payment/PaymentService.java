@@ -4,6 +4,9 @@ import static com.dart.global.common.PaymentConstant.*;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,8 +23,11 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repo.MemberRepository;
 import com.dart.api.domain.payment.entity.Payment;
 import com.dart.api.domain.payment.repo.PaymentRepository;
+import com.dart.api.dto.page.PageInfo;
+import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
+import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.NotFoundException;
@@ -73,6 +79,17 @@ public class PaymentService {
 		paymentRepository.save(payment);
 
 		return paymentApproveDto;
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<PaymentReadDto> readAll(AuthUser authUser, int page, int size) {
+		final Member member = memberRepository.findByEmail(authUser.email())
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+		final Pageable pageable = PageRequest.of(page, size);
+		final Page<Payment> payments = paymentRepository.findAllByMemberOrderByApprovedAtDesc(member, pageable);
+		final PageInfo pageInfo = new PageInfo(payments.getNumber(), payments.isLast());
+
+		return new PageResponse<>(payments.map(Payment::toReadDto).toList(), pageInfo);
 	}
 
 	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
