@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.ForbiddenException;
+import com.dart.global.error.exception.MailSendErrorException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.ServerErrorException;
 import com.dart.global.error.exception.UnauthorizedException;
@@ -62,5 +63,11 @@ public class GlobalExceptionHandler {
 		String errorMessage = fieldErrors.get(0).getDefaultMessage();
 		ErrorResponse errorResponse = new ErrorResponse(errorMessage);
 		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(MailSendErrorException.class)
+	public ResponseEntity<Object> handleMailSendException(MailSendErrorException e) {
+		ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
+		return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

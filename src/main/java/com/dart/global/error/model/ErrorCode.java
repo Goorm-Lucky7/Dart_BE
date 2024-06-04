@@ -51,7 +51,8 @@ public enum ErrorCode {
 	FAIL_NICKNAME_CONFLICT("[❎ ERROR] 이미 존재하는 닉네임입니다."),
 
 	// 500 Server Error
-	FAIL_INTERNAL_SERVER_ERROR("[❎ ERROR] 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	FAIL_INTERNAL_SERVER_ERROR("[❎ ERROR] 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
+	FAIL_EMAIL_SEND("[❎ ERROR] 이메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.");
 
 	private String message;
 }
