@@ -14,8 +14,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.dart.dto.member.request.SignUpDto;
-import com.dart.dto.member.request.MemberUpdateDto;
+import com.dart.api.dto.member.request.SignUpDto;
+import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
