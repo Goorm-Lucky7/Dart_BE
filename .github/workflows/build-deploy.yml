@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -37,9 +37,8 @@ jobs:
 
   build-and-push-docker:
     needs: build-and-test
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -70,7 +69,6 @@ jobs:
 
   deploy-to-ec2:
     needs: build-and-push-docker
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2
