@@ -47,12 +47,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          cat .env
+
       - name: Create application-dev.yml file
         run: |
-          cd ./src/main/resources/
-          touch ./application-dev.yml
-          echo "${{ secrets.APPLICATION_DEV }}" > ./application-dev.yml
-        shell: bash
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
+          cat src/main/resources/application-dev.yml
 
   verify-files:
     needs: create-files
