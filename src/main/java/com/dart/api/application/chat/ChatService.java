@@ -3,8 +3,6 @@ package com.dart.api.application.chat;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.domain.auth.AuthUser;
-import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
