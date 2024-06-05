@@ -13,6 +13,7 @@ services:
       - .env
     volumes:
       - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   app:
     build:
@@ -30,7 +31,7 @@ services:
     volumes:
       - ./application-dev.yml:/app/src/main/resources/application-dev.yml
     environment:
-      SPRING_ACTIVE_PROFILES: ${SPRING_PROFILES_ACTIVE}
+      - SPRING_PROFILES_ACTIVE=dev
 
 networks:
   dart-network:

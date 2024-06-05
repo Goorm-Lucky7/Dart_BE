@@ -10,7 +10,6 @@ permissions:
   contents: read
 
 jobs:
-  # CI: 빌드 및 도커허브 이미지 푸시
   build-and-push-docker:
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +37,6 @@ jobs:
       - name: Push the Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
-  # CD: EC2 배포
   deploy-to-ec2:
     needs: build-and-push-docker
     runs-on: ubuntu-latest
