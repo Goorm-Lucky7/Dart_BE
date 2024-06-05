@@ -49,8 +49,10 @@ jobs:
 
       - name: Create application-dev.yml file
         run: |
-          mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
+          cd ./src/main/resources/
+          touch ./application-dev.yml
+          echo "${{ secrets.APPLICATION_DEV }}" > ./application-dev.yml
+        shell: bash
 
   verify-files:
     needs: create-files
