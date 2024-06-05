@@ -56,6 +56,7 @@ jobs:
             cd /home/ec2-user/Dart_BE
             
             echo "${{ secrets.APPLICATION_DEV }}" > application-dev.yml
+            echo "${{ secrets.ENV_FILE }}" > .env
             
             docker-compose down -v
             docker-compose up -d
