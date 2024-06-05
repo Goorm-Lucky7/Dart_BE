@@ -28,9 +28,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Ensure JAR file exists
-        run: ls -la build/libs
-
       - name: Build the Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} .
 
@@ -46,6 +43,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Transfer JAR to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "build/libs/*.jar"
+          target: "/home/ec2-user/Dart_BE/build/libs/"
 
       - name: Transfer files to EC2
         uses: appleboy/scp-action@master
