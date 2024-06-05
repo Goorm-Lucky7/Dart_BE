@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;

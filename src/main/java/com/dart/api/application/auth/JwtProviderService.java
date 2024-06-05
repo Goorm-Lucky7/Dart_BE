@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
