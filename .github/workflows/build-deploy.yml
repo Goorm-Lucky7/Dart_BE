@@ -40,8 +40,24 @@ jobs:
       - name: Push the Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
-  copy-files-to-ec2:
+  create-files:
     needs: build-and-push-docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Create application-dev.yml file
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
+
+  copy-files-to-ec2:
+    needs: create-files
     runs-on: ubuntu-latest
     steps:
       - name: Copy files to EC2
@@ -50,7 +66,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-          source: "docker-compose.yml, .env, src/main/resources/application-dev.yml, src/main/resources/application-secret.yml"
+          source: "docker-compose.yml, .env, src/main/resources/application-dev.yml"
           target: "/home/ec2-user/Dart_BE"
 
   deploy-to-ec2:
