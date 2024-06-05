@@ -1,9 +1,6 @@
 package com.dart.api.application.chat;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,20 +9,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.dart.api.domain.auth.AuthUser;
-import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.dto.chat.request.ChatMessageCreateDto;
-import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.exception.UnauthorizedException;
-import com.dart.support.ChatFixture;
 import com.dart.support.GalleryFixture;
-import com.dart.support.MemberFixture;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
