@@ -17,6 +17,7 @@ import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.review.request.ReviewCreateDto;
 import com.dart.api.dto.review.response.ReviewReadDto;
+import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -37,7 +38,15 @@ public class ReviewService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 		final Review review = Review.create(dto, gallery, member);
 
+		validateAlreadyReview(member, gallery);
+
 		reviewRepository.save(review);
+	}
+
+	private void validateAlreadyReview(Member member, Gallery gallery) {
+		if (reviewRepository.existsByMemberAndGallery(member, gallery)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_CREATED_REVIEW);
+		}
 	}
 
 	@Transactional(readOnly = true)
