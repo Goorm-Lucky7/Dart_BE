@@ -49,29 +49,27 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-          cat .env
-          ls -l .env
+          echo "${{ secrets.ENV_FILE }}" > $GITHUB_WORKSPACE/.env
+          cat $GITHUB_WORKSPACE/.env
 
       - name: Create application-dev.yml file
         run: |
-          mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
-          cat src/main/resources/application-dev.yml
-          ls -l src/main/resources/application-dev.yml
+          mkdir -p $GITHUB_WORKSPACE/src/main/resources
+          echo "${{ secrets.APPLICATION_DEV }}" > $GITHUB_WORKSPACE/src/main/resources/application-dev.yml
+          cat $GITHUB_WORKSPACE/src/main/resources/application-dev.yml
 
   verify-files:
     needs: create-files
     runs-on: ubuntu-latest
     steps:
       - name: Verify .env file exists
-        run: ls -l .env
+        run: ls -l $GITHUB_WORKSPACE/.env
 
       - name: Verify application-dev.yml file exists
-        run: ls -l src/main/resources/application-dev.yml
+        run: ls -l $GITHUB_WORKSPACE/src/main/resources/application-dev.yml
 
       - name: Verify docker-compose.yml file exists
-        run: ls -l docker-compose.yml
+        run: ls -l $GITHUB_WORKSPACE/docker-compose.yml
 
   copy-files-to-ec2:
     needs: verify-files
@@ -83,7 +81,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-          source: ".env,docker-compose.yml,src/main/resources/application-dev.yml"
+          source: "$GITHUB_WORKSPACE/.env,$GITHUB_WORKSPACE/docker-compose.yml,$GITHUB_WORKSPACE/src/main/resources/application-dev.yml"
           target: "/home/ec2-user/Dart_BE"
 
 
