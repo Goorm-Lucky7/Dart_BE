@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repo.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;

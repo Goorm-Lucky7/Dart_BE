@@ -13,7 +13,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.auth.annotation.Auth;
 import com.dart.global.error.exception.UnauthorizedException;
 

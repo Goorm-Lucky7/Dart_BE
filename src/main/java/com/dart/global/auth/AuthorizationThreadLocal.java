@@ -3,7 +3,7 @@ package com.dart.global.auth;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthorizationThreadLocal {

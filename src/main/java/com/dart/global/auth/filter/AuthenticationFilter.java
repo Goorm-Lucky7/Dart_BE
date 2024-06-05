@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.auth.AuthorizationThreadLocal;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.global.error.exception.UnauthorizedException;
