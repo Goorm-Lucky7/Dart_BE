@@ -8,6 +8,9 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +26,9 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repo.MemberRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
+import com.dart.api.dto.gallery.response.GalleryAllResDto;
+import com.dart.api.dto.gallery.response.PageGalleryAllRes;
+import com.dart.api.dto.gallery.response.PageInfo;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -63,14 +69,28 @@ public class GalleryService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public PageGalleryAllRes getAllGalleries(int page, int size, AuthUser authUser) {
+		final PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		final Page<Gallery> galleryPage = galleryRepository.findAllByIsPaidTrue(pageRequest);
+		final List<GalleryAllResDto> galleries = mapGalleriesToDto(galleryPage.getContent(), authUser);
+		final PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
+		return new PageGalleryAllRes(galleries, pageInfo);
+	}
+
 	public void deleteGallery(DeleteGalleryDto deleteGalleryDto, AuthUser authUser) {
 		final Member member = findMemberByEmail(authUser.email());
-		Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
+		final Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
 		validateUserOwnership(member, gallery);
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
 		deleteHashtagsByGallery(gallery);
 		deleteGallery(gallery);
+	}
+
+	private Member findMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
 	}
 
 	private void saveHashtags(List<String> hashTags, Gallery gallery) {
@@ -123,6 +143,22 @@ public class GalleryService {
 		}
 	}
 
+	private List<GalleryAllResDto> mapGalleriesToDto(List<Gallery> galleryList, AuthUser authUser) {
+		return galleryList.stream()
+			.map(gallery -> mapGalleryToDto(gallery, authUser))
+			.toList();
+	}
+
+	private GalleryAllResDto mapGalleryToDto(Gallery gallery, AuthUser authUser) {
+		final List<String> hashtags = hashtagRepository.findTagByGallery(gallery);
+		return createGalleryAllResDto(gallery, hashtags);
+	}
+
+	private GalleryAllResDto createGalleryAllResDto(Gallery gallery, List<String> hashtags) {
+		return new GalleryAllResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(), gallery.getStartDate(),
+			gallery.getEndDate(), hashtags);
+	}
+
 	private Gallery findGalleryById(Long galleryId) {
 		return galleryRepository.findById(galleryId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
@@ -135,11 +171,6 @@ public class GalleryService {
 
 	private void deleteGallery(Gallery gallery) {
 		galleryRepository.delete(gallery);
-	}
-
-	private Member findMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
 	}
 
 	private void validateUserOwnership(Member member, Gallery gallery) {
