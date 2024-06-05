@@ -64,4 +64,15 @@ public class RedisService {
 	public boolean checkExistsValue(String value) {
 		return !value.equals("false");
 	}
+
+	public void setVerificationCode(String email, String code) {
+		redisTemplate.opsForValue().set(email, code, 10, TimeUnit.MINUTES);
+	}
+
+	public String getVerificationCode(String email) {
+		return (String)redisTemplate.opsForValue().get(email);
+	}
+
+
+
 }
