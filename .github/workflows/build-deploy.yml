@@ -10,6 +10,7 @@ permissions:
   contents: read
 
 jobs:
+  # CI: 빌드 및 도커허브 이미지 푸시
   build-and-push-docker:
     runs-on: ubuntu-latest
     steps:
@@ -37,30 +38,17 @@ jobs:
       - name: Push the Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
+
+
+
+
+  # CD: EC2 배포
   deploy-to-ec2:
     needs: build-and-push-docker
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Transfer JAR to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/*.jar"
-          target: "/home/ec2-user/Dart_BE/build/libs/"
-
-      - name: Transfer files to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "."
-          target: "/home/ec2-user/Dart_BE/"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
