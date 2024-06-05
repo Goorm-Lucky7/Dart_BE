@@ -1,4 +1,4 @@
-package com.dart.api.domain.auth;
+package com.dart.api.domain.auth.entity;
 
 public record AuthUser(
 	String email,

@@ -6,20 +6,17 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.application.gallery.GalleryService;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
-import com.dart.api.dto.gallery.response.PageGalleryAllRes;
 import com.dart.global.auth.annotation.Auth;
 
 import lombok.RequiredArgsConstructor;
@@ -48,12 +45,4 @@ public class GalleryController {
 		return ResponseEntity.ok("OK");
 	}
 
-	@GetMapping
-	public ResponseEntity<PageGalleryAllRes> getAllGalleries(
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size,
-		@Auth(required = false) AuthUser authUser
-	) {
-		return ResponseEntity.ok(galleryService.getAllGalleries(page, size, authUser));
-	}
 }

@@ -41,6 +41,7 @@ public class SecurityConfig {
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations())
 			.requestMatchers("/h2-console/**")
 			.requestMatchers("/api/signup")
+			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/payment/success/**")
 			.requestMatchers("/api/payment/fail")
 			.requestMatchers("/api/payment/cancel")
