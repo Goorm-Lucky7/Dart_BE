@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.dart.api.application.chat.ChatService;
 import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -46,6 +47,7 @@ public class GalleryService {
 	private final HashtagRepository hashtagRepository;
 	private final ImageService imageService;
 	private final S3Service s3Service;
+	private final ChatService chatService;
 
 	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -60,6 +62,8 @@ public class GalleryService {
 			galleryRepository.save(gallery);
 			saveHashtags(createGalleryDto.hashTags(), gallery);
 			imageService.saveImages(createGalleryDto.images(), imageFiles, gallery);
+
+			chatService.createChatRoom(gallery);
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}

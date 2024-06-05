@@ -43,6 +43,9 @@ dependencies {
     // Bean validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Web Socket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
