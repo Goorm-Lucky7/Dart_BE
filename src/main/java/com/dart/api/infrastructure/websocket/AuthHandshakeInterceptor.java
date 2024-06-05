@@ -4,7 +4,6 @@ import static com.dart.global.common.util.AuthConstant.*;
 
 import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -16,6 +15,7 @@ import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.AuthUser;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
