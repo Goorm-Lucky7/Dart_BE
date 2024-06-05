@@ -53,8 +53,17 @@ jobs:
           script: |
             cd /home/ec2-user/Dart_BE
             
-            echo "${{ secrets.APPLICATION_DEV }}" > application-dev.yml
-            echo "${{ secrets.ENV_FILE }}" > .env
+            mkdir -p src/main/resources
+            
+            printf "%s\n" "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
+            printf "%s\n" "${{ secrets.ENV_FILE }}" > src/main/resources/.env
+            
+            echo "src/main/resources/application-dev.yml content:"
+            cat src/main/resources/application-dev.yml
+            echo "-----------------------------"
+            echo "src/main/resources/.env content:"
+            cat src/main/resources/.env
+            echo "-----------------------------"
             
             docker-compose down -v
             docker-compose up -d
