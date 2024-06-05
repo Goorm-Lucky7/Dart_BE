@@ -47,25 +47,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Create .env file
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-          cat .env
-          ls -l .env
-
       - name: Create application-dev.yml file
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
-          cat src/main/resources/application-dev.yml
-          ls -l src/main/resources/application-dev.yml
 
   verify-files:
     needs: create-files
     runs-on: ubuntu-latest
     steps:
-      - name: Verify .env file exists
-        run: ls -l .env
 
       - name: Verify application-dev.yml file exists
         run: ls -l src/main/resources/application-dev.yml
@@ -83,7 +73,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-          source: "docker-compose.yml, .env, src/main/resources/application-dev.yml"
+          source: "docker-compose.yml, src/main/resources/application-dev.yml"
           target: "/home/ec2-user/Dart_BE"
 
   deploy-to-ec2:
