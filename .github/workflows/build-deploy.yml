@@ -51,12 +51,14 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
           cat .env
+          ls -l .env
 
       - name: Create application-dev.yml file
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_DEV }}" > src/main/resources/application-dev.yml
           cat src/main/resources/application-dev.yml
+          ls -l src/main/resources/application-dev.yml
 
   verify-files:
     needs: create-files
