@@ -29,6 +29,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
+      - name: Copy build files
+        run: mkdir -p build/libs && cp build/libs/*.jar .
+
       - name: Build the Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} .
 
@@ -37,10 +40,6 @@ jobs:
 
       - name: Push the Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
-
-
-
-
 
   # CD: EC2 배포
   deploy-to-ec2:
