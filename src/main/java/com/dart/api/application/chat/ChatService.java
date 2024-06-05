@@ -34,14 +34,14 @@ public class ChatService {
 		chatRoomRepository.save(chatRoom);
 	}
 
-	@Transactional
-	public void saveAndSendChatMessage(Long chatRoomId, AuthUser authUser, ChatMessageCreateDto chatMessageCreateDto) {
-		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
-		final Member member = getMemberByEmail(authUser.email());
-
-		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
-		chatMessageRepository.save(chatMessage);
-	}
+	// @Transactional
+	// public void saveAndSendChatMessage(Long chatRoomId, AuthUser authUser, ChatMessageCreateDto chatMessageCreateDto) {
+	// 	final ChatRoom chatRoom = getChatRoomById(chatRoomId);
+	// 	final Member member = getMemberByEmail(authUser.email());
+	//
+	// 	final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
+	// 	chatMessageRepository.save(chatMessage);
+	// }
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
 		return chatRoomRepository.findById(chatRoomId)
