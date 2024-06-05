@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql:latest
+    restart: always
+    container_name: mysql-container
+    ports:
+      - "3306:3306"
+    networks:
+      - dart-network
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    networks:
+      - dart-network
+    env_file:
+      - .env
+    volumes:
+      - ./application-dev.yml:/app/src/main/resources/application-dev.yml
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+
+networks:
+  dart-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

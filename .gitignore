@@ -198,4 +198,6 @@ src/main/resources/application-secret.yml
 
 db/*
 
+.env
+
 tmp/
