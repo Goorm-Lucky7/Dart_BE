@@ -9,12 +9,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.support.GalleryFixture;
+import com.dart.support.MemberFixture;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
