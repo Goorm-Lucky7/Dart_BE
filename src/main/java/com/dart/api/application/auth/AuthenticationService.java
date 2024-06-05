@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.auth.TokenReqDto;
 import com.dart.api.dto.auth.TokenResDto;
 import com.dart.api.dto.member.request.LoginReqDto;

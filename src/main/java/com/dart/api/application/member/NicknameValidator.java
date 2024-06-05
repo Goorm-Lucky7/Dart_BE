@@ -3,7 +3,7 @@ package com.dart.api.application.member;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.model.ErrorCode;
 

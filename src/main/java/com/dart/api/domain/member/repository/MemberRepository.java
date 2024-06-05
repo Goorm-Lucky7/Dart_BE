@@ -1,4 +1,4 @@
-package com.dart.api.domain.member.repo;
+package com.dart.api.domain.member.repository;
 
 import java.util.Optional;
 

@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.domain.auth.AuthUser;
 import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.api.domain.gallery.repo.GalleryRepository;
+import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.review.entity.Review;
-import com.dart.api.domain.review.repo.ReviewRepository;
+import com.dart.api.domain.review.repository.ReviewRepository;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.review.request.ReviewCreateDto;

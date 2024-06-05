@@ -1,4 +1,4 @@
-package com.dart.api.domain.chat.repo;
+package com.dart.api.domain.chat.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

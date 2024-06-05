@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Image;
-import com.dart.api.domain.gallery.repo.ImageRepository;
+import com.dart.api.domain.gallery.repository.ImageRepository;
 import com.dart.api.dto.gallery.request.ImageInfoDto;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
