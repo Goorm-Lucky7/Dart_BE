@@ -25,6 +25,7 @@ public enum ErrorCode {
 	FAIL_GALLERY_ITEM_LIMIT_EXCEEDED("[❎ ERROR] 전시 작품은 최대 20개까지 생성 가능합니다."),
 	FAIL_INVALID_GALLERY_ITEM_INFO("[❎ ERROR] 전시 작품에 대한 정보를 잘못 입력하셨습니다."),
 	FAIL_INVALID_IMAGE_EXTENSION("[❎ ERROR] 전시 이미지는 JPG, JPEG, PNG 형식만 업로드 가능합니다."),
+	FAIL_ALREADY_CREATED_REVIEW("[❎ ERROR] 이미 리뷰를 작성하셨습니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
