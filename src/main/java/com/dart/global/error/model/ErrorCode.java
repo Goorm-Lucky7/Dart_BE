@@ -12,6 +12,7 @@ public enum ErrorCode {
 	// 400 BAD REQUEST EXCEPTION
 	FAIL_INVALID_REQUEST("[❎ ERROR] 잘못된 요청입니다. 입력 형식을 확인해주세요."),
 	FAIL_INCORRECT_PASSWORD("[❎ ERROR] 입력하신 비밀번호가 정확하지 않습니다. 다시 시도해 주세요."),
+	FAIL_INCORRECT_EMAIL_CODE("[❎ ERROR] 입력하신 인증코드가 정확하지 않습니다. 다시 시도해 주세요."),
 	FAIL_TOKEN_EXPIRED_OR_INVALID("[❎ ERROR] 인증 토큰이 유효하지 않습니다. 다시 로그인해 주세요."),
 	FAIL_IMAGE_ALREADY_SET("[❎ ERROR] 선택하신 이미지는 이미 기본 프로필 이미지로 설정되어 있습니다. 다른 이미지를 선택해 주세요."),
 	FAIL_COMMENT_LENGTH_EXCEEDED("[❎ ERROR] 댓글 작성 길이를 초과하였습니다."),
