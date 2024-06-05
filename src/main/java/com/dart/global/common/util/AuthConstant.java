@@ -8,4 +8,6 @@ public final class AuthConstant {
 
 	public static final String ACCESS_TOKEN_HEADER = "Authorization";
 	public static final String BEARER = "Bearer";
+	public static final String EMAIL_TITLE = "Dart 인증 이메일";
+	public static final int EMAIL_CODE_LENGTH = 6;
 }
