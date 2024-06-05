@@ -46,3 +46,16 @@ jwt:
   secret:
     access-key: ${jwt.secret.access-key}
   access-expire: ${jwt.access-expire}
+
+cloud:
+  aws:
+    s3:
+      bucket: ${cloud.aws.s3.bucket}
+    credentials:
+      access-key: ${cloud.aws.credentials.access-key}
+      secret-key: ${cloud.aws.credentials.secret-key}
+    region:
+      static: ${cloud.aws.region.static}
+      auto: false
+    stack:
+      auto: false
