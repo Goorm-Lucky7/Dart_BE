@@ -35,7 +35,6 @@ public class JwtProviderService {
 
 	private static final String EMAIL = "email";
 	private static final String NICKNAME = "nickname";
-	private static final String PROFILE_IMAGE_URL = "profileImageUrl";
 
 	@Value("${jwt.secret.access-key}")
 	private String secret;

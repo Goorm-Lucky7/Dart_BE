@@ -9,12 +9,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import com.dart.api.application.payment.PaymentService;
+import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
+import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
+import com.dart.global.auth.annotation.Auth;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,8 +28,17 @@ public class PaymentController {
 	private final PaymentService paymentService;
 
 	@PostMapping
-	public PaymentReadyDto ready(@RequestBody @Valid PaymentCreateDto dto) {
-		return paymentService.ready(dto);
+	public PaymentReadyDto ready(@RequestBody @Valid PaymentCreateDto dto, @Auth AuthUser authUser) {
+		return paymentService.ready(dto, authUser);
+	}
+
+	@GetMapping
+	public PageResponse<PaymentReadDto> readAll(
+		@Auth AuthUser authUser,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		return paymentService.readAll(authUser, page, size);
 	}
 
 	@GetMapping("/success/{id}/{order}")

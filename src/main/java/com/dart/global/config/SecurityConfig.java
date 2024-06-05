@@ -17,8 +17,8 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.dart.global.auth.filter.AuthenticationFilter;
 import com.dart.api.application.auth.JwtProviderService;
+import com.dart.global.auth.filter.AuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -41,6 +41,9 @@ public class SecurityConfig {
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations())
 			.requestMatchers("/h2-console/**")
 			.requestMatchers("/api/signup")
+			.requestMatchers("/api/payment/success/**")
+			.requestMatchers("/api/payment/fail")
+			.requestMatchers("/api/payment/cancel")
 			.requestMatchers("/api/login")
 			.requestMatchers("/api/reissue");
 	}
@@ -53,9 +56,10 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
 
 		httpSecurity.authorizeHttpRequests((auth) -> auth
-			.requestMatchers(HttpMethod.GET,"/api/signup/*").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
 			.requestMatchers("/favicon.ico").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/galleries").permitAll()
 			.anyRequest().authenticated()
 		);
 

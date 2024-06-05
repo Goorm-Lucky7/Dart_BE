@@ -92,4 +92,8 @@ public class Gallery extends BaseTimeEntity {
 			.member(member)
 			.build();
 	}
+
+	public void pay() {
+		this.isPaid = true;
+	}
 }
