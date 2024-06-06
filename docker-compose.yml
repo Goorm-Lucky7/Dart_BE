@@ -41,7 +41,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./application-dev.yml:/app/src/main/resources/application-dev.yml
+      - ./src/main/resources/application-dev.yml:/app/src/main/resources/application-dev.yml
     environment:
       - SPRING_PROFILES_ACTIVE=dev
 
