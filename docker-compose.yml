@@ -21,8 +21,6 @@ services:
       - "6379:6379"
     networks:
       - dart-network
-    env_file:
-      - .env
 
   app:
     build:
