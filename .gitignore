@@ -200,4 +200,6 @@ db/*
 
 .env
 
+docker-compose.yml
+
 tmp/
