@@ -37,17 +37,11 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "password", nullable = false)
 	private String password;
 
-	@Column(name = "profile_image", nullable = true)
-	private String profileImage;
+	@Column(name = "profile_image_url", nullable = true)
+	private String profileImageUrl;
 
 	@Column(name = "birthday", nullable = true)
 	private LocalDate birthday;
-
-	@Column(name = "bank", nullable = true)
-	private String bank;
-
-	@Column(name = "account", nullable = true)
-	private String account;
 
 	@Column(name = "introduce", nullable = true)
 	private String introduce;
@@ -62,16 +56,12 @@ public class Member extends BaseTimeEntity {
 		String nickname,
 		String password,
 		LocalDate birthday,
-		String bank,
-		String account,
 		String introduce
 	) {
 		this.email = email;
 		this.nickname = nickname;
 		this.password = password;
 		this.birthday = birthday;
-		this.bank = bank;
-		this.account = account;
 		this.introduce = introduce;
 	}
 
@@ -81,18 +71,13 @@ public class Member extends BaseTimeEntity {
 			.nickname(signUpDto.nickname())
 			.password(password)
 			.birthday(signUpDto.birthday())
-			.bank(signUpDto.bank())
-			.account(signUpDto.account())
 			.introduce(signUpDto.introduce())
 			.build();
 	}
 
-	public void updateMemberProfile(MemberUpdateDto memberUpdateDto, String password) {
+	public void updateMemberProfile(MemberUpdateDto memberUpdateDto, String profileImageUrl) {
 		this.nickname = memberUpdateDto.nickname();
-		this.password = password;
-		this.profileImage = memberUpdateDto.profileImage();
-		this.bank = memberUpdateDto.bank();
-		this.account = memberUpdateDto.account();
+		this.profileImageUrl = profileImageUrl;
 		this.introduce = memberUpdateDto.introduce();
 	}
 }
