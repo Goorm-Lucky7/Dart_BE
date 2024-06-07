@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql:latest
+    restart: always
+    container_name: mysql-container
+    ports:
+      - "3306:3306"
+    networks:
+      - dart-network
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - .env
+
+  redis:
+    image: redis:latest
+    restart: always
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+      - dart-network
+    env_file:
+      - .env
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+      - redis
+    networks:
+      - dart-network
+    volumes:
+      - ./src/main/resources/application-dev.yml:/app/src/main/resources/application-dev.yml
+    env_file:
+      - .env
+    container_name: dart-container
+
+networks:
+  dart-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

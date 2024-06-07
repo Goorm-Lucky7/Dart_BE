@@ -16,13 +16,13 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.api.domain.gallery.repo.GalleryRepository;
+import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repo.MemberRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Payment;
-import com.dart.api.domain.payment.repo.PaymentRepository;
+import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;

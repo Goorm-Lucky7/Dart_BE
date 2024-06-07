@@ -1,8 +1,8 @@
 package com.dart.api.domain.chat.entity;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.ColumnDefault;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,14 +17,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
-@Table(name = "tbl_message")
+@Table(name = "tbl_chat_message")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Message extends BaseTimeEntity {
+public class ChatMessage extends BaseTimeEntity {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,25 +31,27 @@ public class Message extends BaseTimeEntity {
 	@Column(name = "content", nullable = false)
 	private String content;
 
-	@Column(name = "is_blinded", nullable = false)
-	@ColumnDefault("false")
-	private boolean isBlinded;
+	@Column(name = "sender", nullable = false)
+	private String sender;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "chatroom_id")
-	private Chatroom chatroom;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
-	private Member member;
+	private ChatRoom chatroom;
 
 	@Builder
-	private Message(
-		String content,
-		LocalDateTime sendTime,
-		boolean isBlinded
-	) {
+	private ChatMessage(String content, String sender, ChatRoom chatroom) {
 		this.content = content;
-		this.isBlinded = isBlinded;
+		this.sender = sender;
+		this.chatroom = chatroom;
+	}
+
+	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
+		ChatMessageCreateDto chatMessageCreateDto
+	) {
+		return ChatMessage.builder()
+			.chatroom(chatRoom)
+			.sender(member.getNickname())
+			.content(chatMessageCreateDto.content())
+			.build();
 	}
 }

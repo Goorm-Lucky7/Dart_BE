@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.review.ReviewService;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.review.request.ReviewCreateDto;
 import com.dart.api.dto.review.response.ReviewReadDto;

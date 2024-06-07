@@ -198,4 +198,8 @@ src/main/resources/application-secret.yml
 
 db/*
 
+.env
+
+docker-compose.yml
+
 tmp/

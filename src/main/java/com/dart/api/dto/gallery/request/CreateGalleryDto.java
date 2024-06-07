@@ -5,7 +5,9 @@ import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
+@Builder
 public record CreateGalleryDto(
 	@NotBlank(message = "[❎ ERROR] 전시 제목을 입력해주세요.")
 	String title,

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.auth.AuthenticationService;
 import com.dart.api.application.member.MemberService;
-import com.dart.api.domain.auth.AuthUser;
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.member.request.LoginReqDto;
 import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;

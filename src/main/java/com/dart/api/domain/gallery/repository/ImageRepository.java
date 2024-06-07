@@ -1,4 +1,4 @@
-package com.dart.api.domain.gallery.repo;
+package com.dart.api.domain.gallery.repository;
 
 import java.util.List;
 

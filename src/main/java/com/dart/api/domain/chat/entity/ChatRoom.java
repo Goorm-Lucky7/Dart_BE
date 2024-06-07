@@ -1,6 +1,7 @@
 package com.dart.api.domain.chat.entity;
 
-import org.hibernate.annotations.ColumnDefault;
+import com.dart.api.domain.gallery.entity.Gallery;
+import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,14 +16,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.global.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
-@Table(name = "tbl_chatroom")
+@Table(name = "tbl_chat_room")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Chatroom extends BaseTimeEntity {
+public class ChatRoom extends BaseTimeEntity {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,20 +30,21 @@ public class Chatroom extends BaseTimeEntity {
 	@Column(name = "title", nullable = false)
 	private String title;
 
-	@Column(name = "is_author", nullable = false)
-	@ColumnDefault("false")
-	private boolean isAuthor;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "gallery_id")
 	private Gallery gallery;
 
 	@Builder
-	private Chatroom(
-		String title,
-		boolean isAuthor
-	) {
+	private ChatRoom(String title, Gallery gallery) {
 		this.title = title;
-		this.isAuthor = isAuthor;
+		this.gallery = gallery;
+	}
+
+	public static ChatRoom createChatRoom(Gallery gallery) {
+		return ChatRoom.builder()
+			.title(gallery.getTitle())
+			.gallery(gallery)
+			.build();
 	}
 }
+
