@@ -9,11 +9,11 @@ services:
       - "3306:3306"
     networks:
       - dart-network
-    env_file:
-      - .env
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - .env
 
   redis:
     image: redis:latest
@@ -38,12 +38,11 @@ services:
       - redis
     networks:
       - dart-network
+    volumes:
+      - ./src/main/resources/application-dev.yml:/app/src/main/resources/application-dev.yml
     env_file:
       - .env
-    volumes:
-      - ./application-dev.yml:/app/src/main/resources/application-dev.yml
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
+    container_name: dart-container
 
 networks:
   dart-network:
