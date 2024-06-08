@@ -33,11 +33,11 @@ public class MemberService {
 
 	@Transactional
 	public void signUp(SignUpDto signUpDto) {
-		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
-		final Member member = Member.signup(signUpDto, encodedPassword);
-
 		validateEmailChecked(signUpDto.isCheckedEmail());
 		validateNicknameChecked(signUpDto.isCheckedNickname());
+
+		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
+		final Member member = Member.signup(signUpDto, encodedPassword);
 
 		memberRepository.save(member);
 	}
