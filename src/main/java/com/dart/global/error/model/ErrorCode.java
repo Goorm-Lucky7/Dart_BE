@@ -28,6 +28,8 @@ public enum ErrorCode {
 	FAIL_INVALID_IMAGE_EXTENSION("[❎ ERROR] 전시 이미지는 JPG, JPEG, PNG 형식만 업로드 가능합니다."),
 
 	FAIL_ALREADY_CREATED_REVIEW("[❎ ERROR] 이미 리뷰를 작성하셨습니다."),
+	FAIL_NOT_VERIFIED_EMAIL("[❎ ERROR] 이메일 중복확인을 해주시길 바랍니다."),
+	FAIL_NOT_VERIFIED_NICKNAME("[❎ ERROR] 닉네임 중복확인을 해주시길 바랍니다."),
 
 	FAIL_INVALID_DISPLAY_VALUE("[❎ ERROR] 다음 중 하나의 값을 입력해 주세요: all, upcoming, inprogress, finished"),
 	FAIL_INVALID_SORT_VALUE("[❎ ERROR] 다음 중 하나의 값을 입력해 주세요: latest, liked"),
