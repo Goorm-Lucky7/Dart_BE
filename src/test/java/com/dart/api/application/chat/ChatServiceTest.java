@@ -3,6 +3,8 @@ package com.dart.api.application.chat;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
@@ -38,6 +41,9 @@ class ChatServiceTest {
 
 	@Mock
 	private MemberRepository memberRepository;
+
+	@Mock
+	private SimpMessageHeaderAccessor simpMessageHeaderAccessor;
 
 	@InjectMocks
 	private ChatService chatService;
@@ -67,11 +73,15 @@ class ChatServiceTest {
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
+		Map<String, Object> sessionAttributes = new HashMap<>();
+		sessionAttributes.put("authMember", authUser);
+
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.of(member));
+		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
 
 		// WHEN
-		chatService.saveAndSendChatMessage(chatRoomId, authUser, chatMessageCreateDto);
+		chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		// THEN
 		verify(chatRoomRepository).findById(chatRoomId);
@@ -85,13 +95,13 @@ class ChatServiceTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.empty());
 
 		// WHEN & THEN
-		assertThatThrownBy(() -> chatService.saveAndSendChatMessage(chatRoomId, authUser, chatMessageCreateDto))
+		assertThatThrownBy(
+			() -> chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 
@@ -111,11 +121,16 @@ class ChatServiceTest {
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
+		Map<String, Object> sessionAttributes = new HashMap<>();
+		sessionAttributes.put("authMember", authUser);
+
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.empty());
+		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
 
 		// WHEN & THEN
-		assertThatThrownBy(() -> chatService.saveAndSendChatMessage(chatRoomId, authUser, chatMessageCreateDto))
+		assertThatThrownBy(
+			() -> chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
 			.isInstanceOf(UnauthorizedException.class)
 			.hasMessage("[❎ ERROR] 로그인이 필요한 기능입니다.");
 
