@@ -1,5 +1,8 @@
 package com.dart.api.application.chat;
 
+import java.util.Objects;
+
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +38,24 @@ public class ChatService {
 	}
 
 	@Transactional
-	public void saveAndSendChatMessage(Long chatRoomId, AuthUser authUser, ChatMessageCreateDto chatMessageCreateDto) {
+	public void saveAndSendChatMessage(
+		Long chatRoomId,
+		ChatMessageCreateDto chatMessageCreateDto,
+		SimpMessageHeaderAccessor simpMessageHeaderAccessor
+	) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
+
+		final AuthUser authUser = extractAuthUserEmail(simpMessageHeaderAccessor);
 		final Member member = getMemberByEmail(authUser.email());
 
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
 		chatMessageRepository.save(chatMessage);
+	}
+
+	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
+		return (AuthUser)Objects
+			.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes(), "SESSION ATTRIBUTE MUST NOT BE NULL")
+			.get("authMember");
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
