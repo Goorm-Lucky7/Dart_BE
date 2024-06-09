@@ -33,6 +33,9 @@ public class MemberService {
 
 	@Transactional
 	public void signUp(SignUpDto signUpDto) {
+		validateEmailChecked(signUpDto.isCheckedEmail());
+		validateNicknameChecked(signUpDto.isCheckedNickname());
+
 		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
 		final Member member = Member.signup(signUpDto, encodedPassword);
 
@@ -69,5 +72,17 @@ public class MemberService {
 
 	private MemberProfileResDto convertToMemberProfileResDto(Member member) {
 		return new MemberProfileResDto(member.getEmail(), member.getNickname(), member.getIntroduce(), member.getProfileImageUrl());
+	}
+
+	private void validateEmailChecked(boolean isEmailChecked) {
+		if(!isEmailChecked) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_EMAIL);
+		}
+	}
+
+	private void validateNicknameChecked(boolean isNicknameChecked) {
+		if(!isNicknameChecked) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
+		}
 	}
 }
