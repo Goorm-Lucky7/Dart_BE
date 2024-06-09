@@ -31,6 +31,8 @@ public record SignUpDto(
 	LocalDate birthday,
 	String bank,
 	String account,
-	String introduce
+	String introduce,
+	boolean isCheckedEmail,
+	boolean isCheckedNickname
 ) {
 }

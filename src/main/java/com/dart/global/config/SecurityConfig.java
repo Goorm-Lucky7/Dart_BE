@@ -59,6 +59,7 @@ public class SecurityConfig {
 		httpSecurity.authorizeHttpRequests((auth) -> auth
 			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
+			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries").permitAll()
 			.anyRequest().authenticated()

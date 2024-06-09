@@ -34,7 +34,8 @@ public class AuthenticationService {
 		final Member member = findByMemberEmail(loginReqDto.email());
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
 
-		final String accessToken = jwtProviderService.generateToken(member.getEmail(), member.getNickname());
+		final String accessToken = jwtProviderService.generateToken(member.getEmail(), member.getNickname(),
+			member.getProfileImageUrl());
 
 		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
 

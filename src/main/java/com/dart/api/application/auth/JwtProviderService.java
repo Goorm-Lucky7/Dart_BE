@@ -35,6 +35,7 @@ public class JwtProviderService {
 
 	private static final String EMAIL = "email";
 	private static final String NICKNAME = "nickname";
+	private static final String PROFILE_IMAGE = "profileImage";
 
 	@Value("${jwt.secret.access-key}")
 	private String secret;
@@ -51,13 +52,14 @@ public class JwtProviderService {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateToken(String email, String nickname) {
+	public String generateToken(String email, String nickname, String profileImage) {
 		final Date issuedDate = new Date();
 		final Date expiredDate = new Date(issuedDate.getTime() + accessTokenExpire);
 
 		return buildJwt(issuedDate, expiredDate)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
+			.claim(PROFILE_IMAGE, profileImage)
 			.compact();
 	}
 
@@ -68,7 +70,7 @@ public class JwtProviderService {
 		final Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
-		return generateToken(member.getEmail(), member.getNickname());
+		return generateToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public String extractToken(String header, HttpServletRequest request) {
