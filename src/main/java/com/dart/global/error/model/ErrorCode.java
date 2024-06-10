@@ -30,6 +30,8 @@ public enum ErrorCode {
 	FAIL_NOT_VERIFIED_EMAIL("[❎ ERROR] 이메일 중복확인을 해주시길 바랍니다."),
 	FAIL_NOT_VERIFIED_NICKNAME("[❎ ERROR] 닉네임 중복확인을 해주시길 바랍니다."),
 	FAIL_NOT_PAYMENT_GALLERY("[❎ ERROR] 미결제 전시관입니다."),
+	FAIL_INVALID_SESSION_ID("[❎ ERROR] 요청하신 채팅방에 유효한 세션 ID가 필요합니다."),
+	FAIL_INVALID_DESTINATION("[❎ ERROR] 요청하신 채팅방의 대상이 유효하지 않습니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
