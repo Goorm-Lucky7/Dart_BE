@@ -13,6 +13,8 @@ services:
       - database
     networks:
       - dart-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
 
   database:
     container_name: mysql-container
