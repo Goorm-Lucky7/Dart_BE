@@ -1,4 +1,4 @@
-package com.dart.global.common;
+package com.dart.global.common.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -15,4 +15,5 @@ public class PaymentConstant {
 	public static final String TAX = "0";
 	public static final String CID = "TC0ONETIME";
 	public static final String QUANTITY = "1";
+	public static final long THIRTY_MINUTE = 1800;
 }
