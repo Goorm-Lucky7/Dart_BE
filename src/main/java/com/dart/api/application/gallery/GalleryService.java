@@ -23,6 +23,7 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
+import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.global.common.util.RedisUtil;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
@@ -46,7 +47,7 @@ public class GalleryService {
 	private final S3Service s3Service;
 	private final RedisUtil redisUtil;
 
-	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
+	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
 		final Member member = findMemberByEmail(authUser.email());
 		try {
@@ -60,6 +61,8 @@ public class GalleryService {
 			saveHashtags(createGalleryDto.hashTags(), gallery);
 			imageService.saveImages(createGalleryDto.images(), imageFiles, gallery);
 			waitPayment(gallery);
+
+			return gallery.toReadIdDto();
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}

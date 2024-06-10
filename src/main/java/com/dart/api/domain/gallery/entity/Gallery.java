@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
+import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -95,5 +96,9 @@ public class Gallery extends BaseTimeEntity {
 
 	public void pay() {
 		this.isPaid = true;
+	}
+
+	public GalleryReadIdDto toReadIdDto() {
+		return new GalleryReadIdDto(this.id);
 	}
 }
