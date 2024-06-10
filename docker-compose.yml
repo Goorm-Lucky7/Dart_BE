@@ -1,48 +1,65 @@
 version: '3.8'
 
 services:
+  nginx:
+    container_name: nginx-container
+    image: ssolmoon/dart-nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+      - database
+    networks:
+      - dart-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+
   database:
+    container_name: mysql-container
     image: mysql:latest
     restart: always
-    container_name: mysql-container
-    ports:
-      - "3306:3306"
+    expose:
+      - "3306"
     networks:
       - dart-network
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     env_file:
-      - .env
+      - ./.env
 
   redis:
+    container_name: redis-container
     image: redis:latest
     restart: always
-    container_name: redis-container
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     networks:
       - dart-network
     env_file:
-      - .env
+      - ./.env
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    container_name: dart-container
+    image: ssolmoon/dart:latest
     restart: always
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     depends_on:
       - database
       - redis
     networks:
       - dart-network
-    volumes:
-      - ./src/main/resources/application-dev.yml:/app/src/main/resources/application-dev.yml
     env_file:
-      - .env
-    container_name: dart-container
+      - ./.env
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
 
 networks:
   dart-network:

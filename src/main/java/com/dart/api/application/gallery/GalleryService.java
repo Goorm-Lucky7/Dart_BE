@@ -1,6 +1,7 @@
 package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
+import static com.dart.global.common.util.PaymentConstant.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +29,7 @@ import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
+import com.dart.global.common.util.RedisUtil;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -35,10 +37,12 @@ import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class GalleryService {
 
 	private final MemberRepository memberRepository;
@@ -47,6 +51,7 @@ public class GalleryService {
 	private final ReviewRepository reviewRepository;
 	private final ImageService imageService;
 	private final S3Service s3Service;
+	private final RedisUtil redisUtil;
 
 	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -62,7 +67,10 @@ public class GalleryService {
 			galleryRepository.save(gallery);
 
 			saveHashtags(createGalleryDto.hashTags(), gallery);
+
 			imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
+
+			waitPayment(gallery);
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}
@@ -181,6 +189,16 @@ public class GalleryService {
 	private void validateUserOwnership(Member member, Gallery gallery) {
 		if (!Objects.equals(member.getId(), gallery.getMember().getId())) {
 			throw new BadRequestException(ErrorCode.FAIL_GALLERY_DELETION_FORBIDDEN);
+		}
+	}
+
+	private void waitPayment(Gallery gallery) {
+		if (!gallery.isPaid()) {
+			redisUtil.setDataExpire(
+				gallery.getId().toString(),
+				String.valueOf(gallery.getTitle()),
+				THIRTY_MINUTE
+			);
 		}
 	}
 }
