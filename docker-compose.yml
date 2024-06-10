@@ -6,12 +6,15 @@ services:
     image: ssolmoon/dart-nginx:latest
     restart: always
     ports:
-      - "80:80/tcp"
+      - "80:80"
+      - "443:443"
     depends_on:
       - app
       - database
     networks:
       - dart-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
 
   database:
     container_name: mysql-container
