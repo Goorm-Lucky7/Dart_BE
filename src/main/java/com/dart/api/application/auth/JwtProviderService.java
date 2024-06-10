@@ -43,6 +43,9 @@ public class JwtProviderService {
 	@Value("${jwt.access-expire}")
 	private long accessTokenExpire;
 
+	@Value("${jwt.refresh-expire}")
+	private long refreshTokenExpire;
+
 	private SecretKey secretKey;
 
 	private final MemberRepository memberRepository;
@@ -52,7 +55,7 @@ public class JwtProviderService {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateToken(String email, String nickname, String profileImage) {
+	public String generateAccessToken(String email, String nickname, String profileImage) {
 		final Date issuedDate = new Date();
 		final Date expiredDate = new Date(issuedDate.getTime() + accessTokenExpire);
 
@@ -63,14 +66,23 @@ public class JwtProviderService {
 			.compact();
 	}
 
+	public String generateRefreshToken(String email) {
+		final Date issuedDate = new Date();
+		final Date expiredDate = new Date(issuedDate.getTime() + refreshTokenExpire);
+
+		return buildJwt(issuedDate, expiredDate)
+			.claim(EMAIL, email)
+			.compact();
+	}
+
 	@Transactional
-	public String reGenerateToken(String accessToken) {
+	public String reGenerateAccessToken(String accessToken) {
 		final Claims claims = getClaimsByToken(accessToken);
 		final String email = claims.get(EMAIL, String.class);
 		final Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
-		return generateToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		return generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public String extractToken(String header, HttpServletRequest request) {
