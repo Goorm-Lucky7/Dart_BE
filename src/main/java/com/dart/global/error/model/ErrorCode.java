@@ -29,6 +29,7 @@ public enum ErrorCode {
 	FAIL_ALREADY_CREATED_REVIEW("[❎ ERROR] 이미 리뷰를 작성하셨습니다."),
 	FAIL_NOT_VERIFIED_EMAIL("[❎ ERROR] 이메일 중복확인을 해주시길 바랍니다."),
 	FAIL_NOT_VERIFIED_NICKNAME("[❎ ERROR] 닉네임 중복확인을 해주시길 바랍니다."),
+	FAIL_NOT_PAYMENT_GALLERY("[❎ ERROR] 미결제 전시관입니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
