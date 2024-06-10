@@ -20,6 +20,7 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
+import com.dart.api.dto.gallery.response.GalleryInfoDto;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.auth.annotation.Auth;
 
@@ -61,5 +62,11 @@ public class GalleryController {
 		@Auth(required = false) AuthUser authUser
 	) {
 		return galleryService.getAllGalleries(page, size, category, keyword, sort, cost, display, authUser);
+	}
+
+	@GetMapping("/info")
+	public ResponseEntity<GalleryInfoDto> getGalleryInfo(@RequestParam("gallery-id") Long galleryId,
+		@Auth(required = false) AuthUser authUser) {
+		return ResponseEntity.ok(galleryService.getGalleryInfo(galleryId, authUser));
 	}
 }
