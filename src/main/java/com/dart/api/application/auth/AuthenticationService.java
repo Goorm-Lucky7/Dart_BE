@@ -68,6 +68,7 @@ public class AuthenticationService {
 		String newAccessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
 
+		redisService.deleteValues(authUser.email());
 		redisService.setValues(authUser.email(), newRefreshToken, Duration.ofMillis(refreshTokenExpire));
 
 		setTokensInResponse(response, newAccessToken, newRefreshToken);
