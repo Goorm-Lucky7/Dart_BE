@@ -6,6 +6,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.model.ErrorCode;
+
 public enum Sort {
 	LATEST("latest"),
 	LIKED("liked");
@@ -24,6 +27,10 @@ public enum Sort {
 	}
 
 	public static Sort fromValue(String value) {
-		return valuesMap.get(value);
+		Sort sort = valuesMap.get(value.toLowerCase());
+		if (sort == null) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_SORT_VALUE);
+		}
+		return sort;
 	}
 }
