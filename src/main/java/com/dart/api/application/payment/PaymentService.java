@@ -1,6 +1,6 @@
 package com.dart.api.application.payment;
 
-import static com.dart.global.common.PaymentConstant.*;
+import static com.dart.global.common.util.PaymentConstant.*;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +21,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.api.domain.payment.entity.Order;
 import com.dart.api.domain.payment.entity.Payment;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.page.PageInfo;
@@ -29,7 +30,9 @@ import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
+import com.dart.global.common.util.RedisUtil;
 import com.dart.global.config.PaymentProperties;
+import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -43,9 +46,12 @@ public class PaymentService {
 	private final MemberRepository memberRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentProperties paymentProperties;
+	private final RedisUtil redisUtil;
 	private PaymentReadyDto paymentReadyDto;
 
 	public PaymentReadyDto ready(PaymentCreateDto dto, AuthUser authUser) {
+		validateExistGallery(dto);
+
 		final Member member = memberRepository.findByEmail(authUser.email())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 		final MultiValueMap<String, String> params = readyToBody(dto, member.getId());
@@ -57,6 +63,12 @@ public class PaymentService {
 			READY_URL,
 			requestEntity,
 			PaymentReadyDto.class);
+	}
+
+	private void validateExistGallery(PaymentCreateDto dto) {
+		if (dto.order().equals(Order.TICKET.getValue()) && !galleryRepository.findIsPaidById(dto.galleryId())) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
+		}
 	}
 
 	public PaymentApproveDto approve(String token, Long id, String order) {
@@ -75,7 +87,7 @@ public class PaymentService {
 		final LocalDateTime approveAt = paymentApproveDto.approved_at();
 		final Payment payment = Payment.create(member, gallery, approveAt, order);
 
-		gallery.pay();
+		payGallery(id, order, gallery);
 		paymentRepository.save(payment);
 
 		return paymentApproveDto;
@@ -132,5 +144,12 @@ public class PaymentService {
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
 		return headers;
+	}
+
+	private void payGallery(Long id, String order, Gallery gallery) {
+		if (order.equals(Order.PAID_GALLERY.getValue())) {
+			gallery.pay();
+			redisUtil.deleteData(String.valueOf(id));
+		}
 	}
 }
