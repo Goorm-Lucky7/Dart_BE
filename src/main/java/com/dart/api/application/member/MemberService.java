@@ -42,10 +42,12 @@ public class MemberService {
 		memberRepository.save(member);
 	}
 
-	public MemberProfileResDto getMemberProfile(AuthUser authUser) {
-		final Member member = findMemberByEmail(authUser.email());
-
-		return convertToMemberProfileResDto(member);
+	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
+		if (isOwnProfile(nickname, authUser.nickname())) {
+			return getOwnProfile(nickname);
+		} else {
+			return getOtherProfile(nickname);
+		}
 	}
 
 	@Transactional
@@ -65,13 +67,30 @@ public class MemberService {
 		nicknameValidator.validate(nicknameDuplicationCheckDto.nickname());
 	}
 
-	private Member findMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
+	private boolean isOwnProfile(String currentNickname, String profileNickname) {
+		return currentNickname.equals(profileNickname);
+	}
+
+	private MemberProfileResDto getOwnProfile(String nickname) {
+		final Member member = findMemberByNickname(nickname);
+		return new MemberProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl(),
+			String.valueOf(member.getBirthday()), member.getIntroduce());
+	}
+
+	private MemberProfileResDto getOtherProfile(String nickname) {
+		final Member member = findMemberByNickname(nickname);
+		return new MemberProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl(),
+			null, member.getIntroduce());
+	}
+
+	private Member findMemberByNickname(String nickname) {
+		return memberRepository.findByNickname(nickname)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
-	private MemberProfileResDto convertToMemberProfileResDto(Member member) {
-		return new MemberProfileResDto(member.getEmail(), member.getNickname(), member.getIntroduce(), member.getProfileImageUrl());
+	private Member findMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void validateEmailChecked(boolean isEmailChecked) {
