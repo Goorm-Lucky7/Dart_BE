@@ -1,5 +1,7 @@
 package com.dart.api.domain.gallery.repository;
 
+import static com.dart.global.common.util.GlobalConstant.*;
+
 import org.springframework.stereotype.Component;
 
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -41,12 +43,12 @@ public class GallerySorter {
 
 	private void orderByLiked(JPAQuery<Gallery> query, QGallery gallery, QReview review) {
 		NumberExpression<Double> averageScore = new CaseBuilder()
-			.when(review.score.eq(Score.ONE_STAR)).then(1)
-			.when(review.score.eq(Score.TWO_STAR)).then(2)
-			.when(review.score.eq(Score.THREE_STAR)).then(3)
-			.when(review.score.eq(Score.FOUR_STAR)).then(4)
-			.when(review.score.eq(Score.FIVE_STAR)).then(5)
-			.otherwise(0)
+			.when(review.score.eq(Score.ONE_STAR)).then(ONE_STAR)
+			.when(review.score.eq(Score.TWO_STAR)).then(TWO_STAR)
+			.when(review.score.eq(Score.THREE_STAR)).then(THREE_STAR)
+			.when(review.score.eq(Score.FOUR_STAR)).then(FOUR_STAR)
+			.when(review.score.eq(Score.FIVE_STAR)).then(FIVE_STAR)
+			.otherwise(ZERO_STAR)
 			.avg();
 
 		query.leftJoin(review).on(review.gallery.eq(gallery))
