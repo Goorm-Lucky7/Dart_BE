@@ -2,34 +2,37 @@ version: '3.8'
 
 services:
   database:
+    container_name: mysql-container
     image: mysql:latest
     restart: always
-    container_name: mysql-container
     ports:
       - "3306:3306"
     networks:
       - dart-network
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     env_file:
-      - .env
+      - ./.env
 
   redis:
+    container_name: redis-container
     image: redis:latest
     restart: always
-    container_name: redis-container
     ports:
       - "6379:6379"
     networks:
       - dart-network
     env_file:
-      - .env
+      - ./.env
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    container_name: dart-container
+    image: ssolmoon/dart:latest
     restart: always
     ports:
       - "8080:8080"
@@ -38,11 +41,10 @@ services:
       - redis
     networks:
       - dart-network
-    volumes:
-      - ./src/main/resources/application-dev.yml:/app/src/main/resources/application-dev.yml
     env_file:
-      - .env
-    container_name: dart-container
+      - ./.env
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
 
 networks:
   dart-network:

@@ -193,13 +193,10 @@ gradle-app.setting
 *.hprof
 
 # Yml
-src/main/resources/application-dev.yml
 src/main/resources/application-secret.yml
 
 db/*
 
 .env
-
-docker-compose.yml
 
 tmp/
