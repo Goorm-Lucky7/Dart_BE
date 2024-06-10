@@ -46,6 +46,14 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}:latest
 
+      - name: Build and push Nginx Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: nginx/Dockerfile.nginx
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}-nginx:latest
+
       - name: Copy JAR file to EC2
         uses: appleboy/scp-action@master
         with:
@@ -79,6 +87,24 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           source: "Dockerfile"
           target: "/home/ec2-user/"
+
+      - name: Copy Nginx Dockerfile to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "nginx/Dockerfile.nginx"
+          target: "/home/ec2-user/"
+
+      - name: Copy Nginx config to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "nginx/nginx.conf"
+          target: "/home/ec2-user/nginx/"
 
       - name: SSH into EC2 and create .env
         uses: appleboy/ssh-action@master
