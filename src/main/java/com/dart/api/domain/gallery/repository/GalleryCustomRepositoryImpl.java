@@ -38,7 +38,7 @@ public class GalleryCustomRepositoryImpl implements GalleryCustomRepository {
 			.and(gallerySpecification.applyDisplayCondition(display))
 			.and(gallerySpecification.applySearchCondition(category, keyword));
 
-		JPAQuery<Gallery> query = createQuery(builder, gallery, review, pageable, sort);
+		JPAQuery<Gallery> query = createQuery(builder, gallery, pageable, sort);
 
 		List<Gallery> results = query.fetch();
 
@@ -47,7 +47,7 @@ public class GalleryCustomRepositoryImpl implements GalleryCustomRepository {
 		return new PageImpl<>(results, pageable, totalCount);
 	}
 
-	private JPAQuery<Gallery> createQuery(BooleanBuilder builder, QGallery gallery, QReview review, Pageable pageable,
+	private JPAQuery<Gallery> createQuery(BooleanBuilder builder, QGallery gallery, Pageable pageable,
 		String sort) {
 		JPAQuery<Gallery> query = queryFactory.selectFrom(gallery)
 			.leftJoin(gallery.member).fetchJoin()
