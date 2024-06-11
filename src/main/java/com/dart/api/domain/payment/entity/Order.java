@@ -23,4 +23,8 @@ public enum Order {
 	public static Order fromValue(String value) {
 		return valuesMap.get(value);
 	}
+
+	public static boolean contains(String value) {
+		return valuesMap.containsKey(value);
+	}
 }

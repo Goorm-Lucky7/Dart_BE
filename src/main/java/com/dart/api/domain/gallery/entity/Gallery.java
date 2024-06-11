@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
+import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -54,9 +55,6 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "fee", nullable = false)
 	private int fee;
 
-	@Column(name = "review_average")
-	private float reviewAverage;
-
 	@Column(name = "is_paid")
 	private boolean isPaid;
 
@@ -65,8 +63,8 @@ public class Gallery extends BaseTimeEntity {
 	private Member member;
 
 	@Builder
-	private Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
-		Cost cost, int fee, float reviewAverage, Member member) {
+	public Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
+		Cost cost, int fee, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
@@ -74,7 +72,6 @@ public class Gallery extends BaseTimeEntity {
 		this.cost = cost;
 		this.endDate = endDate;
 		this.fee = fee;
-		this.reviewAverage = reviewAverage;
 		this.isPaid = !Cost.PAY.equals(cost);
 		this.member = member;
 	}
@@ -87,7 +84,6 @@ public class Gallery extends BaseTimeEntity {
 			.endDate(createGalleryDto.endDate())
 			.cost(cost)
 			.fee(createGalleryDto.fee())
-			.reviewAverage(0.0f)
 			.thumbnail(thumbnailUrl)
 			.member(member)
 			.build();
@@ -95,5 +91,9 @@ public class Gallery extends BaseTimeEntity {
 
 	public void pay() {
 		this.isPaid = true;
+	}
+
+	public GalleryReadIdDto toReadIdDto() {
+		return new GalleryReadIdDto(this.id);
 	}
 }
