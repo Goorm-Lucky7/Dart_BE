@@ -1,4 +1,4 @@
-package com.dart.global.common.util;
+package com.dart.api.infrastructure.s3;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
