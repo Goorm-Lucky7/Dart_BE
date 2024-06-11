@@ -30,7 +30,7 @@ import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
-import com.dart.global.common.util.RedisUtil;
+import com.dart.api.infrastructure.redis.RedisPaymentRepository;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -46,7 +46,8 @@ public class PaymentService {
 	private final MemberRepository memberRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentProperties paymentProperties;
-	private final RedisUtil redisUtil;
+	private final RedisPaymentRepository redisPaymentRepository;
+
 	private PaymentReadyDto paymentReadyDto;
 
 	public PaymentReadyDto ready(PaymentCreateDto dto, AuthUser authUser) {
@@ -175,7 +176,7 @@ public class PaymentService {
 	private void payGallery(Long id, String order, Gallery gallery) {
 		if (order.equals(Order.PAID_GALLERY.getValue())) {
 			gallery.pay();
-			redisUtil.deleteData(String.valueOf(id));
+			redisPaymentRepository.deletePayment(String.valueOf(id));
 		}
 	}
 }

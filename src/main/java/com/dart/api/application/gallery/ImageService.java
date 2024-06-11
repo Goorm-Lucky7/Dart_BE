@@ -13,7 +13,7 @@ import com.dart.api.domain.gallery.entity.Image;
 import com.dart.api.domain.gallery.repository.ImageRepository;
 import com.dart.api.dto.gallery.request.ImageInfoDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
-import com.dart.global.common.util.S3Service;
+import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.model.ErrorCode;
 

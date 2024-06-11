@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.dart.api.application.RedisService;
+import com.dart.api.infrastructure.redis.RedisTokenRepository;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -36,13 +36,13 @@ import com.dart.global.error.model.ErrorCode;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+	@Value("${jwt.refresh-expire}")
+	private long refreshTokenExpire;
+
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
-	private final RedisService redisService;
-
-	@Value("${jwt.refresh-expire}")
-	private long refreshTokenExpire;
+	private final RedisTokenRepository redisTokenRepository;
 
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
@@ -52,7 +52,7 @@ public class AuthenticationService {
 		final String accessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
-		redisService.setValues(loginReqDto.email(), refreshToken, Duration.ofDays(7));
+		redisTokenRepository.setToken(loginReqDto.email(), refreshToken);
 
 		setTokensInResponse(response, accessToken, refreshToken);
 
@@ -73,8 +73,8 @@ public class AuthenticationService {
 		String newAccessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
 
-		redisService.deleteValues(authUser.email());
-		redisService.setValues(authUser.email(), newRefreshToken, Duration.ofMillis(refreshTokenExpire));
+		redisTokenRepository.deleteToken(authUser.email());
+		redisTokenRepository.setToken(authUser.email(), newRefreshToken);
 
 		setTokensInResponse(response, newAccessToken, newRefreshToken);
 
@@ -99,7 +99,7 @@ public class AuthenticationService {
 	}
 
 	private void validateSavedRefreshToken(String email, String refreshToken) {
-		String savedRefreshToken = redisService.getValues(email);
+		String savedRefreshToken = redisTokenRepository.getToken(email);
 		if (!savedRefreshToken.equals(refreshToken)) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
