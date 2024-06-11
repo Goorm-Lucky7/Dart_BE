@@ -2,6 +2,7 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -37,6 +38,16 @@ public class ChatService {
 	public void createChatRoom(Gallery gallery) {
 		final ChatRoom chatRoom = ChatRoom.createChatRoom(gallery);
 		chatRoomRepository.save(chatRoom);
+	}
+
+	public void deleteChatRoom(Gallery gallery) {
+		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
+
+		final List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoom(chatRoom);
+
+		chatMessageRepository.deleteAll(chatMessages);
+		chatRoomRepository.delete(chatRoom);
 	}
 
 	@Transactional
