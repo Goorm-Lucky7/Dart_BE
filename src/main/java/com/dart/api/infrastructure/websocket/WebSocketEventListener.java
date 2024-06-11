@@ -66,7 +66,7 @@ public class WebSocketEventListener {
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor
 			.wrap(abstractSubProtocolEvent.getMessage());
 
-		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes()).get("authMember");
+		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes()).get("authUser");
 	}
 
 	private void validateSessionIdPresent(String sessionId) {
