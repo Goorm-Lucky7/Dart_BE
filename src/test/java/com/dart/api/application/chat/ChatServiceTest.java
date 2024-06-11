@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,6 +60,50 @@ class ChatServiceTest {
 
 		// THEN
 		verify(chatRoomRepository, times(1)).save(any(ChatRoom.class));
+	}
+
+	@Test
+	@DisplayName("DELETE CHATROOM(⭕️ SUCCESS): 사용자가 성공적으로 채팅방과 채팅메시지 삭제를 완료했습니다.")
+	void deleteChatRoom_void_success() {
+		// GIVEN
+		Gallery gallery = GalleryFixture.createGalleryEntity();
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
+		List<ChatMessage> chatMessages = List.of(
+			ChatFixture.createChatMessageEntity(chatRoom),
+			ChatFixture.createChatMessageEntity(chatRoom)
+		);
+
+		given(chatRoomRepository.findByGallery(gallery)).willReturn(Optional.of(chatRoom));
+		given(chatMessageRepository.findByChatRoom(chatRoom)).willReturn(chatMessages);
+
+		// WHEN
+		chatService.deleteChatRoom(gallery);
+
+		// THEN
+		verify(chatRoomRepository).findByGallery(gallery);
+		verify(chatMessageRepository).findByChatRoom(chatRoom);
+		verify(chatMessageRepository).deleteAll(chatMessages);
+		verify(chatRoomRepository).delete(chatRoom);
+	}
+
+	@Test
+	@DisplayName("DELETE CHATROOM(❌ FAILURE): 존재하지 않는 채팅방을 삭제하려고 시도했습니다.")
+	void deleteChatRoom_NotFoundException_fail() {
+		// GIVEN
+		Gallery gallery = GalleryFixture.createGalleryEntity();
+
+		given(chatRoomRepository.findByGallery(gallery)).willReturn(Optional.empty());
+
+		// WHEN & THEN
+		assertThatThrownBy(
+			() -> chatService.deleteChatRoom(gallery))
+			.isInstanceOf(NotFoundException.class)
+			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
+
+		verify(chatRoomRepository, times(1)).findByGallery(gallery);
+		verify(chatMessageRepository, times(0)).findByChatRoom(any(ChatRoom.class));
+		verify(chatMessageRepository, times(0)).deleteAll(anyList());
+		verify(chatRoomRepository, times(0)).delete(any(ChatRoom.class));
 	}
 
 	@Test
