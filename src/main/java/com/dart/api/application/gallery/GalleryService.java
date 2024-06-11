@@ -33,6 +33,8 @@ import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
+import com.dart.api.dto.gallery.response.GalleryResDto;
+import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.common.util.RedisUtil;
@@ -104,6 +106,17 @@ public class GalleryService {
 		final PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
 
 		return new PageResponse<>(galleries, pageInfo);
+	}
+
+	@Transactional(readOnly = true)
+	public GalleryResDto getGallery(Long galleryId, AuthUser authUser) {
+		final Gallery gallery = findGalleryById(galleryId);
+
+		boolean hasComment = checkIfUserHasCommented(gallery, authUser);
+
+		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
+
+		return new GalleryResDto(gallery.getTitle(), hasComment, images);
 	}
 
 	@Transactional(readOnly = true)
@@ -214,17 +227,43 @@ public class GalleryService {
 	}
 
 	private boolean checkIfUserHasTicket(AuthUser authUser, Gallery gallery) {
-		if (authUser == null) {
+		if (isAuthUserNull(authUser)) {
 			return false;
 		}
 
 		final Member member = findMemberByEmail(authUser.email());
 
-		if (gallery.getMember().getEmail().equals(member.getEmail())) {
+		if (isGalleryOwner(gallery, member)) {
 			return true;
 		}
 
 		return paymentRepository.existsByMemberAndGalleryAndOrder(member, gallery, Order.TICKET);
+	}
+
+	private boolean checkIfUserHasCommented(Gallery gallery, AuthUser authUser) {
+		if (isAuthUserNull(authUser)) {
+			return false;
+		}
+
+		Member member = findMemberByEmail(authUser.email());
+
+		if (isGalleryOwner(gallery, member)) {
+			return true;
+		}
+
+		return hasMemberCommentedOnGallery(member, gallery);
+	}
+
+	private boolean isAuthUserNull(AuthUser authUser) {
+		return authUser == null;
+	}
+
+	private boolean isGalleryOwner(Gallery gallery, Member member) {
+		return gallery.getMember().getId().equals(member.getId());
+	}
+
+	private boolean hasMemberCommentedOnGallery(Member member, Gallery gallery) {
+		return reviewRepository.existsByMemberAndGallery(member, gallery);
 	}
 
 	private Gallery findGalleryById(Long galleryId) {
