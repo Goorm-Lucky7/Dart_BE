@@ -17,5 +17,5 @@ public class GlobalConstant {
 	public static final int FOUR_STAR = 4;
 	public static final int FIVE_STAR = 5;
 	public static final int ZERO_STAR = 0;
-
+	public static final float NO_REVIEW_SCORE = 0.0f;
 }
