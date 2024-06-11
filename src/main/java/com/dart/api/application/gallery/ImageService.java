@@ -2,6 +2,7 @@ package com.dart.api.application.gallery;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Image;
 import com.dart.api.domain.gallery.repository.ImageRepository;
 import com.dart.api.dto.gallery.request.ImageInfoDto;
+import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.global.common.util.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.model.ErrorCode;
@@ -64,5 +66,12 @@ public class ImageService {
 
 	public void deleteThumbnail(Gallery gallery) {
 		s3Service.deleteFile(gallery.getThumbnail());
+	}
+
+	@Transactional(readOnly = true)
+	public List<ImageResDto> getImagesByGalleryId(Long galleryId) {
+		return imageRepository.findByGalleryId(galleryId).stream()
+			.map(image -> new ImageResDto(image.getImageUri(), image.getDescription(), image.getImageTitle()))
+			.collect(Collectors.toList());
 	}
 }
