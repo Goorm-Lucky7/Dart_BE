@@ -10,7 +10,7 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.review.entity.Review;
 
 @Repository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
+public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
 	Page<Review> findAllByGalleryOrderByCreatedAtDesc(Gallery gallery, Pageable pageable);
 
 	boolean existsByMemberAndGallery(Member member, Gallery gallery);

@@ -40,8 +40,9 @@ public class SecurityConfig {
 		return web -> web.ignoring()
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations())
 			.requestMatchers("/h2-console/**")
-			.requestMatchers("/api/signup")
+			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
+			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/success/**")
 			.requestMatchers("/api/payment/fail")
 			.requestMatchers("/api/payment/cancel")
@@ -62,6 +63,7 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
 			.anyRequest().authenticated()
 		);
 

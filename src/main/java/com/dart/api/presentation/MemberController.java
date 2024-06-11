@@ -44,6 +44,15 @@ public class MemberController {
 		return ResponseEntity.ok("Signup successfully");
 	}
 
+	@PostMapping("/signup/nickname/check")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> checkNicknameDuplication(
+		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
+
+		return ResponseEntity.ok("OK");
+	}
+
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> login(
@@ -74,7 +83,7 @@ public class MemberController {
 		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
-	@PostMapping("/members/nickname/check")
+	@PostMapping("/nickname/check")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> checkNicknameDuplication(
 		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
