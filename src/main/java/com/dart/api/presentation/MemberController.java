@@ -20,10 +20,10 @@ import com.dart.api.dto.member.request.LoginReqDto;
 import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;
-import com.dart.api.dto.member.response.LoginResDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.global.auth.annotation.Auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class MemberController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto) {
 		memberService.signUp(signUpDto);
-		return ResponseEntity.ok("OK");
+		return ResponseEntity.ok("Signup successfully");
 	}
 
 	@PostMapping("/signup/nickname/check")
@@ -55,10 +55,17 @@ public class MemberController {
 
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<LoginResDto> login(
-		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletResponse response
-	) {
-		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
+	public ResponseEntity<String> login(
+		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletResponse response) {
+		authenticationService.login(loginReqDto, response);
+		return ResponseEntity.ok("Login successfully");
+	}
+
+	@PostMapping("/reissue")
+	@ResponseStatus(HttpStatus.CREATED)
+	public ResponseEntity<String> reissue(HttpServletRequest request, HttpServletResponse response) {
+		authenticationService.reissue(request, response);
+		return ResponseEntity.ok("Token reissued successfully");
 	}
 
 	@GetMapping("/members")
@@ -73,6 +80,15 @@ public class MemberController {
 		@RequestPart @Valid MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage) {
 		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage);
-		return ResponseEntity.ok("OK");
+		return ResponseEntity.ok("Updated member profile successfully");
+	}
+
+	@PostMapping("/nickname/check")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> checkNicknameDuplication(
+		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
+
+		return ResponseEntity.ok("Checked nickname duplication successfully");
 	}
 }

@@ -55,7 +55,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 				}
 
 				if (jwtProviderService.isUsable(accessToken)) {
-					String newAccessToken = jwtProviderService.reGenerateToken(accessToken);
+					String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
 					setAuthentication(newAccessToken);
 				} else {
 					log.info("Access Token not usable");
