@@ -27,6 +27,7 @@ import com.dart.api.domain.review.repository.ReviewRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
+import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.common.util.RedisUtil;
@@ -53,7 +54,7 @@ public class GalleryService {
 	private final S3Service s3Service;
 	private final RedisUtil redisUtil;
 
-	public void createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
+	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
 		final Member member = findMemberByEmail(authUser.email());
 		try {
@@ -71,6 +72,8 @@ public class GalleryService {
 			imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
 
 			waitPayment(gallery);
+
+			return gallery.toReadIdDto();
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}

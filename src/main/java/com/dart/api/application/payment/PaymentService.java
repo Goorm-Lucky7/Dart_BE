@@ -51,9 +51,14 @@ public class PaymentService {
 
 	public PaymentReadyDto ready(PaymentCreateDto dto, AuthUser authUser) {
 		validateExistGallery(dto);
+		validateOrder(dto.order());
 
 		final Member member = memberRepository.findByEmail(authUser.email())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+
+		validateAlreadyGallery(dto, member);
+		validateAlreadyTicket(dto, member);
+
 		final MultiValueMap<String, String> params = readyToBody(dto, member.getId());
 		final HttpHeaders headers = setHeaders();
 		final HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
@@ -63,12 +68,6 @@ public class PaymentService {
 			READY_URL,
 			requestEntity,
 			PaymentReadyDto.class);
-	}
-
-	private void validateExistGallery(PaymentCreateDto dto) {
-		if (dto.order().equals(Order.TICKET.getValue()) && !galleryRepository.findIsPaidById(dto.galleryId())) {
-			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
-		}
 	}
 
 	public PaymentApproveDto approve(String token, Long id, String order) {
@@ -144,6 +143,33 @@ public class PaymentService {
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
 		return headers;
+	}
+
+	private void validateAlreadyTicket(PaymentCreateDto dto, Member member) {
+		if (dto.order().equals(Order.TICKET.getValue()) && paymentRepository.existsByMemberAndGalleryIdAndOrder(member,
+			dto.galleryId(), Order.TICKET)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_TICKET);
+
+		}
+	}
+
+	private void validateAlreadyGallery(PaymentCreateDto dto, Member member) {
+		if (dto.order().equals(Order.PAID_GALLERY.getValue()) && paymentRepository.existsByMemberAndGalleryIdAndOrder(
+			member, dto.galleryId(), Order.PAID_GALLERY)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_GALLERY);
+		}
+	}
+
+	private static void validateOrder(String order) {
+		if (!Order.contains(order)) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_ORDER);
+		}
+	}
+
+	private void validateExistGallery(PaymentCreateDto dto) {
+		if (dto.order().equals(Order.TICKET.getValue()) && !galleryRepository.findIsPaidById(dto.galleryId())) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
+		}
 	}
 
 	private void payGallery(Long id, String order, Gallery gallery) {
