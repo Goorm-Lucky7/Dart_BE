@@ -17,10 +17,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dart.api.application.auth.AuthenticationService;
 import com.dart.api.application.member.MemberService;
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.dto.auth.response.TokenResDto;
 import com.dart.api.dto.member.request.LoginReqDto;
 import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;
+import com.dart.api.dto.member.response.LoginResDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.global.auth.annotation.Auth;
 
@@ -46,17 +48,15 @@ public class MemberController {
 
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<String> login(
+	public ResponseEntity<LoginResDto> login(
 		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletResponse response) {
-		authenticationService.login(loginReqDto, response);
-		return ResponseEntity.ok("Login successfully");
+		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
 	}
 
 	@PostMapping("/reissue")
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<String> reissue(HttpServletRequest request, HttpServletResponse response) {
-		authenticationService.reissue(request, response);
-		return ResponseEntity.ok("Token reissued successfully");
+	public ResponseEntity<TokenResDto> reissue(HttpServletRequest request, HttpServletResponse response) {
+		return ResponseEntity.ok(authenticationService.reissue(request, response));
 	}
 
 	@GetMapping("/members/{nickname}")

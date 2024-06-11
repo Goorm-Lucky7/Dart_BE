@@ -23,7 +23,9 @@ import com.dart.api.application.RedisService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.api.dto.auth.response.TokenResDto;
 import com.dart.api.dto.member.request.LoginReqDto;
+import com.dart.api.dto.member.response.LoginResDto;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
@@ -43,7 +45,7 @@ public class AuthenticationService {
 	private long refreshTokenExpire;
 
 	@Transactional
-	public void login(LoginReqDto loginReqDto, HttpServletResponse response) {
+	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
 		final Member member = findByMemberEmail(loginReqDto.email());
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
 
@@ -53,9 +55,11 @@ public class AuthenticationService {
 		redisService.setValues(loginReqDto.email(), refreshToken, Duration.ofDays(7));
 
 		setTokensInResponse(response, accessToken, refreshToken);
+
+		return new LoginResDto(accessToken);
 	}
 
-	public void reissue(HttpServletRequest request, HttpServletResponse response) {
+	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
 		String accessToken = request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
 		String refreshToken = getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
 
@@ -73,6 +77,8 @@ public class AuthenticationService {
 		redisService.setValues(authUser.email(), newRefreshToken, Duration.ofMillis(refreshTokenExpire));
 
 		setTokensInResponse(response, newAccessToken, newRefreshToken);
+
+		return new TokenResDto(accessToken);
 	}
 
 	private Member findByMemberEmail(String email) {
