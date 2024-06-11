@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
+import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.auth.annotation.Auth;
 
@@ -62,6 +64,12 @@ public class GalleryController {
 		@Auth(required = false) AuthUser authUser
 	) {
 		return galleryService.getAllGalleries(page, size, category, keyword, sort, cost, display, authUser);
+	}
+
+	@GetMapping("/{gallery-id}")
+	public ResponseEntity<GalleryResDto> getGallery(
+		@PathVariable("gallery-id") Long galleryId, @Auth(required = false) AuthUser authUser) {
+		return ResponseEntity.ok(galleryService.getGallery(galleryId, authUser));
 	}
 
 	@GetMapping("/info")
