@@ -47,7 +47,7 @@ public class MemberController {
 	@PostMapping("/signup/nickname/check")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> checkNicknameDuplication(
-		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
+		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
 		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
 
 		return ResponseEntity.ok("OK");
