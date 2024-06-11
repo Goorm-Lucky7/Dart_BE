@@ -35,21 +35,21 @@ public class ChatMessage extends BaseTimeEntity {
 	private String sender;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "chatroom_id")
-	private ChatRoom chatroom;
+	@JoinColumn(name = "chat_room_id")
+	private ChatRoom chatRoom;
 
 	@Builder
-	private ChatMessage(String content, String sender, ChatRoom chatroom) {
+	private ChatMessage(String content, String sender, ChatRoom chatRoom) {
 		this.content = content;
 		this.sender = sender;
-		this.chatroom = chatroom;
+		this.chatRoom = chatRoom;
 	}
 
 	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
 		ChatMessageCreateDto chatMessageCreateDto
 	) {
 		return ChatMessage.builder()
-			.chatroom(chatRoom)
+			.chatRoom(chatRoom)
 			.sender(member.getNickname())
 			.content(chatMessageCreateDto.content())
 			.build();
