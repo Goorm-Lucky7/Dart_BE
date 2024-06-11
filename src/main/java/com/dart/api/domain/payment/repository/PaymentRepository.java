@@ -16,4 +16,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Page<Payment> findAllByMemberOrderByApprovedAtDesc(Member member, Pageable pageable);
 
 	boolean existsByMemberAndGalleryAndOrder(Member member, Gallery gallery, Order order);
+
+	boolean existsByMemberAndGalleryIdAndOrder(Member member, Long galleryId, Order order);
 }

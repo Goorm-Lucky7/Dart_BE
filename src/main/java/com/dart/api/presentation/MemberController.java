@@ -44,6 +44,15 @@ public class MemberController {
 		return ResponseEntity.ok("OK");
 	}
 
+	@PostMapping("/signup/nickname/check")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> checkNicknameDuplication(
+		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
+
+		return ResponseEntity.ok("OK");
+	}
+
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<LoginResDto> login(
@@ -64,15 +73,6 @@ public class MemberController {
 		@RequestPart @Valid MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage) {
 		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage);
-		return ResponseEntity.ok("OK");
-	}
-
-	@PostMapping("/members/nickname/check")
-	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<String> checkNicknameDuplication(
-		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
-		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
-
 		return ResponseEntity.ok("OK");
 	}
 }

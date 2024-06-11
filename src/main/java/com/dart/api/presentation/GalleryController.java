@@ -21,6 +21,7 @@ import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
+import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.auth.annotation.Auth;
 
@@ -34,13 +35,12 @@ public class GalleryController {
 	private final GalleryService galleryService;
 
 	@PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-	public ResponseEntity<String> createGallery(
+	public GalleryReadIdDto createGallery(
 		@RequestPart("gallery") @Validated CreateGalleryDto createGalleryDto,
 		@RequestPart("thumbnail") MultipartFile thumbnail,
 		@RequestPart("images") List<MultipartFile> imageFiles,
 		@Auth AuthUser authUser) {
-		galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
-		return ResponseEntity.ok("OK");
+		return galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
 	}
 
 	@DeleteMapping

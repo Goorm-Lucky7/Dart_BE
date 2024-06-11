@@ -31,6 +31,9 @@ public enum ErrorCode {
 	FAIL_NOT_VERIFIED_EMAIL("[❎ ERROR] 이메일 중복확인을 해주시길 바랍니다."),
 	FAIL_NOT_VERIFIED_NICKNAME("[❎ ERROR] 닉네임 중복확인을 해주시길 바랍니다."),
 	FAIL_NOT_PAYMENT_GALLERY("[❎ ERROR] 미결제 전시관입니다."),
+	FAIL_INVALID_ORDER("[❎ ERROR] 잘못된 형식의 주문입니다."),
+	FAIL_ALREADY_PAID_GALLERY("[❎ ERROR] 이미 전시회를 구매하셨습니다."),
+	FAIL_ALREADY_PAID_TICKET("[❎ ERROR] 이미 티켓을 구매하셨습니다."),
 
 	FAIL_INVALID_DISPLAY_VALUE("[❎ ERROR] 다음 중 하나의 값을 입력해 주세요: all, upcoming, inprogress, finished"),
 	FAIL_INVALID_SORT_VALUE("[❎ ERROR] 다음 중 하나의 값을 입력해 주세요: latest, liked"),
