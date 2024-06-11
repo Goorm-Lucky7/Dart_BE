@@ -1,5 +1,7 @@
 package com.dart.api.infrastructure.websocket;
 
+import static com.dart.global.common.util.ChatConstant.*;
+
 import java.util.Objects;
 
 import org.springframework.context.event.EventListener;
@@ -66,7 +68,8 @@ public class WebSocketEventListener {
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor
 			.wrap(abstractSubProtocolEvent.getMessage());
 
-		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes()).get("authUser");
+		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
+			.get(CHAT_SESSION_USER);
 	}
 
 	private void validateSessionIdPresent(String sessionId) {

@@ -1,6 +1,7 @@
 package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.AuthConstant.*;
+import static com.dart.global.common.util.ChatConstant.*;
 
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 			}
 
 			AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-			attributes.put("authUser", authUser);
+			attributes.put(CHAT_SESSION_USER, authUser);
 			log.info("[✅ LOGGER] SUCCESS MEMBER AUTHORIZATION: {}", authUser.nickname());
 		}
 		return true;

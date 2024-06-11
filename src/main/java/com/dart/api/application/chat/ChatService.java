@@ -1,5 +1,7 @@
 package com.dart.api.application.chat;
 
+import static com.dart.global.common.util.ChatConstant.*;
+
 import java.util.Objects;
 
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -55,7 +57,7 @@ public class ChatService {
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
 		return (AuthUser)Objects
 			.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes(), "SESSION ATTRIBUTE MUST NOT BE NULL")
-			.get("authUser");
+			.get(CHAT_SESSION_USER);
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
