@@ -58,7 +58,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -88,7 +88,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setDestination(destination);
@@ -115,7 +115,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -169,7 +169,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -195,7 +195,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setLeaveMutable(true);
