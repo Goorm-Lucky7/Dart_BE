@@ -68,6 +68,7 @@ jwt:
   secret:
     access-key: ${jwt.secret.access-key}
   access-expire: ${jwt.access-expire}
+  refresh-expire: ${jwt.refresh-expire}
 
 cloud:
   aws:
