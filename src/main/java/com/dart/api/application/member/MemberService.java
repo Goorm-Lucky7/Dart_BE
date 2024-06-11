@@ -50,12 +50,15 @@ public class MemberService {
 
 	@Transactional
 	public void updateMemberProfile(AuthUser authUser, MemberUpdateDto memberUpdateDto, MultipartFile profileImage) {
+		validateNicknameChecked(memberUpdateDto.isCheckedNickname());
+
 		final Member member = findMemberByEmail(authUser.email());
-		nicknameValidator.validate(memberUpdateDto.nickname());
+		final String savedProfileImage = member.getProfileImageUrl();
 
 		try{
-			String profileImageUrl = s3Service.uploadFile(profileImage);
-			member.updateMemberProfile(memberUpdateDto, profileImageUrl);
+			String newProfileImageUrl = s3Service.uploadFile(profileImage);
+			if(savedProfileImage != null) s3Service.deleteFile(savedProfileImage);
+			member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}

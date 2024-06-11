@@ -42,6 +42,7 @@ public class SecurityConfig {
 			.requestMatchers("/h2-console/**")
 			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
+			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/success/**")
 			.requestMatchers("/api/payment/fail")
 			.requestMatchers("/api/payment/cancel")
