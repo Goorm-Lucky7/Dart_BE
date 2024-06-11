@@ -19,7 +19,7 @@ public record CreateGalleryDto(
 	@NotNull(message = "[❎ ERROR] 전시 입장료를 입력해주세요.(무료이면 0원을 입력해주세요.)")
 	Integer fee,
 	List<String> hashTags,
-	@NotNull(message = "[❎ ERROR] 전시 작품들을 입력해주세요.")
-	List<ImageInfoDto> images
+	@NotNull(message = "[❎ ERROR] 전시 작품들에 대한 제목과 설명을 입력해주세요.")
+	List<ImageInfoDto> informations
 ) {
 }
