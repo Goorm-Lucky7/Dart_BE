@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.auth.EmailService;
-import com.dart.api.dto.auth.EmailSendReqDto;
-import com.dart.api.dto.auth.EmailVerificationReqDto;
+import com.dart.api.dto.auth.request.EmailSendReqDto;
+import com.dart.api.dto.auth.request.EmailVerificationReqDto;
 
 import lombok.RequiredArgsConstructor;
 
