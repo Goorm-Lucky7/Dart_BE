@@ -30,7 +30,8 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		RedisMessageListenerContainer listenerContainer,
 		GalleryRepository galleryRepository,
 		ImageService imageService,
-		HashtagRepository hashtagRepository, ChatRoomRepository chatRoomRepository
+		HashtagRepository hashtagRepository,
+		ChatRoomRepository chatRoomRepository
 	) {
 		super(listenerContainer);
 		this.galleryRepository = galleryRepository;
