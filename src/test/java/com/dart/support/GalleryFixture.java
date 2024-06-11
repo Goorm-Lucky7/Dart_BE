@@ -27,7 +27,7 @@ public class GalleryFixture {
 			.endDate(LocalDateTime.now().plusDays(10))
 			.fee(1000)
 			.hashTags(List.of("happy", "good", "excellent"))
-			.images(List.of(
+			.informations(List.of(
 				new ImageInfoDto("image1.jpg", "Image 1"),
 				new ImageInfoDto("image2.jpg", "Image 2"))
 			)
