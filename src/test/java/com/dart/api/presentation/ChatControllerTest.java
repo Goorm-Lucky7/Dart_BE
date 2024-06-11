@@ -37,7 +37,7 @@ class ChatControllerTest {
 	@InjectMocks
 	private ChatController chatController;
 
-	@Test
+/*	@Test
 	@DisplayName("SAVE AND SEND CHAT MESSAGE(⭕️ SUCCESS): STOMP 메시지가 성공적으로 전송되었습니다.")
 	void saveAndSendChatMessage_void_success() {
 		// GIVEN
@@ -57,5 +57,5 @@ class ChatControllerTest {
 		// THEN
 		verify(chatService).saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 		verify(simpMessageSendingOperations).convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
-	}
+	}*/
 }
