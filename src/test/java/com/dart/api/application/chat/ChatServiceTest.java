@@ -74,7 +74,7 @@ class ChatServiceTest {
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.of(member));
@@ -122,7 +122,7 @@ class ChatServiceTest {
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authMember", authUser);
+		sessionAttributes.put("authUser", authUser);
 
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.empty());

@@ -29,7 +29,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -43,15 +42,6 @@ public class MemberController {
 	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto) {
 		memberService.signUp(signUpDto);
 		return ResponseEntity.ok("Signup successfully");
-	}
-
-	@PostMapping("/signup/nickname/check")
-	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<String> checkNicknameDuplication(
-		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
-		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
-
-		return ResponseEntity.ok("OK");
 	}
 
 	@PostMapping("/login")
@@ -73,7 +63,7 @@ public class MemberController {
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<MemberProfileResDto> getMemberProfile(
 		@PathVariable(name = "nickname") String nickname, @Auth AuthUser authUser) {
-		return ResponseEntity.ok( memberService.getMemberProfile(nickname, authUser));
+		return ResponseEntity.ok(memberService.getMemberProfile(nickname, authUser));
 	}
 
 	@PutMapping("/members")
