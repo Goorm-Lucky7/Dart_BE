@@ -55,7 +55,7 @@ public class ChatService {
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
 		return (AuthUser)Objects
 			.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes(), "SESSION ATTRIBUTE MUST NOT BE NULL")
-			.get("authMember");
+			.get("authUser");
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
