@@ -39,6 +39,8 @@ public enum ErrorCode {
 	FAIL_INVALID_CATEGORY_VALUE("[❎ ERROR] 다음 중 하나의 값을 입력해 주세요: hashtag, author, title"),
 	FAIL_INVALID_SESSION_ID("[❎ ERROR] 요청하신 채팅방에 유효한 세션 ID가 필요합니다."),
 	FAIL_INVALID_DESTINATION("[❎ ERROR] 요청하신 채팅방의 대상이 유효하지 않습니다."),
+	FAIL_CREATED_OWN_REVIEW("[❎ ERROR] 본인의 전시관에 리뷰를 작성하실 수 없습니다."),
+	FAIL_CREATED_UNPAID_REVIEW("[❎ ERROR] 미결제 전시관에 리뷰를 작성하실 수 없습니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
