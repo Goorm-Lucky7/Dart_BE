@@ -1,6 +1,7 @@
 package com.dart.api.application.auth;
 
 import static com.dart.global.common.util.AuthConstant.*;
+import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -93,7 +94,7 @@ public class JwtProviderService {
 			return null;
 		}
 
-		return token.replaceFirst(BEARER, "").trim();
+		return token.replaceFirst(BEARER, BLANK).trim();
 	}
 
 	public AuthUser extractAuthUserByAccessToken(String token) {

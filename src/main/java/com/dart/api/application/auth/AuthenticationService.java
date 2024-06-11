@@ -2,6 +2,7 @@ package com.dart.api.application.auth;
 
 
 import static com.dart.global.common.util.AuthConstant.*;
+import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.time.Duration;
 
@@ -55,8 +56,8 @@ public class AuthenticationService {
 	}
 
 	public void reissue(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = request.getHeader(ACCESS_TOKEN_HEADER).replace("Bearer ", "");
-		String refreshToken = getCookieValue(request, "Refresh-Token");
+		String accessToken = request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
+		String refreshToken = getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
 
 		validateRefreshToken(refreshToken);
 
@@ -106,7 +107,7 @@ public class AuthenticationService {
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
 		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
 
-		ResponseCookie refreshTokenCookie = ResponseCookie.from("Refresh-Token", refreshToken)
+		ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
 			.httpOnly(true)
 			.secure(true)
 			.path("/")
