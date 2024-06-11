@@ -62,7 +62,7 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
 			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
 			.requestMatchers("/favicon.ico").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/galleries").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
 			.anyRequest().authenticated()
 		);
