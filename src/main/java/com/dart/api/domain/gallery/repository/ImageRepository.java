@@ -11,4 +11,6 @@ import com.dart.api.domain.gallery.entity.Image;
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
 	List<Image> findByGallery(Gallery gallery);
+
+	List<Image> findByGalleryId(Long galleryId);
 }
