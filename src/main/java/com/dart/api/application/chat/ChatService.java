@@ -18,7 +18,6 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
-import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -33,7 +32,6 @@ public class ChatService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatMessageRepository chatMessageRepository;
 	private final MemberRepository memberRepository;
-	private final MemberSessionRegistry memberSessionRegistry;
 
 	public void createChatRoom(Gallery gallery) {
 		final ChatRoom chatRoom = ChatRoom.createChatRoom(gallery);
