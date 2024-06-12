@@ -36,17 +36,14 @@ public class ReviewService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
-		final Review review = Review.create(dto, gallery, member);
 
+		validateUnpaidGalley(gallery);
+		validateMyGalley(gallery, member);
 		validateAlreadyReview(member, gallery);
 
-		reviewRepository.save(review);
-	}
+		final Review review = Review.create(dto, gallery, member);
 
-	private void validateAlreadyReview(Member member, Gallery gallery) {
-		if (reviewRepository.existsByMemberAndGallery(member, gallery)) {
-			throw new BadRequestException(ErrorCode.FAIL_ALREADY_CREATED_REVIEW);
-		}
+		reviewRepository.save(review);
 	}
 
 	@Transactional(readOnly = true)
@@ -58,5 +55,23 @@ public class ReviewService {
 		final PageInfo pageInfo = new PageInfo(reviews.getNumber(), reviews.isLast());
 
 		return new PageResponse<>(reviews.map(Review::toReviewReadDto).toList(), pageInfo);
+	}
+
+	private void validateMyGalley(Gallery gallery, Member member) {
+		if (gallery.isMine(member)) {
+			throw new BadRequestException(ErrorCode.FAIL_CREATED_OWN_REVIEW);
+		}
+	}
+
+	private void validateUnpaidGalley(Gallery gallery) {
+		if (!gallery.isPaid()) {
+			throw new BadRequestException(ErrorCode.FAIL_CREATED_UNPAID_REVIEW);
+		}
+	}
+
+	private void validateAlreadyReview(Member member, Gallery gallery) {
+		if (reviewRepository.existsByMemberAndGallery(member, gallery)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_CREATED_REVIEW);
+		}
 	}
 }
