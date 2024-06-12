@@ -85,17 +85,12 @@ class WebSocketConfigTest {
 	@Test
 	@DisplayName("CONFIGURE WEB SOCKET TRANSPORT(⭕️ SUCCESS): 메시지 크기, 전송 시간, 버퍼 크기 제한을 설정합니다.")
 	void configureWebSocketTransport_void_success() {
-		// GIVEN
-		int messageSizeLimit = 160 * 64 * 1024;
-		int sendTimeLimit = 100 * 10000;
-		int sendBufferSizeLimit = 3 * 512 * 1024;
-
 		// WHEN
 		webSocketConfig.configureWebSocketTransport(webSocketTransportRegistration);
 
 		// THEN
-		verify(webSocketTransportRegistration).setMessageSizeLimit(messageSizeLimit);
-		verify(webSocketTransportRegistration).setSendTimeLimit(sendTimeLimit);
-		verify(webSocketTransportRegistration).setSendBufferSizeLimit(sendBufferSizeLimit);
+		verify(webSocketTransportRegistration).setMessageSizeLimit(MESSAGE_SIZE_LIMIT);
+		verify(webSocketTransportRegistration).setSendTimeLimit(SEND_TIME_LIMIT);
+		verify(webSocketTransportRegistration).setSendBufferSizeLimit(SEND_BUFFER_SIZE_LIMIT);
 	}
 }
