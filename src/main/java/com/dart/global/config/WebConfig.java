@@ -12,6 +12,18 @@ import com.dart.global.auth.handler.AuthUserArgumentResolver;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+	public static final String[] ALLOWED_ORIGINS = {
+		"http://localhost:5173",
+		"https://dartgallery.site"
+	};
+
+	public static final String[] ALLOWED_METHODS = {
+		"GET", "POST", "PUT", "DELETE", "OPTIONS"
+	};
+
+	public static final String CORS_MAPPING_PATH = "/api/**";
+	public static final String ALLOWED_HEADERS = "*";
+
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(new AuthUserArgumentResolver());
@@ -19,14 +31,10 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/api/**")
-			.allowedOrigins(
-				"http://localhost:5173",
-				"https://localhost:5173"
-			)
-			.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-			.allowedHeaders("*")
+		registry.addMapping(CORS_MAPPING_PATH)
+			.allowedOrigins(ALLOWED_ORIGINS)
+			.allowedMethods(ALLOWED_METHODS)
+			.allowedHeaders(ALLOWED_HEADERS)
 			.allowCredentials(true);
 	}
-
 }
