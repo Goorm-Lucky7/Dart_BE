@@ -64,6 +64,7 @@ public class SecurityConfig {
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.anyRequest().authenticated()
 		);
 
