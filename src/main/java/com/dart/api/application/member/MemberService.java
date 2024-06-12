@@ -43,7 +43,7 @@ public class MemberService {
 	}
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
-		if (isOwnProfile(nickname, authUser.nickname())) {
+		if(isMember(authUser) && isOwnProfile(nickname, authUser.nickname())) {
 			return getOwnProfile(nickname);
 		} else {
 			return getOtherProfile(nickname);
@@ -68,6 +68,10 @@ public class MemberService {
 
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
 		nicknameValidator.validate(nicknameDuplicationCheckDto.nickname());
+	}
+
+	private boolean isMember(AuthUser authUser) {
+		return authUser != null;
 	}
 
 	private boolean isOwnProfile(String currentNickname, String profileNickname) {
