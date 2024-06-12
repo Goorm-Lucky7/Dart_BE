@@ -140,6 +140,8 @@ public class GalleryService {
 
 		validateUserOwnership(member, gallery);
 
+		chatService.deleteChatRoom(gallery);
+
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
 		deleteHashtagsByGallery(gallery);

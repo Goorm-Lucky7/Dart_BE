@@ -18,6 +18,14 @@ public class ChatFixture {
 		);
 	}
 
+	public static ChatMessage createChatMessageEntity(ChatRoom chatRoom) {
+		return ChatMessage.createChatMessage(
+			chatRoom,
+			MemberFixture.createMemberEntity(),
+			createChatMessageEntityForChatMessageCreateDto()
+		);
+	}
+
 	public static ChatMessageCreateDto createChatMessageEntityForChatMessageCreateDto() {
 		return ChatMessageCreateDto.builder()
 			.content("Hello 👋🏻")

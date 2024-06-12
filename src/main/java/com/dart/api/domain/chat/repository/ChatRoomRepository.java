@@ -10,5 +10,6 @@ import com.dart.api.domain.gallery.entity.Gallery;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+
 	Optional<ChatRoom> findByGallery(Gallery gallery);
 }

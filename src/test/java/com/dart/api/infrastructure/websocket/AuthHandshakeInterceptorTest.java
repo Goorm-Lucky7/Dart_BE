@@ -118,4 +118,23 @@ class AuthHandshakeInterceptorTest {
 		assertThat(actual).isFalse();
 		verify(servletServerHttpResponse).setStatusCode(HttpStatus.UNAUTHORIZED);
 	}
+
+	@Test
+	@DisplayName("AFTER HANDSHAKE(⭕️ SUCCESS): 해당 요청의 핸드쉐이크가 성공적으로 완료되었습니다.")
+	void afterHandshake_void_success() {
+		// WHEN
+		authHandshakeInterceptor.afterHandshake(servletServerHttpRequest, servletServerHttpResponse, webSocketHandler,
+			null);
+	}
+
+	@Test
+	@DisplayName("AFTER HANDSHAKE(❌ FAILURE): 해당 요청의 핸드쉐이크 중 예외가 발생하였습니다.")
+	void afterHandshake_Exception_fail() {
+		// GIVEN
+		Exception exception = new Exception("[❎ ERROR] EXCEPTION DURING HANDSHAKE");
+
+		// WHEN
+		authHandshakeInterceptor.afterHandshake(servletServerHttpRequest, servletServerHttpResponse, webSocketHandler,
+			exception);
+	}
 }
