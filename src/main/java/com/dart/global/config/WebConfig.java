@@ -14,7 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
 
 	public static final String[] ALLOWED_ORIGINS = {
 		"http://localhost:5173",
-		"https://dartgallery.site"
+		"https://dartgallery.site",
+		"https://www.dartgallery.site"
 	};
 
 	public static final String[] ALLOWED_METHODS = {

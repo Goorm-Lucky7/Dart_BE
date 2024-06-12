@@ -15,6 +15,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.StompWebSocketEndpointRegistration;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import com.dart.api.infrastructure.websocket.AuthHandshakeInterceptor;
@@ -27,6 +28,9 @@ class WebSocketConfigTest {
 
 	@Mock
 	private StompWebSocketEndpointRegistration stompWebSocketEndpointRegistration;
+
+	@Mock
+	private WebSocketTransportRegistration webSocketTransportRegistration;
 
 	@Mock
 	private SockJsServiceRegistration sockJsServiceRegistration;
@@ -76,5 +80,22 @@ class WebSocketConfigTest {
 		verify(stompWebSocketEndpointRegistration).addInterceptors(any(AuthHandshakeInterceptor.class));
 		verify(stompWebSocketEndpointRegistration).setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN);
 		verify(stompWebSocketEndpointRegistration).withSockJS();
+	}
+
+	@Test
+	@DisplayName("CONFIGURE WEB SOCKET TRANSPORT(⭕️ SUCCESS): 메시지 크기, 전송 시간, 버퍼 크기 제한을 설정합니다.")
+	void configureWebSocketTransport_void_success() {
+		// GIVEN
+		int messageSizeLimit = 160 * 64 * 1024;
+		int sendTimeLimit = 100 * 10000;
+		int sendBufferSizeLimit = 3 * 512 * 1024;
+
+		// WHEN
+		webSocketConfig.configureWebSocketTransport(webSocketTransportRegistration);
+
+		// THEN
+		verify(webSocketTransportRegistration).setMessageSizeLimit(messageSizeLimit);
+		verify(webSocketTransportRegistration).setSendTimeLimit(sendTimeLimit);
+		verify(webSocketTransportRegistration).setSendBufferSizeLimit(sendBufferSizeLimit);
 	}
 }
