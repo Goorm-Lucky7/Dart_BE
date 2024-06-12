@@ -12,7 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.global.common.util.RedisUtil;
+import com.dart.api.infrastructure.redis.RedisEmailRepository;
 import com.dart.global.error.exception.InvalidVerificationCodeException;
 import com.dart.global.error.exception.MailSendException;
 import com.dart.global.error.model.ErrorCode;
@@ -27,21 +27,19 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailService {
 
 	private final JavaMailSender emailSender;
-	private final RedisUtil redisUtil;
+	private final RedisEmailRepository redisEmailRepository;
 
 	@Value("${spring.mail.username}")
 	private String sender;
-
-	@Value("${spring.mail.auth-code-expiration-millis}")
-	private int authCodeExpirationMillis;
 
 	public void sendEmail(String to) {
 		String code = createCode();
 		SimpleMailMessage emailForm = createEmailForm(to, EMAIL_TITLE, code);
 
 		try {
+			if(redisEmailRepository.checkExistsEmail(to)) redisEmailRepository.deleteEmail(to);
 			emailSender.send(emailForm);
-			redisUtil.setDataExpire(to, code, authCodeExpirationMillis);
+			redisEmailRepository.setEmail(to, code);
 		} catch (RuntimeException e) {
 			throw new MailSendException(ErrorCode.FAIL_EMAIL_SEND);
 		}
@@ -57,11 +55,12 @@ public class EmailService {
 		return message;
 	}
 
-	public void verifyCode(String email, int code) {
-		int storedCode = Integer.parseInt(redisUtil.getData(email));
+	public void verifyCode(String to, int code) {
+		int storedCode = Integer.parseInt(redisEmailRepository.getEmail(to));
 		if (storedCode != code) {
 			throw new InvalidVerificationCodeException(ErrorCode.FAIL_INCORRECT_EMAIL_CODE);
 		}
+		redisEmailRepository.deleteEmail(to);
 	}
 
 	private String createCode() {

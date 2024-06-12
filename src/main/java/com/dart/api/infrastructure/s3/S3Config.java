@@ -1,4 +1,4 @@
-package com.dart.global.config;
+package com.dart.api.infrastructure.s3;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
