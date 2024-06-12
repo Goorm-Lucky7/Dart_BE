@@ -64,13 +64,6 @@ spring:
       host: ${spring.data.redis.host}
       port: ${spring.data.redis.port}
 
-  kafka:
-    bootstrap-servers: ${spring.kafka.bootstrap-servers}
-    consumer:
-      group-id: ${spring.kafka.consumer.group-id}
-    producer:
-      topics: ${spring.kafka.producer.topics}
-
 jwt:
   secret:
     access-key: ${jwt.secret.access-key}
