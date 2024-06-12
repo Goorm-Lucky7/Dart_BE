@@ -47,7 +47,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // S3
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:3.0.1'
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.500'
+    implementation 'software.amazon.ion:ion-java:1.0.5'
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
