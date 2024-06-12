@@ -55,12 +55,6 @@ dependencies {
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-    // Spring Kafka
-    implementation 'org.springframework.kafka:spring-kafka'
-
-    // Kafka Client
-    implementation 'org.apache.kafka:kafka-clients'
-
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
