@@ -32,6 +32,7 @@ import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
+import com.dart.api.dto.gallery.response.GalleryMypageResDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
@@ -109,6 +110,22 @@ public class GalleryService {
 	}
 
 	@Transactional(readOnly = true)
+	public PageResponse<GalleryMypageResDto> getMypageGalleries(int page, int size, String nickname,
+		AuthUser authUser) {
+		final PageRequest pageRequest = PageRequest.of(page, size);
+
+		validateRequest(nickname, authUser);
+		final Member member = findMember(nickname, authUser);
+
+		Page<Gallery> galleryPage = galleryRepository.findByMemberAndIsPaidTrueOrderByCreatedAtDesc(member,
+			pageRequest);
+		List<GalleryMypageResDto> galleryDtos = convertToGalleryMypageResDtos(galleryPage);
+
+		PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
+		return new PageResponse<>(galleryDtos, pageInfo);
+	}
+
+	@Transactional(readOnly = true)
 	public GalleryResDto getGallery(Long galleryId, AuthUser authUser) {
 		final Gallery gallery = findGalleryById(galleryId);
 
@@ -151,6 +168,11 @@ public class GalleryService {
 	private Member findMemberByEmail(String email) {
 		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
+	}
+
+	private Member findMemberByNickname(String nickname) {
+		return memberRepository.findByNickname(nickname)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void saveHashtags(List<String> hashTags, Gallery gallery) {
@@ -221,6 +243,32 @@ public class GalleryService {
 	private GalleryAllResDto createGalleryAllResDto(Gallery gallery, List<String> hashtags) {
 		return new GalleryAllResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(), gallery.getStartDate(),
 			gallery.getEndDate(), hashtags);
+	}
+
+	private void validateRequest(String nickname, AuthUser authUser) {
+		if ((nickname == null || nickname.isEmpty()) && authUser == null) {
+			throw new BadRequestException(ErrorCode.FAIL_NO_TARGET_MEMBER_PROVIDED);
+		}
+	}
+
+	private Member findMember(String nickname, AuthUser authUser) {
+		return Optional.ofNullable(nickname)
+			.filter(name -> !name.isEmpty())
+			.map(this::findMemberByNickname)
+			.orElseGet(() -> findMemberByEmail(authUser.email()));
+	}
+
+	private List<GalleryMypageResDto> convertToGalleryMypageResDtos(Page<Gallery> galleryPage) {
+		return galleryPage.stream()
+			.map(this::convertToGalleryMypageResDto)
+			.collect(Collectors.toList());
+	}
+
+	private GalleryMypageResDto convertToGalleryMypageResDto(Gallery gallery) {
+		List<String> hashtags = findHashtagsByGallery(gallery);
+
+		return new GalleryMypageResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(),
+			gallery.getStartDate(), gallery.getEndDate(), gallery.getFee(), hashtags);
 	}
 
 	private Float calculateReviewAverage(Long galleryId) {
