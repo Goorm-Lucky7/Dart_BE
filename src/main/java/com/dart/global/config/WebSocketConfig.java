@@ -1,5 +1,7 @@
 package com.dart.global.config;
 
+import static com.dart.global.common.util.ChatConstant.*;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -27,15 +29,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
-		messageBrokerRegistry.enableSimpleBroker("/sub");
-		messageBrokerRegistry.setApplicationDestinationPrefixes("/pub");
+		messageBrokerRegistry.enableSimpleBroker(SUBSCRIPTION_PREFIX);
+		messageBrokerRegistry.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
 	}
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
-		stompEndpointRegistry.addEndpoint("/ws")
+		stompEndpointRegistry.addEndpoint(WEBSOCKET_ENDPOINT)
 			.setHandshakeHandler(new DefaultHandshakeHandler())
 			.addInterceptors(authHandshakeInterceptor())
-			.setAllowedOriginPatterns("*");
+			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN)
+			.withSockJS();
 	}
 }
