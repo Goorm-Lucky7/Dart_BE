@@ -118,6 +118,7 @@ public class AuthenticationService {
 			.secure(true)
 			.path("/")
 			.maxAge(Duration.ofMillis(refreshTokenExpire).toSeconds())
+			.sameSite("None")
 			.build();
 
 		response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());

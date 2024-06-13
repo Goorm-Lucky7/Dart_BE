@@ -11,6 +11,8 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -71,11 +73,15 @@ public class EmailService {
 
 	private void setCookie(HttpServletResponse response){
 		String sessionId = UUID.randomUUID().toString();
-		Cookie cookie = new Cookie(SESSION_ID, sessionId);
-		cookie.setPath("/");
-		cookie.setHttpOnly(true);
-		cookie.setMaxAge(THIRTY_MINUTES);
-		response.addCookie(cookie);
+		ResponseCookie cookie = ResponseCookie.from(SESSION_ID, sessionId)
+			.httpOnly(true)
+			.secure(true)
+			.path("/")
+			.maxAge(THIRTY_MINUTES)
+			.sameSite("None")
+			.build();
+
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 
 	public void verifyEmail(String to, int code) {

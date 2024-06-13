@@ -6,6 +6,8 @@ import static java.lang.Boolean.*;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.Cookie;
@@ -44,16 +46,19 @@ public class NicknameService {
 
 	private void setCookie(HttpServletResponse response){
 		String sessionId = UUID.randomUUID().toString();
-		Cookie cookie = new Cookie(SESSION_ID, sessionId);
-		cookie.setPath("/");
-		cookie.setHttpOnly(true);
-		cookie.setMaxAge(THIRTY_MINUTES);
-		response.addCookie(cookie);
+		ResponseCookie cookie = ResponseCookie.from(SESSION_ID, sessionId)
+			.httpOnly(true)
+			.secure(true)
+			.path("/")
+			.maxAge(THIRTY_DAYS)
+			.sameSite("None")
+			.build();
+
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 
 	public void setNicknameVerified(String nickname) {
 		if(redisNicknameRepository.isReserved(nickname)){
-			System.out.println("redisNicknameRepository.isReserved(nickname):" +redisNicknameRepository.isReserved(nickname));
 			redisNicknameRepository.setVerified(nickname);
 		}
 	}
