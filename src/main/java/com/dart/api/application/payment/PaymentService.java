@@ -71,7 +71,7 @@ public class PaymentService {
 			PaymentReadyDto.class);
 	}
 
-	public void approve(String token, Long id, String order) {
+	public String approve(String token, Long id, String order) {
 		final MultiValueMap<String, String> params = approveToBody(token);
 		final HttpHeaders headers = setHeaders();
 		final RestTemplate restTemplate = new RestTemplate();
@@ -89,6 +89,8 @@ public class PaymentService {
 
 		payGallery(id, order, gallery);
 		paymentRepository.save(payment);
+
+		return gallery.getId().toString();
 	}
 
 	@Transactional(readOnly = true)
