@@ -3,6 +3,7 @@ package com.dart.api.presentation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -69,7 +70,7 @@ public class MemberController {
 	@PutMapping("/members")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
-		@RequestPart @Valid MemberUpdateDto memberUpdateDto,
+		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage) {
 		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage);
 		return ResponseEntity.ok("Updated member profile successfully");
@@ -78,8 +79,9 @@ public class MemberController {
 	@PostMapping("/nickname/check")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> checkNicknameDuplication(
-		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
-		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
+		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto,
+		@CookieValue(value = "sessionId", required = false) String sessionId, HttpServletResponse response) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto, sessionId, response);
 
 		return ResponseEntity.ok("Checked nickname duplication successfully");
 	}
