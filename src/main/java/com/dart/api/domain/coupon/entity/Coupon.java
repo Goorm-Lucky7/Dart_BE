@@ -28,9 +28,6 @@ public class Coupon extends BaseTimeEntity {
 	@Column(name = "stock", nullable = false)
 	private int stock;
 
-	@Column(name = "count", nullable = false)
-	private int count;
-
 	@Column(name = "name", nullable = false)
 	private String name;
 
@@ -44,13 +41,11 @@ public class Coupon extends BaseTimeEntity {
 	@Builder
 	private Coupon(
 		int stock,
-		int count,
 		String name,
 		String description,
 		CouponType couponType
 	) {
 		this.stock = stock;
-		this.count = count;
 		this.name = name;
 		this.description = description;
 		this.couponType = couponType;
@@ -58,14 +53,12 @@ public class Coupon extends BaseTimeEntity {
 
 	public static Coupon create(
 		int stock,
-		int count,
 		String name,
 		String description,
 		String couponType
 	) {
 		return Coupon.builder()
 			.stock(stock)
-			.count(count)
 			.name(name)
 			.description(description)
 			.couponType(CouponType.fromName(couponType))
