@@ -1,5 +1,6 @@
 package com.dart.api.application.auth;
 
+import static com.dart.api.infrastructure.redis.RedisConstant.*;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 import static java.lang.Boolean.*;
@@ -70,7 +71,7 @@ public class EmailService {
 
 	private void setCookie(HttpServletResponse response){
 		String sessionId = UUID.randomUUID().toString();
-		Cookie cookie = new Cookie("sessionId", sessionId);
+		Cookie cookie = new Cookie(SESSION_ID, sessionId);
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
 		cookie.setMaxAge(THIRTY_MINUTES);

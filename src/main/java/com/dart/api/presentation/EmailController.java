@@ -1,5 +1,7 @@
 package com.dart.api.presentation;
 
+import static com.dart.global.common.util.AuthConstant.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -27,7 +29,7 @@ public class EmailController {
 	@PostMapping("/send")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> sendVerificationEmail(@RequestBody @Validated EmailSendReqDto emailSendReqDto,
-		@CookieValue(value = "sessionId", required = false) String sessionId, HttpServletResponse response) {
+		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
 		emailService.sendVerificationEmail(emailSendReqDto.email(), sessionId, response);
 		return ResponseEntity.ok("OK");
 	}

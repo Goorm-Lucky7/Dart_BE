@@ -1,5 +1,7 @@
 package com.dart.api.presentation;
 
+import static com.dart.global.common.util.AuthConstant.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -79,7 +81,7 @@ public class MemberController {
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> checkNicknameDuplication(
 		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto,
-		@CookieValue(value = "sessionId", required = false) String sessionId, HttpServletResponse response) {
+		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
 		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto, sessionId, response);
 
 		return ResponseEntity.ok("Checked nickname duplication successfully");

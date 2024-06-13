@@ -25,16 +25,11 @@ public class RedisNicknameRepository {
 		nicknameInfo.put(NICKNAME_VERIFIED, FALSE);
 
 		redisHashRepository.setHashOpsAndExpire(REDIS_NICKNAME_PREFIX + nickname, nicknameInfo,
-			TimeUnit.MILLISECONDS.toSeconds(20000));
+			TimeUnit.MILLISECONDS.toSeconds(SESSION_NICKNAME_EXPIRATION));
 	}
 
 	public void setVerified(String nickname) {
 		redisHashRepository.updateHashOpsField(REDIS_NICKNAME_PREFIX + nickname, NICKNAME_VERIFIED, TRUE);
-	}
-
-	@Transactional(readOnly = true)
-	public String findSessionIdByNickname(String nickname) {
-		return redisHashRepository.getHashOps(REDIS_NICKNAME_PREFIX + nickname, SESSION_ID);
 	}
 
 	public void deleteNickname(String nickname) {
@@ -50,9 +45,5 @@ public class RedisNicknameRepository {
 	@Transactional(readOnly = true)
 	public boolean isVerified(String nickname) {
 		return TRUE.equals(redisHashRepository.getHashOps(REDIS_NICKNAME_PREFIX + nickname, NICKNAME_VERIFIED));
-	}
-
-	public boolean existsNickname(String nickname) {
-		return redisHashRepository.exists(REDIS_NICKNAME_PREFIX + nickname);
 	}
 }

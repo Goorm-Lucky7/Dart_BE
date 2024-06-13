@@ -29,17 +29,12 @@ public class RedisEmailRepository {
 		emailInfo.put(EMAIL_VERIFIED, FALSE);
 
 		redisHashRepository.setHashOpsAndExpire(REDIS_EMAIL_PREFIX + to, emailInfo,
-			TimeUnit.MILLISECONDS.toSeconds(600000));
+			TimeUnit.MILLISECONDS.toSeconds(authCodeExpirationMillis));
 	}
 
 	@Transactional(readOnly = true)
 	public String findVerificationCodeByEmail(String to) {
 		return redisHashRepository.getHashOps(REDIS_EMAIL_PREFIX + to, EMAIL_CODE);
-	}
-
-	@Transactional(readOnly = true)
-	public String findSessionIdByEmail(String to) {
-		return redisHashRepository.getHashOps(REDIS_EMAIL_PREFIX + to, SESSION_ID);
 	}
 
 	@Transactional(readOnly = true)

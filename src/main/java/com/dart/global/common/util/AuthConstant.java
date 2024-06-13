@@ -11,4 +11,5 @@ public final class AuthConstant {
 	public static final String BEARER = "Bearer";
 	public static final String EMAIL_TITLE = "Dart 인증 이메일";
 	public static final int EMAIL_CODE_LENGTH = 6;
+	public static final String SESSION_ID = "sessionId";
 }

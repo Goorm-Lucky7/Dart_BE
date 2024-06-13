@@ -21,5 +21,4 @@ public class RedisConstant {
 	public static final String NICKNAME_VERIFIED = "verified:";
 	public static final int SESSION_EMAIL_EXPIRATION = THIRTY_MINUTES;
 	public static final int SESSION_NICKNAME_EXPIRATION = THIRTY_MINUTES;
-	public static final String SESSION_ID = "sessionId";
 }
