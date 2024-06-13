@@ -41,11 +41,13 @@ public enum ErrorCode {
 	FAIL_INVALID_DESTINATION("[❎ ERROR] 요청하신 채팅방의 대상이 유효하지 않습니다."),
 	FAIL_CREATED_OWN_REVIEW("[❎ ERROR] 본인의 전시관에 리뷰를 작성하실 수 없습니다."),
 	FAIL_CREATED_UNPAID_REVIEW("[❎ ERROR] 미결제 전시관에 리뷰를 작성하실 수 없습니다."),
+	FAIL_ALREADY_VERIFIED_EMAIL("[❎ ERROR] 이미 이메일 중복확인이 완료되었습니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
 	FAIL_TOKEN_EXPIRED("[❎ ERROR] 인증 토큰이 만료되었습니다. 다시 로그인해 주세요."),
 	FAIL_INVALID_TOKEN("[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요."),
+	FAIL_INVALID_EMAIL_CODE("[❎ ERROR] 인증 코드가 만료되었습니다. 이메일 중복확인을 다시 시도해 주세요."),
 
 	// 403 Forbidden
 	FAIL_GALLERY_CREATION_FORBIDDEN("[❎ ERROR] 전시 생성 권한이 없습니다."),
