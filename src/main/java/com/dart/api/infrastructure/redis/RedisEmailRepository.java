@@ -1,6 +1,11 @@
 package com.dart.api.infrastructure.redis;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.REDIS_EMAIL_PREFIX;
+import static com.dart.api.infrastructure.redis.RedisConstant.*;
+import static org.apache.commons.lang3.BooleanUtils.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -17,21 +22,40 @@ public class RedisEmailRepository {
 
 	private final RedisHashRepository redisHashRepository;
 
-	public void setEmail(String key, String data) {
-		redisHashRepository.setExpire(REDIS_EMAIL_PREFIX + key, data, authCodeExpirationMillis/1000);
+	@Transactional
+	public void setEmail(String to, String code) {
+		Map<String, String> emailInfo = new HashMap<>();
+		emailInfo.put(EMAIL_CODE, code);
+		emailInfo.put(EMAIL_VERIFIED, FALSE);
+
+		redisHashRepository.setHashOpsAndExpire(REDIS_EMAIL_PREFIX + to, emailInfo,
+			TimeUnit.MILLISECONDS.toSeconds(600000));
 	}
 
 	@Transactional(readOnly = true)
-	public String getEmail(String key) {
-		String value = redisHashRepository.get(REDIS_EMAIL_PREFIX + key);
-		return value != null ? value : "false";
+	public String findVerificationCodeByEmail(String to) {
+		return redisHashRepository.getHashOps(REDIS_EMAIL_PREFIX + to, EMAIL_CODE);
 	}
 
-	public void deleteEmail(String key) {
-		redisHashRepository.delete(REDIS_EMAIL_PREFIX + key);
+	@Transactional(readOnly = true)
+	public String findSessionIdByEmail(String to) {
+		return redisHashRepository.getHashOps(REDIS_EMAIL_PREFIX + to, SESSION_ID);
 	}
 
-	public boolean checkExistsEmail(String key) {
-		return redisHashRepository.exists(REDIS_EMAIL_PREFIX + key);
+	@Transactional(readOnly = true)
+	public boolean isVerified(String to) {
+		return TRUE.equals(redisHashRepository.getHashOps(REDIS_EMAIL_PREFIX + to, EMAIL_VERIFIED));
+	}
+
+	public void setVerified(String to) {
+		redisHashRepository.updateHashOpsField(REDIS_EMAIL_PREFIX + to, EMAIL_VERIFIED, TRUE);
+	}
+
+	public boolean existsEmail(String email) {
+		return redisHashRepository.exists(REDIS_EMAIL_PREFIX + email);
+	}
+
+	public void deleteEmail(String email) {
+		redisHashRepository.delete(REDIS_EMAIL_PREFIX + email);
 	}
 }
