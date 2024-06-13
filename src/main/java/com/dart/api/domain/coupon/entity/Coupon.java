@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -39,4 +40,35 @@ public class Coupon extends BaseTimeEntity {
 	@Column(name = "coupon_type")
 	@Enumerated(EnumType.STRING)
 	private CouponType couponType;
+
+	@Builder
+	private Coupon(
+		int stock,
+		int count,
+		String name,
+		String description,
+		CouponType couponType
+	) {
+		this.stock = stock;
+		this.count = count;
+		this.name = name;
+		this.description = description;
+		this.couponType = couponType;
+	}
+
+	public static Coupon create(
+		int stock,
+		int count,
+		String name,
+		String description,
+		String couponType
+	) {
+		return Coupon.builder()
+			.stock(stock)
+			.count(count)
+			.name(name)
+			.description(description)
+			.couponType(CouponType.fromName(couponType))
+			.build();
+	}
 }
