@@ -26,25 +26,31 @@ public class RedisHashRepository {
 		return Boolean.TRUE.equals(redisTemplate.hasKey(key));
 	}
 
-	public void setExpire(String key, String value, long duration) {
-		ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+	public void setExpire(String key, String data, long duration) {
+		ValueOperations<String, String> value = redisTemplate.opsForValue();
 		Duration expireDuration = Duration.ofSeconds(duration);
-		valueOperations.set(key, value, expireDuration);
+		value.set(key, data, expireDuration);
 	}
 
 	public void delete(String key) {
 		redisTemplate.delete(key);
 	}
 
-	public void setHashOps(String key, Map<String, String> data) {
+	public void setHashOpsAndExpire(String key, Map<String, String> data, long duration) {
 		HashOperations<String, Object, Object> values = redisTemplate.opsForHash();
 		values.putAll(key, data);
+		redisTemplate.expire(key, Duration.ofSeconds(duration));
 	}
 
 	@Transactional(readOnly = true)
 	public String getHashOps(String key, String hashKey) {
 		HashOperations<String, Object, Object> values = redisTemplate.opsForHash();
 		return Boolean.TRUE.equals(values.hasKey(key, hashKey)) ? (String) values.get(key, hashKey) : "";
+	}
+
+	public void updateHashOpsField(String key, String field, String value) {
+		HashOperations<String, Object, Object> values = redisTemplate.opsForHash();
+		values.put(key, field, value);
 	}
 
 	public void deleteHashOps(String key, String hashKey) {
