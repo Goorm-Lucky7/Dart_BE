@@ -1,7 +1,6 @@
 package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
-import static com.dart.global.common.util.PaymentConstant.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +36,7 @@ import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
-import com.dart.api.infrastructure.redis.RedisGalleryRepository;
+import com.dart.api.infrastructure.redis.RedisPaymentRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -60,7 +59,7 @@ public class GalleryService {
 	private final PaymentRepository paymentRepository;
 	private final ImageService imageService;
 	private final S3Service s3Service;
-	private final RedisGalleryRepository redisGalleryRepository;
+	private final RedisPaymentRepository redisPaymentRepository;
 	private final ChatService chatService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -294,10 +293,9 @@ public class GalleryService {
 
 	private void waitPayment(Gallery gallery) {
 		if (!gallery.isPaid()) {
-			redisGalleryRepository.setGallery(
+			redisPaymentRepository.setData(
 				gallery.getId().toString(),
-				String.valueOf(gallery.getTitle()),
-				THIRTY_MINUTE
+				String.valueOf(gallery.getTitle())
 			);
 		}
 	}

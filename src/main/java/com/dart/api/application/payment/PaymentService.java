@@ -174,7 +174,7 @@ public class PaymentService {
 	private void payGallery(Long id, String order, Gallery gallery) {
 		if (order.equals(Order.PAID_GALLERY.getValue())) {
 			gallery.pay();
-			redisPaymentRepository.deletePayment(String.valueOf(id));
+			redisPaymentRepository.deleteData(id.toString());
 		}
 	}
 }

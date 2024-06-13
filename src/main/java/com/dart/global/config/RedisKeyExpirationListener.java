@@ -1,5 +1,7 @@
 package com.dart.global.config;
 
+import static com.dart.api.infrastructure.redis.RedisConstant.*;
+
 import java.util.List;
 
 import org.springframework.data.redis.connection.Message;
@@ -44,8 +46,9 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 	public void onMessage(Message message, byte[] pattern) {
 		final String expiredKey = message.toString();
 
-		if (isLongParsable(expiredKey)) {
-			final Gallery gallery = galleryRepository.findById(Long.parseLong(expiredKey))
+		if (isPaymentKey(expiredKey)) {
+			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
+			final Gallery gallery = galleryRepository.findById(galleryId)
 				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 			final List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
 			final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
@@ -59,7 +62,7 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		}
 	}
 
-	public boolean isLongParsable(String str) {
-		return str != null && str.matches("-?\\d+");
+	public boolean isPaymentKey(String str) {
+		return str.contains(REDIS_PAYMENT_PREFIX);
 	}
 }
