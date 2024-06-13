@@ -1,5 +1,7 @@
 package com.dart.api.application.member;
 
+import static java.lang.Boolean.*;
+
 import java.io.IOException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
@@ -16,8 +19,11 @@ import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
+import com.dart.api.infrastructure.redis.RedisEmailRepository;
+import com.dart.api.infrastructure.redis.RedisNicknameRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -27,18 +33,23 @@ import com.dart.global.error.model.ErrorCode;
 public class MemberService {
 
 	private final MemberRepository memberRepository;
+	private final RedisEmailRepository redisEmailRepository;
+	private final RedisNicknameRepository redisNicknameRepository;
 	private final S3Service s3Service;
-	private final NicknameValidator nicknameValidator;
+	private final NicknameService nicknameService;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
 	public void signUp(SignUpDto signUpDto) {
-		validateEmailChecked(signUpDto.isCheckedEmail());
-		validateNicknameChecked(signUpDto.isCheckedNickname());
+		nicknameService.setNicknameVerified(signUpDto.nickname());
+
+		verifyEmailChecked(signUpDto.email());
+		verifyNicknameChecked(signUpDto.nickname());
 
 		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
 		final Member member = Member.signup(signUpDto, encodedPassword);
 
+		validateExistMember(signUpDto.email());
 		memberRepository.save(member);
 	}
 
@@ -52,7 +63,7 @@ public class MemberService {
 
 	@Transactional
 	public void updateMemberProfile(AuthUser authUser, MemberUpdateDto memberUpdateDto, MultipartFile profileImage) {
-		validateNicknameChecked(memberUpdateDto.isCheckedNickname());
+		verifyNicknameChecked(memberUpdateDto.nickname());
 
 		final Member member = findMemberByEmail(authUser.email());
 		final String savedProfileImage = member.getProfileImageUrl();
@@ -66,8 +77,9 @@ public class MemberService {
 		}
 	}
 
-	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
-		nicknameValidator.validate(nicknameDuplicationCheckDto.nickname());
+	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
+		HttpServletResponse response) {
+		nicknameService.checkAndReserveNickname(nicknameDuplicationCheckDto.nickname(), sessionId, response);
 	}
 
 	private boolean isMember(AuthUser authUser) {
@@ -100,15 +112,21 @@ public class MemberService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
-	private void validateEmailChecked(boolean isEmailChecked) {
-		if(!isEmailChecked) {
+	private void verifyEmailChecked(String email) {
+		if(FALSE.equals(redisEmailRepository.isVerified(email))) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_EMAIL);
 		}
 	}
 
-	private void validateNicknameChecked(boolean isNicknameChecked) {
-		if(!isNicknameChecked) {
+	private void verifyNicknameChecked(String nickname) {
+		if(FALSE.equals(redisNicknameRepository.isVerified(nickname))) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
+		}
+	}
+
+	private void validateExistMember(String email) {
+		if (memberRepository.existsByEmail(email)) {
+			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
 	}
 }
