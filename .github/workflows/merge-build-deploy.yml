@@ -1,4 +1,4 @@
-name: Build, Push Docker Image and Deploy to EC2
+name: Build, Push Docker Image and Deploy to EC2 for Merge
 
 on:
   pull_request:
