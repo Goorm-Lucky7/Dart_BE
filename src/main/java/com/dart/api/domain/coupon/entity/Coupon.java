@@ -27,6 +27,9 @@ public class Coupon extends BaseTimeEntity {
 	@Column(name = "stock", nullable = false)
 	private int stock;
 
+	@Column(name = "count", nullable = false)
+	private int count;
+
 	@Column(name = "name", nullable = false)
 	private String name;
 
