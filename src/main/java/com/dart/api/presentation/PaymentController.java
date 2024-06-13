@@ -47,8 +47,8 @@ public class PaymentController {
 		@PathVariable("id") Long id,
 		@PathVariable("order") String order
 	) {
-		paymentService.approve(token, id, order);
-		return new RedirectView("http://localhost:5173/payment/success");
+		final String galleryId = paymentService.approve(token, id, order);
+		return new RedirectView("http://localhost:5173/payment/success/" + galleryId + "/" + order);
 	}
 
 	@GetMapping("/cancel")
