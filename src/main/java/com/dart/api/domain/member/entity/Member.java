@@ -28,10 +28,10 @@ public class Member extends BaseTimeEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "email", nullable = false)
+	@Column(name = "email", unique = true, nullable = false)
 	private String email;
 
-	@Column(name = "nickname", nullable = false)
+	@Column(name = "nickname", unique = true, nullable = false)
 	private String nickname;
 
 	@Column(name = "password", nullable = false)
