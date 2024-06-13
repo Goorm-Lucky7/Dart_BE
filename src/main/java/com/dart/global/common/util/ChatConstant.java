@@ -6,5 +6,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChatConstant {
 
+	public static final String WEBSOCKET_ENDPOINT = "/ws";
+	public static final String SUBSCRIPTION_PREFIX = "/sub";
+	public static final String APPLICATION_DESTINATION_PREFIX = "/pub";
+	public static final String ALLOWED_ORIGIN_PATTERN = "*";
 	public static final String CHAT_SESSION_USER = "authUser";
 }

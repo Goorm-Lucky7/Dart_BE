@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import com.dart.api.application.payment.PaymentService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
-import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
 import com.dart.global.auth.annotation.Auth;
@@ -42,17 +42,18 @@ public class PaymentController {
 	}
 
 	@GetMapping("/success/{id}/{order}")
-	public PaymentApproveDto approve(
+	public RedirectView approve(
 		@RequestParam("pg_token") String token,
 		@PathVariable("id") Long id,
 		@PathVariable("order") String order
 	) {
-		return paymentService.approve(token, id, order);
+		final String galleryId = paymentService.approve(token, id, order);
+		return new RedirectView("http://localhost:5173/payment/success/" + galleryId + "/" + order);
 	}
 
 	@GetMapping("/cancel")
-	public ResponseEntity<String> cancel() {
-		return ResponseEntity.internalServerError().body("결제 취소");
+	public RedirectView cancel() {
+		return new RedirectView("http://localhost:5173/payment/fail");
 	}
 
 	@GetMapping("/fail")

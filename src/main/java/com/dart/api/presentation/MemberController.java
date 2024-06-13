@@ -62,7 +62,7 @@ public class MemberController {
 	@GetMapping("/members")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<MemberProfileResDto> getMemberProfile(
-		@RequestParam String nickname, @Auth AuthUser authUser) {
+		@RequestParam String nickname, @Auth(required = false) AuthUser authUser) {
 		return ResponseEntity.ok(memberService.getMemberProfile(nickname, authUser));
 	}
 
