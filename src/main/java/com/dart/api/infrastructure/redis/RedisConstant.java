@@ -1,5 +1,7 @@
 package com.dart.api.infrastructure.redis;
 
+import static com.dart.global.common.util.GlobalConstant.*;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -7,6 +9,17 @@ import lombok.NoArgsConstructor;
 public class RedisConstant {
 	public static final String REDIS_TOKEN_PREFIX = "token:";
 	public static final String REDIS_EMAIL_PREFIX = "email:";
+	public static final String REDIS_NICKNAME_PREFIX = "nickname:";
 	public static final String REDIS_GALLERY_PREFIX = "gallery:";
 	public static final String REDIS_PAYMENT_PREFIX = "payment:";
+	public static final String REDIS_SESSION_EMAIL_PREFIX = "session-email:";
+	public static final String REDIS_SESSION_NICKNAME_PREFIX = "session-nickname:";
+
+	public static final String EMAIL_CODE = "code";
+	public static final String EMAIL_VERIFIED = "verified";
+	public static final String NICKNAME_RESERVED = "reserved:";
+	public static final String NICKNAME_VERIFIED = "verified:";
+	public static final int SESSION_EMAIL_EXPIRATION = THIRTY_MINUTES;
+	public static final int SESSION_NICKNAME_EXPIRATION = THIRTY_MINUTES;
+	public static final String SESSION_ID = "sessionId";
 }
