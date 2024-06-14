@@ -1,6 +1,6 @@
 package com.dart.global.config;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;

@@ -1,4 +1,4 @@
-package com.dart.api.infrastructure.redis;
+package com.dart.global.common.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

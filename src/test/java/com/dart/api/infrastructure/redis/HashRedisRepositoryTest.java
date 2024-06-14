@@ -30,7 +30,7 @@ class HashRedisRepositoryTest {
 	private HashOperations<String, Object, Object> hashOperations;
 
 	@InjectMocks
-	private RedisHashRepository redisHashRepository;
+	private HashRedisRepository hashRedisRepository;
 
 	@Test
 	@DisplayName("SET EXPIRE(⭕️ SUCCESS): 성공적으로 KEY와 VALUE를 저장하고 만료 시간을 지정했습니다.")
@@ -43,7 +43,7 @@ class HashRedisRepositoryTest {
 		when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
 
 		// WHEN
-		redisHashRepository.setExpire(key, value, duration);
+		hashRedisRepository.setExpire(key, value, duration);
 
 		// THEN
 		verify(valueOperations).set(eq(key), eq(value), eq(Duration.ofSeconds(duration)));
@@ -60,7 +60,7 @@ class HashRedisRepositoryTest {
 		when(valueOperations.get(expectedKey)).thenReturn(expectedValue);
 
 		// WHEN
-		String actualValue = redisHashRepository.get(expectedKey);
+		String actualValue = hashRedisRepository.get(expectedKey);
 
 		// THEN
 		assertEquals(expectedValue, actualValue);
@@ -74,7 +74,7 @@ class HashRedisRepositoryTest {
 		String key = "testKey";
 
 		// WHEN
-		redisHashRepository.delete(key);
+		hashRedisRepository.delete(key);
 
 		// THEN
 		verify(stringRedisTemplate).delete(key);
@@ -89,7 +89,7 @@ class HashRedisRepositoryTest {
 		when(stringRedisTemplate.hasKey(expectedKey)).thenReturn(true);
 
 		// WHEN
-		boolean actualKey = redisHashRepository.exists(expectedKey);
+		boolean actualKey = hashRedisRepository.exists(expectedKey);
 
 		// THEN
 		assertTrue(actualKey);
@@ -109,7 +109,7 @@ class HashRedisRepositoryTest {
 		when(stringRedisTemplate.opsForHash()).thenReturn(hashOperations);
 
 		// WHEN
-		redisHashRepository.setHashOps(expectedKey, expectedData);
+		hashRedisRepository.setHashOps(expectedKey, expectedData);
 
 		// THEN
 		verify(hashOperations).putAll(eq(expectedKey), eq(expectedData));
@@ -128,7 +128,7 @@ class HashRedisRepositoryTest {
 		when(hashOperations.get(expectedKey, expectedHashKey)).thenReturn(expectedValue);
 
 		// WHEN
-		String actualData = redisHashRepository.getHashOps(expectedKey, expectedHashKey);
+		String actualData = hashRedisRepository.getHashOps(expectedKey, expectedHashKey);
 
 		// THEN
 		assertEquals(expectedValue, actualData);
@@ -146,7 +146,7 @@ class HashRedisRepositoryTest {
 		when(stringRedisTemplate.opsForHash()).thenReturn(hashOperations);
 
 		// WHEN
-		redisHashRepository.deleteHashOps(expectedKey, expectedHashKey);
+		hashRedisRepository.deleteHashOps(expectedKey, expectedHashKey);
 
 		// THEN
 		verify(hashOperations).delete(expectedKey, expectedHashKey);
