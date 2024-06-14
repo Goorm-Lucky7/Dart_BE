@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisHashRepository {
+public class HashRedisRepository {
 
 	private final StringRedisTemplate redisTemplate;
 
