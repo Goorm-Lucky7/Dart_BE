@@ -15,19 +15,19 @@ public class TokenRedisRepository {
 	@Value("${jwt.refresh-expire}")
 	private long refreshTokenExpire;
 
-	private final HashRedisRepository hashRedisRepository;
+	private final ValueRedisRepository valueRedisRepository;
 
 	public void setToken(String key, String data) {
-		hashRedisRepository.setExpire(REDIS_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
+		valueRedisRepository.saveValueWithExpiry(REDIS_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
 	}
 
 	@Transactional(readOnly = true)
 	public String getToken(String key) {
-		String value = hashRedisRepository.get(REDIS_TOKEN_PREFIX + key);
+		String value = valueRedisRepository.getValue(REDIS_TOKEN_PREFIX + key);
 		return value != null ? value : "false";
 	}
 
 	public void deleteToken(String key) {
-		hashRedisRepository.delete(REDIS_TOKEN_PREFIX + key);
+		valueRedisRepository.deleteValue(REDIS_TOKEN_PREFIX + key);
 	}
 }

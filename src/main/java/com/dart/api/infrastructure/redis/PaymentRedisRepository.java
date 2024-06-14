@@ -11,13 +11,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PaymentRedisRepository {
 
-	private final HashRedisRepository hashRedisRepository;
+	private final ValueRedisRepository valueRedisRepository;
 
 	public void deleteData(String key) {
-		hashRedisRepository.delete(REDIS_PAYMENT_PREFIX + key);
+		valueRedisRepository.deleteValue(REDIS_PAYMENT_PREFIX + key);
 	}
 
 	public void setData(String key, String value) {
-		hashRedisRepository.setExpire(REDIS_PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
+		valueRedisRepository.saveValueWithExpiry(REDIS_PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
 	}
 }
