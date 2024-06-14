@@ -9,5 +9,5 @@ public class RedisConstant {
 	public static final String REDIS_EMAIL_PREFIX = "email:";
 	public static final String REDIS_GALLERY_PREFIX = "gallery:";
 	public static final String REDIS_PAYMENT_PREFIX = "payment:";
-	public static final String CHAT_MESSAGE_KEY_PREFIX = "chatMessage:";
+	public static final String REDIS_CHAT_MESSAGE_PREFIX = "chatMessage:";
 }
