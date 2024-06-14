@@ -3,6 +3,7 @@ package com.dart.api.application.gallery;
 import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -145,9 +146,11 @@ public class GalleryService {
 
 		final List<String> hashtags = findHashtagsByGallery(gallery);
 
+		boolean isOpen = isGalleryOpen(gallery);
+
 		return new GalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
 			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getContent(), gallery.getStartDate(),
-			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, hashtags);
+			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, isOpen, hashtags);
 	}
 
 	public void deleteGallery(DeleteGalleryDto deleteGalleryDto, AuthUser authUser) {
@@ -322,6 +325,12 @@ public class GalleryService {
 
 	private List<String> findHashtagsByGallery(Gallery gallery) {
 		return hashtagRepository.findTagByGallery(gallery);
+	}
+
+	private boolean isGalleryOpen(Gallery gallery) {
+		LocalDateTime now = LocalDateTime.now();
+		return (gallery.getStartDate().isBefore(now) || gallery.getStartDate().isEqual(now)) &&
+			(gallery.getEndDate() == null || gallery.getEndDate().isAfter(now) || gallery.getEndDate().isEqual(now));
 	}
 
 	private void deleteHashtagsByGallery(Gallery gallery) {

@@ -14,6 +14,7 @@ public record GalleryInfoDto(
 	Integer fee,
 	float reviewAverage,
 	boolean hasTicket,
+	boolean isOpen,
 	List<String> hashtags
 ) {
 }
