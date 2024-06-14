@@ -36,6 +36,7 @@ import com.dart.api.dto.gallery.response.GalleryMypageResDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
+import com.dart.api.dto.gallery.response.ReviewGalleryInfoDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.infrastructure.redis.RedisPaymentRepository;
@@ -151,6 +152,15 @@ public class GalleryService {
 		return new GalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
 			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getContent(), gallery.getStartDate(),
 			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, isOpen, hashtags);
+	}
+
+	@Transactional(readOnly = true)
+	public ReviewGalleryInfoDto getReviewGalleryInfo(Long galleryId, AuthUser authUser) {
+		final Gallery gallery = findGalleryById(galleryId);
+		final Float reviewAverage = calculateReviewAverage(gallery.getId());
+		return new ReviewGalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
+			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getStartDate(), gallery.getEndDate(),
+			reviewAverage);
 	}
 
 	public void deleteGallery(DeleteGalleryDto deleteGalleryDto, AuthUser authUser) {
