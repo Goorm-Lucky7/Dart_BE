@@ -41,6 +41,7 @@ public enum ErrorCode {
 	FAIL_INVALID_DESTINATION("[❎ ERROR] 요청하신 채팅방의 대상이 유효하지 않습니다."),
 	FAIL_CREATED_OWN_REVIEW("[❎ ERROR] 본인의 전시관에 리뷰를 작성하실 수 없습니다."),
 	FAIL_CREATED_UNPAID_REVIEW("[❎ ERROR] 미결제 전시관에 리뷰를 작성하실 수 없습니다."),
+	FAIL_NO_TARGET_MEMBER_PROVIDED("[❎ ERROR] 조회하고 싶은 대상을 입력해 주세요."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
