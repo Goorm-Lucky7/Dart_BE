@@ -1,4 +1,4 @@
-package com.dart.global.config;
+package com.dart.api.infrastructure.redis;
 
 import static com.dart.api.infrastructure.redis.RedisConstant.*;
 
