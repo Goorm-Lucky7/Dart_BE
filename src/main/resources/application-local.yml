@@ -3,6 +3,11 @@ spring:
     activate:
       on-profile: local
 
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+
   security:
     oauth2:
       client:
