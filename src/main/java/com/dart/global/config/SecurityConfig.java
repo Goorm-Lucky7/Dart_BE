@@ -43,9 +43,7 @@ public class SecurityConfig {
 			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
-			.requestMatchers("/api/payment/success/**")
-			.requestMatchers("/api/payment/fail")
-			.requestMatchers("/api/payment/cancel")
+			.requestMatchers("/api/payment/kakao/**")
 			.requestMatchers("/api/login")
 			.requestMatchers("/api/reissue");
 	}
