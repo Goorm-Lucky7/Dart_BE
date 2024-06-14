@@ -1,6 +1,6 @@
 package com.dart.api.infrastructure.redis;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 import static com.dart.global.common.util.PaymentConstant.*;
 
 import org.springframework.stereotype.Repository;
@@ -9,15 +9,15 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisPaymentRepository {
+public class PaymentRedisRepository {
 
-	private final RedisHashRepository redisHashRepository;
+	private final HashRedisRepository hashRedisRepository;
 
 	public void deleteData(String key) {
-		redisHashRepository.delete(REDIS_PAYMENT_PREFIX + key);
+		hashRedisRepository.delete(REDIS_PAYMENT_PREFIX + key);
 	}
 
 	public void setData(String key, String value) {
-		redisHashRepository.setExpire(REDIS_PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
+		hashRedisRepository.setExpire(REDIS_PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
 	}
 }
