@@ -37,7 +37,7 @@ import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
-import com.dart.api.infrastructure.redis.PaymentRedisRepository;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;

@@ -1,10 +1,12 @@
-package com.dart.api.infrastructure.redis;
+package com.dart.api.domain.auth.repository;
 
 import static com.dart.global.common.util.RedisConstant.REDIS_TOKEN_PREFIX;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.dart.api.infrastructure.redis.ValueRedisRepository;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,9 +1,11 @@
-package com.dart.api.infrastructure.redis;
+package com.dart.api.domain.payment.repository;
 
 import static com.dart.global.common.util.RedisConstant.*;
 import static com.dart.global.common.util.PaymentConstant.*;
 
 import org.springframework.stereotype.Repository;
+
+import com.dart.api.infrastructure.redis.ValueRedisRepository;
 
 import lombok.RequiredArgsConstructor;
 

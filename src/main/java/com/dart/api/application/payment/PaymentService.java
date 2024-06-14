@@ -30,7 +30,7 @@ import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
-import com.dart.api.infrastructure.redis.PaymentRedisRepository;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;

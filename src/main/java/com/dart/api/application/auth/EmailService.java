@@ -12,7 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.infrastructure.redis.EmailRedisRepository;
+import com.dart.api.domain.auth.repository.EmailRedisRepository;
 import com.dart.global.error.exception.InvalidVerificationCodeException;
 import com.dart.global.error.exception.MailSendException;
 import com.dart.global.error.model.ErrorCode;

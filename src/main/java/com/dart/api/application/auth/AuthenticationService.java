@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.dart.api.infrastructure.redis.TokenRedisRepository;
+import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
