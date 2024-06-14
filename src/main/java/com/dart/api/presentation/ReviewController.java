@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dart.api.application.gallery.GalleryService;
 import com.dart.api.application.review.ReviewService;
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.dto.gallery.response.ReviewGalleryInfoDto;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.review.request.ReviewCreateDto;
 import com.dart.api.dto.review.response.ReviewReadDto;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/reviews")
 public class ReviewController {
 	private final ReviewService reviewService;
+	private final GalleryService galleryService;
 
 	@PostMapping
 	public ResponseEntity<String> create(@RequestBody @Valid ReviewCreateDto dto, @Auth AuthUser authUser) {
@@ -40,4 +43,13 @@ public class ReviewController {
 	) {
 		return reviewService.readAll(galleryId, page, size);
 	}
+
+	@GetMapping("/info")
+	public ResponseEntity<ReviewGalleryInfoDto> getReviewGalleryInfo(
+		@RequestParam("gallery-id") Long galleryId,
+		@Auth(required = false) AuthUser authUser
+	) {
+		return ResponseEntity.ok(galleryService.getReviewGalleryInfo(galleryId, authUser));
+	}
+
 }
