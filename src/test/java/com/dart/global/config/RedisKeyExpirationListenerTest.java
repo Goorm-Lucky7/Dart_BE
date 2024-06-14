@@ -26,6 +26,7 @@ import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.gallery.repository.HashtagRepository;
+import com.dart.api.infrastructure.redis.RedisKeyExpirationListener;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.support.ChatFixture;
 import com.dart.support.GalleryFixture;
