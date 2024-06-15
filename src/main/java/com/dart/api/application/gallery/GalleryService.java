@@ -39,7 +39,7 @@ import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.dto.gallery.response.ReviewGalleryInfoDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
-import com.dart.api.infrastructure.redis.RedisPaymentRepository;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -62,7 +62,7 @@ public class GalleryService {
 	private final PaymentRepository paymentRepository;
 	private final ImageService imageService;
 	private final S3Service s3Service;
-	private final RedisPaymentRepository redisPaymentRepository;
+	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatService chatService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -360,7 +360,7 @@ public class GalleryService {
 
 	private void waitPayment(Gallery gallery) {
 		if (!gallery.isPaid()) {
-			redisPaymentRepository.setData(
+			paymentRedisRepository.setData(
 				gallery.getId().toString(),
 				String.valueOf(gallery.getTitle())
 			);
