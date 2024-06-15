@@ -66,5 +66,5 @@ networks:
     driver: bridge
 
 volumes:
-  db_data:
+  ec2-user_db_data:
     driver: local
