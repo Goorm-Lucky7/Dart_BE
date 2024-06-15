@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class RedisHashRepository {
@@ -45,7 +47,7 @@ public class RedisHashRepository {
 	@Transactional(readOnly = true)
 	public String getHashOps(String key, String hashKey) {
 		HashOperations<String, Object, Object> values = redisTemplate.opsForHash();
-		return Boolean.TRUE.equals(values.hasKey(key, hashKey)) ? (String) values.get(key, hashKey) : "";
+		return (String) values.get(key, hashKey);
 	}
 
 	public void updateHashOpsField(String key, String field, String value) {

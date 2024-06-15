@@ -47,7 +47,7 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		final String expiredKey = message.toString();
 
 		if (isPaymentKey(expiredKey)) {
-			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
+			final Long galleryId = Long.parseLong(expiredKey.replace(PAYMENT_PREFIX, ""));
 			final Gallery gallery = galleryRepository.findById(galleryId)
 				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 			final List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
@@ -63,6 +63,6 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 	}
 
 	public boolean isPaymentKey(String str) {
-		return str.contains(REDIS_PAYMENT_PREFIX);
+		return str.contains(PAYMENT_PREFIX);
 	}
 }

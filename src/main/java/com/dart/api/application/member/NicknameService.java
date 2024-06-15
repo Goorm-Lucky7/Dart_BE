@@ -10,12 +10,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.infrastructure.redis.RedisNicknameRepository;
 import com.dart.api.infrastructure.redis.RedisSessionRepository;
+import com.dart.global.common.util.CookieUtil;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -27,9 +27,11 @@ public class NicknameService {
 	private final RedisNicknameRepository redisNicknameRepository;
 	private final RedisSessionRepository redisSessionRepository;
 
+	private final CookieUtil cookieUtil;
+
 	public void checkAndReserveNickname(String newNickname, String sessionId, HttpServletResponse response) {
 		if (sessionId == null || sessionId.isEmpty()) {
-			setCookie(response);
+			cookieUtil.setSessionCookie(response);
 		}
 
 		String oldNickname = redisSessionRepository.findNicknameBySessionId(sessionId);
@@ -42,19 +44,6 @@ public class NicknameService {
 			verifyNicknameReserved(newNickname);
 		}
 		reserveNickname(newNickname, sessionId);
-	}
-
-	private void setCookie(HttpServletResponse response){
-		String sessionId = UUID.randomUUID().toString();
-		ResponseCookie cookie = ResponseCookie.from(SESSION_ID, sessionId)
-			.httpOnly(true)
-			.secure(true)
-			.path("/")
-			.maxAge(THIRTY_DAYS)
-			.sameSite("None")
-			.build();
-
-		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 
 	public void setNicknameVerified(String nickname) {

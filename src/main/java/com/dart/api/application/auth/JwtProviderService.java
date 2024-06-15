@@ -57,10 +57,7 @@ public class JwtProviderService {
 	}
 
 	public String generateAccessToken(String email, String nickname, String profileImage) {
-		final Date issuedDate = new Date();
-		final Date expiredDate = new Date(issuedDate.getTime() + accessTokenExpire);
-
-		return buildJwt(issuedDate, expiredDate)
+		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
@@ -68,10 +65,7 @@ public class JwtProviderService {
 	}
 
 	public String generateRefreshToken(String email) {
-		final Date issuedDate = new Date();
-		final Date expiredDate = new Date(issuedDate.getTime() + refreshTokenExpire);
-
-		return buildJwt(issuedDate, expiredDate)
+		return buildJwt(new Date(), new Date(System.currentTimeMillis() + refreshTokenExpire))
 			.claim(EMAIL, email)
 			.compact();
 	}
@@ -99,10 +93,7 @@ public class JwtProviderService {
 
 	public AuthUser extractAuthUserByAccessToken(String token) {
 		final Claims claims = getClaimsByToken(token);
-		final String email = claims.get(EMAIL, String.class);
-		final String nickname = claims.get(NICKNAME, String.class);
-
-		return AuthUser.create(email, nickname);
+		return AuthUser.create(claims.get(EMAIL, String.class), claims.get(NICKNAME, String.class));
 	}
 
 	public boolean isUsable(String token) {

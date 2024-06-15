@@ -26,6 +26,7 @@ import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.auth.response.TokenResDto;
 import com.dart.api.dto.member.request.LoginReqDto;
 import com.dart.api.dto.member.response.LoginResDto;
+import com.dart.global.common.util.CookieUtil;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
@@ -44,6 +45,8 @@ public class AuthenticationService {
 	private final JwtProviderService jwtProviderService;
 	private final RedisTokenRepository redisTokenRepository;
 
+	private final CookieUtil cookieUtil;
+
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
 		final Member member = findByMemberEmail(loginReqDto.email());
@@ -60,8 +63,8 @@ public class AuthenticationService {
 	}
 
 	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
-		String refreshToken = getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
+		String accessToken = extractTokenFromHeader(request);
+		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
 		validateRefreshToken(refreshToken);
 
@@ -111,27 +114,19 @@ public class AuthenticationService {
 	}
 
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
-		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
-
-		ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
-			.httpOnly(true)
-			.secure(true)
-			.path("/")
-			.maxAge(Duration.ofMillis(refreshTokenExpire).toSeconds())
-			.sameSite("None")
-			.build();
-
-		response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+		setAccessToken(response, accessToken);
+		setRefreshToken(response, refreshToken);
 	}
 
-	private String getCookieValue(HttpServletRequest request, String name) {
-		if (request.getCookies() != null) {
-			for (Cookie cookie : request.getCookies()) {
-				if (cookie.getName().equals(name)) {
-					return cookie.getValue();
-				}
-			}
-		}
-		return null;
+	private String extractTokenFromHeader(HttpServletRequest request) {
+		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
+	}
+
+	private void setAccessToken(HttpServletResponse response, String accessToken) {
+		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
+	}
+
+	private void setRefreshToken(HttpServletResponse response, String refreshToken){
+		cookieUtil.setRefreshCookie(response, refreshToken);
 	}
 }

@@ -14,10 +14,10 @@ public class RedisPaymentRepository {
 	private final RedisHashRepository redisHashRepository;
 
 	public void deleteData(String key) {
-		redisHashRepository.delete(REDIS_PAYMENT_PREFIX + key);
+		redisHashRepository.delete(PAYMENT_PREFIX + key);
 	}
 
 	public void setData(String key, String value) {
-		redisHashRepository.setExpire(REDIS_PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
+		redisHashRepository.setExpire(PAYMENT_PREFIX + key, value, THIRTY_MINUTE);
 	}
 }

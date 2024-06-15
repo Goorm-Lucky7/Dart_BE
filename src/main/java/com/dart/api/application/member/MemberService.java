@@ -21,6 +21,7 @@ import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.api.infrastructure.redis.RedisEmailRepository;
 import com.dart.api.infrastructure.redis.RedisNicknameRepository;
+import com.dart.api.infrastructure.redis.RedisSessionRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -35,22 +36,26 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final RedisEmailRepository redisEmailRepository;
 	private final RedisNicknameRepository redisNicknameRepository;
+	private final RedisSessionRepository redisSessionRepository;
+
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
-	public void signUp(SignUpDto signUpDto) {
+	public void signUp(SignUpDto signUpDto, String sessionId) {
 		nicknameService.setNicknameVerified(signUpDto.nickname());
 
 		verifyEmailChecked(signUpDto.email());
 		verifyNicknameChecked(signUpDto.nickname());
+		validateExistMember(signUpDto.email());
 
 		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
 		final Member member = Member.signup(signUpDto, encodedPassword);
 
-		validateExistMember(signUpDto.email());
 		memberRepository.save(member);
+
+		cleanUpSessionData(sessionId, signUpDto.email(), signUpDto.nickname());
 	}
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
@@ -62,16 +67,35 @@ public class MemberService {
 	}
 
 	@Transactional
-	public void updateMemberProfile(AuthUser authUser, MemberUpdateDto memberUpdateDto, MultipartFile profileImage) {
-		verifyNicknameChecked(memberUpdateDto.nickname());
-
+	public void updateMemberProfile(AuthUser authUser, MemberUpdateDto memberUpdateDto, MultipartFile profileImage,
+		String sessionId, HttpServletResponse response) {
+		String newNickname = memberUpdateDto.nickname();
 		final Member member = findMemberByEmail(authUser.email());
-		final String savedProfileImage = member.getProfileImageUrl();
 
-		try{
-			String newProfileImageUrl = s3Service.uploadFile(profileImage);
-			if(savedProfileImage != null) s3Service.deleteFile(savedProfileImage);
+		if (newNickname != null && !newNickname.equals(member.getNickname())) {
+			if (sessionId == null || !redisNicknameRepository.isReserved(newNickname)) {
+				throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
+			}
+		}
+
+		final String savedProfileImage = member.getProfileImageUrl();
+		String newProfileImageUrl = null;
+
+		try {
+			if (profileImage != null && !profileImage.isEmpty()) {
+				newProfileImageUrl = s3Service.uploadFile(profileImage);
+				if (savedProfileImage != null) {
+					s3Service.deleteFile(savedProfileImage);
+				}
+			}
+
 			member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
+
+			if (newNickname != null && !newNickname.equals(member.getNickname())) {
+				redisSessionRepository.deleteSessionNicknameMapping(sessionId);
+				redisNicknameRepository.deleteNickname(newNickname);
+			}
+
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}
@@ -84,6 +108,13 @@ public class MemberService {
 
 	private boolean isMember(AuthUser authUser) {
 		return authUser != null;
+	}
+
+	private void cleanUpSessionData(String sessionId, String email, String nickname) {
+		redisSessionRepository.deleteSessionEmailMapping(sessionId);
+		redisSessionRepository.deleteSessionNicknameMapping(sessionId);
+		redisEmailRepository.deleteEmail(email);
+		redisNicknameRepository.deleteNickname(nickname);
 	}
 
 	private boolean isOwnProfile(String currentNickname, String profileNickname) {
@@ -119,7 +150,7 @@ public class MemberService {
 	}
 
 	private void verifyNicknameChecked(String nickname) {
-		if(FALSE.equals(redisNicknameRepository.isVerified(nickname))) {
+		if(FALSE.equals(redisNicknameRepository.isReserved(nickname))) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
 		}
 	}

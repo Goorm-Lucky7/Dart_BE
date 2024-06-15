@@ -21,8 +21,8 @@ public class MemberFixture {
 			.nickname("test1")
 			.password("1q2w3e4r!")
 			.birthday(LocalDate.of(2024, 6, 4))
-			.bank("example bank")
-			.account("000-000-000000")
+			//.bank("example bank")
+			//.account("000-000-000000")
 			.introduce("Hello 👏")
 			.build();
 	}

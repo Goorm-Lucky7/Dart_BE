@@ -43,8 +43,9 @@ public class MemberController {
 
 	@PostMapping("/signup")
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto) {
-		memberService.signUp(signUpDto);
+	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto,
+		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
+		memberService.signUp(signUpDto, sessionId);
 		return ResponseEntity.ok("Signup successfully");
 	}
 
@@ -72,8 +73,9 @@ public class MemberController {
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
-		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage) {
-		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage);
+		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage,
+		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
+		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId, response);
 		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
@@ -83,7 +85,6 @@ public class MemberController {
 		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
 		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto, sessionId, response);
-
 		return ResponseEntity.ok("Checked nickname duplication successfully");
 	}
 }
