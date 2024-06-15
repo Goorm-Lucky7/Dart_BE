@@ -25,7 +25,7 @@ services:
     networks:
       - dart-network
     volumes:
-      - db_data:/var/lib/mysql
+      - ec2-user_db_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
