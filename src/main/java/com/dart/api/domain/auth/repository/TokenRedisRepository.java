@@ -1,33 +1,35 @@
-package com.dart.api.infrastructure.redis;
+package com.dart.api.domain.auth.repository;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.REDIS_TOKEN_PREFIX;
+import static com.dart.global.common.util.RedisConstant.REDIS_TOKEN_PREFIX;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.infrastructure.redis.ValueRedisRepository;
+
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisTokenRepository {
+public class TokenRedisRepository {
 
 	@Value("${jwt.refresh-expire}")
 	private long refreshTokenExpire;
 
-	private final RedisHashRepository redisHashRepository;
+	private final ValueRedisRepository valueRedisRepository;
 
 	public void setToken(String key, String data) {
-		redisHashRepository.setExpire(REDIS_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
+		valueRedisRepository.saveValueWithExpiry(REDIS_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
 	}
 
 	@Transactional(readOnly = true)
 	public String getToken(String key) {
-		String value = redisHashRepository.get(REDIS_TOKEN_PREFIX + key);
+		String value = valueRedisRepository.getValue(REDIS_TOKEN_PREFIX + key);
 		return value != null ? value : "false";
 	}
 
 	public void deleteToken(String key) {
-		redisHashRepository.delete(REDIS_TOKEN_PREFIX + key);
+		valueRedisRepository.deleteValue(REDIS_TOKEN_PREFIX + key);
 	}
 }

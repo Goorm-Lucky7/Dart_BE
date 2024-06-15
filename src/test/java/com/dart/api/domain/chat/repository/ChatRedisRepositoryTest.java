@@ -1,6 +1,6 @@
 package com.dart.api.domain.chat.repository;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

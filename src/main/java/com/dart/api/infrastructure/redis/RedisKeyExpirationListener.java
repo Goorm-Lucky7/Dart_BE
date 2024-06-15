@@ -1,6 +1,6 @@
 package com.dart.api.infrastructure.redis;
 
-import static com.dart.api.infrastructure.redis.RedisConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 
 import java.util.List;
 
