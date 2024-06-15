@@ -100,5 +100,3 @@ public class S3Service {
 		return filename.substring(lastIndex + 1);
 	}
 }
-
-
