@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
+import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Hashtag;
@@ -27,19 +28,22 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 	private final ImageService imageService;
 	private final HashtagRepository hashtagRepository;
 	private final ChatRoomRepository chatRoomRepository;
+	private final ChatRedisRepository chatRedisRepository;
 
 	public RedisKeyExpirationListener(
 		RedisMessageListenerContainer listenerContainer,
 		GalleryRepository galleryRepository,
 		ImageService imageService,
 		HashtagRepository hashtagRepository,
-		ChatRoomRepository chatRoomRepository
+		ChatRoomRepository chatRoomRepository,
+		ChatRedisRepository chatRedisRepository
 	) {
 		super(listenerContainer);
 		this.galleryRepository = galleryRepository;
 		this.imageService = imageService;
 		this.hashtagRepository = hashtagRepository;
 		this.chatRoomRepository = chatRoomRepository;
+		this.chatRedisRepository = chatRedisRepository;
 	}
 
 	@Override
@@ -48,21 +52,36 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 
 		if (isPaymentKey(expiredKey)) {
 			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
-			final Gallery gallery = galleryRepository.findById(galleryId)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
-			final List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
-			final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
-
-			chatRoomRepository.delete(chatRoom);
-			imageService.deleteImagesByGallery(gallery);
-			imageService.deleteThumbnail(gallery);
-			hashtagRepository.deleteAll(hashtags);
-			galleryRepository.delete(gallery);
+			handleExpiredGallery(galleryId);
+		} else if (isChatMessageKey(expiredKey)) {
+			final Long chatRoomId = Long.parseLong(expiredKey.replace(REDIS_CHAT_MESSAGE_PREFIX, ""));
+			handleExpiredChatMessages(chatRoomId);
 		}
 	}
 
-	public boolean isPaymentKey(String str) {
+	public void handleExpiredGallery(Long galleryId) {
+		final Gallery gallery = galleryRepository.findById(galleryId)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
+		final List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
+		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
+
+		chatRoomRepository.delete(chatRoom);
+		imageService.deleteImagesByGallery(gallery);
+		imageService.deleteThumbnail(gallery);
+		hashtagRepository.deleteAll(hashtags);
+		galleryRepository.delete(gallery);
+	}
+
+	public void handleExpiredChatMessages(Long chatRoomId) {
+		chatRedisRepository.deleteChatMessages(chatRoomId);
+	}
+
+	private boolean isPaymentKey(String str) {
 		return str.contains(REDIS_PAYMENT_PREFIX);
+	}
+
+	private boolean isChatMessageKey(String str) {
+		return str.startsWith(REDIS_CHAT_MESSAGE_PREFIX);
 	}
 }
