@@ -19,9 +19,9 @@ import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
-import com.dart.api.infrastructure.redis.RedisEmailRepository;
-import com.dart.api.infrastructure.redis.RedisNicknameRepository;
-import com.dart.api.infrastructure.redis.RedisSessionRepository;
+import com.dart.api.domain.auth.repository.EmailRedisRepository;
+import com.dart.api.domain.auth.repository.NicknameRedisRepository;
+import com.dart.api.domain.auth.repository.SessionRedisRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -34,9 +34,9 @@ import com.dart.global.error.model.ErrorCode;
 public class MemberService {
 
 	private final MemberRepository memberRepository;
-	private final RedisEmailRepository redisEmailRepository;
-	private final RedisNicknameRepository redisNicknameRepository;
-	private final RedisSessionRepository redisSessionRepository;
+	private final EmailRedisRepository emailRedisRepository;
+	private final NicknameRedisRepository nicknameRedisRepository;
+	private final SessionRedisRepository sessionRedisRepository;
 
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
@@ -67,37 +67,49 @@ public class MemberService {
 	}
 
 	@Transactional
-	public void updateMemberProfile(AuthUser authUser, MemberUpdateDto memberUpdateDto, MultipartFile profileImage,
-		String sessionId, HttpServletResponse response) {
-		String newNickname = memberUpdateDto.nickname();
-		final Member member = findMemberByEmail(authUser.email());
+	public void updateMemberProfile(
+		AuthUser authUser,
+		MemberUpdateDto memberUpdateDto,
+		MultipartFile profileImage,
+		String sessionId,
+		HttpServletResponse response) {
 
-		if (newNickname != null && !newNickname.equals(member.getNickname())) {
-			if (sessionId == null || !redisNicknameRepository.isReserved(newNickname)) {
+		Member member = findMemberByEmail(authUser.email());
+		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+		String newProfileImageUrl = handleProfileImageUpdate(profileImage, member.getProfileImageUrl());
+
+		member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
+		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+	}
+
+	private void validateNickname(String newNickname, String currentNickname, String sessionId) {
+		if (newNickname != null && !newNickname.equals(currentNickname)) {
+			if (sessionId == null || !nicknameRedisRepository.isReserved(newNickname)) {
 				throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
 			}
 		}
+	}
 
-		final String savedProfileImage = member.getProfileImageUrl();
-		String newProfileImageUrl = null;
+	private String handleProfileImageUpdate(MultipartFile profileImage, String savedProfileImage) {
+		if (profileImage == null || profileImage.isEmpty()) {
+			return null;
+		}
 
 		try {
-			if (profileImage != null && !profileImage.isEmpty()) {
-				newProfileImageUrl = s3Service.uploadFile(profileImage);
-				if (savedProfileImage != null) {
-					s3Service.deleteFile(savedProfileImage);
-				}
+			String newProfileImageUrl = s3Service.uploadFile(profileImage);
+			if (savedProfileImage != null) {
+				s3Service.deleteFile(savedProfileImage);
 			}
-
-			member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
-
-			if (newNickname != null && !newNickname.equals(member.getNickname())) {
-				redisSessionRepository.deleteSessionNicknameMapping(sessionId);
-				redisNicknameRepository.deleteNickname(newNickname);
-			}
-
+			return newProfileImageUrl;
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
+		}
+	}
+
+	private void handleNicknameUpdate(String newNickname, String currentNickname, String sessionId) {
+		if (newNickname != null && !newNickname.equals(currentNickname)) {
+			sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
+			nicknameRedisRepository.deleteNickname(newNickname);
 		}
 	}
 
@@ -111,10 +123,10 @@ public class MemberService {
 	}
 
 	private void cleanUpSessionData(String sessionId, String email, String nickname) {
-		redisSessionRepository.deleteSessionEmailMapping(sessionId);
-		redisSessionRepository.deleteSessionNicknameMapping(sessionId);
-		redisEmailRepository.deleteEmail(email);
-		redisNicknameRepository.deleteNickname(nickname);
+		sessionRedisRepository.deleteSessionEmailMapping(sessionId);
+		sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
+		emailRedisRepository.deleteEmail(email);
+		nicknameRedisRepository.deleteNickname(nickname);
 	}
 
 	private boolean isOwnProfile(String currentNickname, String profileNickname) {
@@ -144,13 +156,13 @@ public class MemberService {
 	}
 
 	private void verifyEmailChecked(String email) {
-		if(FALSE.equals(redisEmailRepository.isVerified(email))) {
+		if(FALSE.equals(emailRedisRepository.isVerified(email))) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_EMAIL);
 		}
 	}
 
 	private void verifyNicknameChecked(String nickname) {
-		if(FALSE.equals(redisNicknameRepository.isReserved(nickname))) {
+		if(FALSE.equals(nicknameRedisRepository.isReserved(nickname))) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_VERIFIED_NICKNAME);
 		}
 	}
