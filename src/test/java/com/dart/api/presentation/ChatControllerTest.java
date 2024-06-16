@@ -62,7 +62,7 @@ class ChatControllerTest {
 		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		// THEN
-		verify(chatService).saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		verify(chatService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 		verify(simpMessageSendingOperations).convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
