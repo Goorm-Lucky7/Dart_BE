@@ -21,6 +21,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -70,6 +71,10 @@ public class ChatService {
 			chatMessage.getCreatedAt(),
 			determineExpiry(chatRoom)
 		);
+	}
+
+	public List<ChatMessageReadDto> getChatMessageList(Long chatRoomId) {
+		return chatRedisRepository.getChatMessageReadDto(chatRoomId);
 	}
 
 	public long determineExpiry(ChatRoom chatRoom) {
