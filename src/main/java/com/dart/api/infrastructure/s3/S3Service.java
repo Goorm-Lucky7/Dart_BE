@@ -29,7 +29,7 @@ public class S3Service {
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucket;
 
-	public String uploadFile(MultipartFile multipartFile) throws IOException {
+	public String uploadFile(MultipartFile multipartFile) {
 		String originalFilename = multipartFile.getOriginalFilename();
 		String fileName = generateUniqueFilename(originalFilename);
 
@@ -48,7 +48,12 @@ public class S3Service {
 			}
 		}
 
-		amazonS3.putObject(new PutObjectRequest(bucket, fileName, multipartFile.getInputStream(), metadata));
+		try {
+			amazonS3.putObject(new PutObjectRequest(bucket, fileName, multipartFile.getInputStream(), metadata));
+		} catch (IOException e) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
+		}
+
 		return amazonS3.getUrl(bucket, fileName).toString();
 	}
 
