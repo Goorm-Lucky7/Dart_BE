@@ -17,7 +17,9 @@ import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ChatController {
@@ -32,8 +34,11 @@ public class ChatController {
 		@Payload ChatMessageCreateDto chatMessageCreateDto,
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
-		chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+
+		log.info("Received message: {}", chatMessageCreateDto.content());
 		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
+		log.info("Message sent to /sub/ws/{}: {}", chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
