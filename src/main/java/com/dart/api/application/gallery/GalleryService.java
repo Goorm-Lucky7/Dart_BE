@@ -3,6 +3,7 @@ package com.dart.api.application.gallery;
 import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,12 +32,14 @@ import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
+import com.dart.api.dto.gallery.response.GalleryMypageResDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
 import com.dart.api.dto.gallery.response.GalleryResDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
+import com.dart.api.dto.gallery.response.ReviewGalleryInfoDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
-import com.dart.api.infrastructure.redis.RedisPaymentRepository;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -59,7 +62,7 @@ public class GalleryService {
 	private final PaymentRepository paymentRepository;
 	private final ImageService imageService;
 	private final S3Service s3Service;
-	private final RedisPaymentRepository redisPaymentRepository;
+	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatService chatService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -108,6 +111,22 @@ public class GalleryService {
 	}
 
 	@Transactional(readOnly = true)
+	public PageResponse<GalleryMypageResDto> getMypageGalleries(int page, int size, String nickname,
+		AuthUser authUser) {
+		final PageRequest pageRequest = PageRequest.of(page, size);
+
+		validateRequest(nickname, authUser);
+		final Member member = findMember(nickname, authUser);
+
+		Page<Gallery> galleryPage = galleryRepository.findByMemberAndIsPaidTrueOrderByCreatedAtDesc(member,
+			pageRequest);
+		List<GalleryMypageResDto> galleryDtos = convertToGalleryMypageResDtos(galleryPage);
+
+		PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
+		return new PageResponse<>(galleryDtos, pageInfo);
+	}
+
+	@Transactional(readOnly = true)
 	public GalleryResDto getGallery(Long galleryId, AuthUser authUser) {
 		final Gallery gallery = findGalleryById(galleryId);
 
@@ -128,9 +147,20 @@ public class GalleryService {
 
 		final List<String> hashtags = findHashtagsByGallery(gallery);
 
+		boolean isOpen = isGalleryOpen(gallery);
+
 		return new GalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
 			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getContent(), gallery.getStartDate(),
-			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, hashtags);
+			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, isOpen, hashtags);
+	}
+
+	@Transactional(readOnly = true)
+	public ReviewGalleryInfoDto getReviewGalleryInfo(Long galleryId, AuthUser authUser) {
+		final Gallery gallery = findGalleryById(galleryId);
+		final Float reviewAverage = calculateReviewAverage(gallery.getId());
+		return new ReviewGalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
+			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getStartDate(), gallery.getEndDate(),
+			reviewAverage);
 	}
 
 	public void deleteGallery(DeleteGalleryDto deleteGalleryDto, AuthUser authUser) {
@@ -150,6 +180,11 @@ public class GalleryService {
 	private Member findMemberByEmail(String email) {
 		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
+	}
+
+	private Member findMemberByNickname(String nickname) {
+		return memberRepository.findByNickname(nickname)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void saveHashtags(List<String> hashTags, Gallery gallery) {
@@ -222,6 +257,32 @@ public class GalleryService {
 			gallery.getEndDate(), hashtags);
 	}
 
+	private void validateRequest(String nickname, AuthUser authUser) {
+		if ((nickname == null || nickname.isEmpty()) && authUser == null) {
+			throw new BadRequestException(ErrorCode.FAIL_NO_TARGET_MEMBER_PROVIDED);
+		}
+	}
+
+	private Member findMember(String nickname, AuthUser authUser) {
+		return Optional.ofNullable(nickname)
+			.filter(name -> !name.isEmpty())
+			.map(this::findMemberByNickname)
+			.orElseGet(() -> findMemberByEmail(authUser.email()));
+	}
+
+	private List<GalleryMypageResDto> convertToGalleryMypageResDtos(Page<Gallery> galleryPage) {
+		return galleryPage.stream()
+			.map(this::convertToGalleryMypageResDto)
+			.collect(Collectors.toList());
+	}
+
+	private GalleryMypageResDto convertToGalleryMypageResDto(Gallery gallery) {
+		List<String> hashtags = findHashtagsByGallery(gallery);
+
+		return new GalleryMypageResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(),
+			gallery.getStartDate(), gallery.getEndDate(), gallery.getFee(), hashtags);
+	}
+
 	private Float calculateReviewAverage(Long galleryId) {
 		return Optional.ofNullable(reviewRepository.calculateAverageScoreByGalleryId(galleryId))
 			.orElse(NO_REVIEW_SCORE);
@@ -276,6 +337,12 @@ public class GalleryService {
 		return hashtagRepository.findTagByGallery(gallery);
 	}
 
+	private boolean isGalleryOpen(Gallery gallery) {
+		LocalDateTime now = LocalDateTime.now();
+		return (gallery.getStartDate().isBefore(now) || gallery.getStartDate().isEqual(now)) &&
+			(gallery.getEndDate() == null || gallery.getEndDate().isAfter(now) || gallery.getEndDate().isEqual(now));
+	}
+
 	private void deleteHashtagsByGallery(Gallery gallery) {
 		List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
 		hashtagRepository.deleteAll(hashtags);
@@ -293,7 +360,7 @@ public class GalleryService {
 
 	private void waitPayment(Gallery gallery) {
 		if (!gallery.isPaid()) {
-			redisPaymentRepository.setData(
+			paymentRedisRepository.setData(
 				gallery.getId().toString(),
 				String.valueOf(gallery.getTitle())
 			);

@@ -43,9 +43,7 @@ public class SecurityConfig {
 			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
-			.requestMatchers("/api/payment/success/**")
-			.requestMatchers("/api/payment/fail")
-			.requestMatchers("/api/payment/cancel")
+			.requestMatchers("/api/payment/kakao/**")
 			.requestMatchers("/api/login")
 			.requestMatchers("/api/reissue");
 	}
@@ -64,7 +62,9 @@ public class SecurityConfig {
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
 			.anyRequest().authenticated()
 		);
 

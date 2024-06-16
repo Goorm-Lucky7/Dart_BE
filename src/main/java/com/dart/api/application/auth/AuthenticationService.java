@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.dart.api.infrastructure.redis.RedisTokenRepository;
+import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -43,7 +43,7 @@ public class AuthenticationService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
-	private final RedisTokenRepository redisTokenRepository;
+	private final TokenRedisRepository tokenRedisRepository;
 
 	private final CookieUtil cookieUtil;
 
@@ -55,7 +55,7 @@ public class AuthenticationService {
 		final String accessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
-		redisTokenRepository.setToken(loginReqDto.email(), refreshToken);
+		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
 
 		setTokensInResponse(response, accessToken, refreshToken);
 
@@ -76,8 +76,8 @@ public class AuthenticationService {
 		String newAccessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
 
-		redisTokenRepository.deleteToken(authUser.email());
-		redisTokenRepository.setToken(authUser.email(), newRefreshToken);
+		tokenRedisRepository.deleteToken(authUser.email());
+		tokenRedisRepository.setToken(authUser.email(), newRefreshToken);
 
 		setTokensInResponse(response, newAccessToken, newRefreshToken);
 
@@ -102,7 +102,7 @@ public class AuthenticationService {
 	}
 
 	private void validateSavedRefreshToken(String email, String refreshToken) {
-		String savedRefreshToken = redisTokenRepository.getToken(email);
+		String savedRefreshToken = tokenRedisRepository.getToken(email);
 		if (!savedRefreshToken.equals(refreshToken)) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}

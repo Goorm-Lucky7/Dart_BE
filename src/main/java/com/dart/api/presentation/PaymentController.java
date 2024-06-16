@@ -1,5 +1,7 @@
 package com.dart.api.presentation;
 
+import static com.dart.global.common.util.PaymentConstant.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,22 +43,22 @@ public class PaymentController {
 		return paymentService.readAll(authUser, page, size);
 	}
 
-	@GetMapping("/success/{id}/{order}")
+	@GetMapping("/kakao/success/{id}/{order}")
 	public RedirectView approve(
 		@RequestParam("pg_token") String token,
 		@PathVariable("id") Long id,
 		@PathVariable("order") String order
 	) {
 		final String galleryId = paymentService.approve(token, id, order);
-		return new RedirectView("http://localhost:5173/payment/success/" + galleryId + "/" + order);
+		return new RedirectView(SUCCESS_REDIRECT_URL + galleryId + "/" + order);
 	}
 
-	@GetMapping("/cancel")
+	@GetMapping("/kakao/cancel")
 	public RedirectView cancel() {
-		return new RedirectView("http://localhost:5173/payment/fail");
+		return new RedirectView(FAIL_REDIRECT_URL);
 	}
 
-	@GetMapping("/fail")
+	@GetMapping("/kakao/fail")
 	public ResponseEntity<String> fail() {
 		return ResponseEntity.internalServerError().body("결제 실패");
 	}

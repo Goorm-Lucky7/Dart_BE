@@ -21,10 +21,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	private static final int MESSAGE_SIZE_LIMIT = 160 * 64 * 1024;
-	private static final int SEND_TIME_LIMIT = 100 * 10000;
-	private static final int SEND_BUFFER_SIZE_LIMIT = 3 * 512 * 1024;
-
 	private final JwtProviderService jwtProviderService;
 
 	@Bean

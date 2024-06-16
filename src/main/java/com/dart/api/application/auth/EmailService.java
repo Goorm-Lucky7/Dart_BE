@@ -1,7 +1,6 @@
 package com.dart.api.application.auth;
 
 import static com.dart.global.common.util.AuthConstant.*;
-import static java.lang.Boolean.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -16,10 +15,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.infrastructure.redis.RedisEmailRepository;
-import com.dart.api.infrastructure.redis.RedisSessionRepository;
-import com.dart.global.common.util.CookieUtil;
-import com.dart.global.error.exception.BadRequestException;
+import com.dart.api.domain.auth.repository.EmailRedisRepository;
+import com.dart.global.error.exception.InvalidVerificationCodeException;
 import com.dart.global.error.exception.MailSendException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
@@ -35,10 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailService {
 
 	private final JavaMailSender emailSender;
-	private final RedisEmailRepository redisEmailRepository;
-	private final RedisSessionRepository redisSessionRepository;
-
-	private final CookieUtil cookieUtil;
+	private final EmailRedisRepository emailRedisRepository;
 
 	@Value("${spring.mail.username}")
 	private String sender;
@@ -86,6 +80,14 @@ public class EmailService {
 		message.setFrom(sender);
 
 		return message;
+	}
+
+	public void verifyCode(String to, int code) {
+		int storedCode = Integer.parseInt(emailRedisRepository.getEmail(to));
+		if (storedCode != code) {
+			throw new InvalidVerificationCodeException(ErrorCode.FAIL_INCORRECT_EMAIL_CODE);
+		}
+		emailRedisRepository.deleteEmail(to);
 	}
 
 	private String createCode() {
