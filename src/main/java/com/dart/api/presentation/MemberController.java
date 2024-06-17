@@ -74,8 +74,8 @@ public class MemberController {
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage,
-		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
-		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId, response);
+		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
+		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId);
 		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
