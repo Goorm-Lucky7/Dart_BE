@@ -1,6 +1,5 @@
 package com.dart.api.application.gallery;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,8 +13,6 @@ import com.dart.api.domain.gallery.repository.ImageRepository;
 import com.dart.api.dto.gallery.request.ImageInfoDto;
 import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.infrastructure.s3.S3Service;
-import com.dart.global.error.exception.BadRequestException;
-import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,13 +35,9 @@ public class ImageService {
 	}
 
 	private void processImage(ImageInfoDto imageInfoDto, MultipartFile imageFile, Gallery gallery) {
-		try {
-			String imageUrl = s3Service.uploadFile(imageFile);
-			final Image image = createImageEntity(imageInfoDto, imageUrl, gallery);
-			imageRepository.save(image);
-		} catch (IOException e) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
-		}
+		String imageUrl = s3Service.uploadFile(imageFile);
+		final Image image = createImageEntity(imageInfoDto, imageUrl, gallery);
+		imageRepository.save(image);
 	}
 
 	private Image createImageEntity(ImageInfoDto imageInfoDto, String imageUrl, Gallery gallery) {

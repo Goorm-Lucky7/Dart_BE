@@ -5,6 +5,7 @@ import java.util.List;
 public record GalleryResDto(
 	String title,
 	boolean hasComment,
+	String nickname,
 	List<ImageResDto> images
 ) {
 }

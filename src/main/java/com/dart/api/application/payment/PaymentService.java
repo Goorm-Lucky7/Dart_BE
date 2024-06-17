@@ -23,6 +23,7 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
 import com.dart.api.domain.payment.entity.Payment;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
@@ -30,7 +31,6 @@ import com.dart.api.dto.payment.request.PaymentCreateDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
-import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -87,7 +87,7 @@ public class PaymentService {
 		final LocalDateTime approveAt = paymentApproveDto.approved_at();
 		final Payment payment = Payment.create(member, gallery, approveAt, order);
 
-		payGallery(id, order, gallery);
+		payGallery(order, gallery);
 		paymentRepository.save(payment);
 
 		return gallery.getId().toString();
@@ -173,10 +173,10 @@ public class PaymentService {
 		}
 	}
 
-	private void payGallery(Long id, String order, Gallery gallery) {
+	private void payGallery(String order, Gallery gallery) {
 		if (order.equals(Order.PAID_GALLERY.getValue())) {
 			gallery.pay();
-			paymentRedisRepository.deleteData(id.toString());
+			paymentRedisRepository.deleteData(gallery.getId().toString());
 		}
 	}
 }
