@@ -4,6 +4,7 @@ import static com.dart.global.common.util.RedisConstant.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +35,9 @@ public class ChatRedisRepository {
 	}
 
 	public List<ChatMessageReadDto> getChatMessageReadDto(Long chatRoomId) {
-		Set<Object> messageValues = zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1);
+		Set<Object> messageValues = new LinkedHashSet<>(
+			zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1)
+		);
 
 		Set<Object> validateMessageValues = validateMessageValuesIfAbsent(messageValues);
 
@@ -54,12 +57,12 @@ public class ChatRedisRepository {
 	}
 
 	private String createMessageValue(String sender, String content, LocalDateTime createdAt) {
-		return sender + "|" + content + "|" + createdAt.toString();
+		return sender + "|" + content + "|" + createdAt;
 	}
 
 	private Set<Object> validateMessageValuesIfAbsent(Set<Object> messageValues) {
 		if (messageValues == null || messageValues.isEmpty()) {
-			return Set.of();
+			return new LinkedHashSet<>();
 		}
 
 		return messageValues;

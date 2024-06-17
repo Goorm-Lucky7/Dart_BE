@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.chat.ChatService;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ChatController {
@@ -32,12 +35,20 @@ public class ChatController {
 		@Payload ChatMessageCreateDto chatMessageCreateDto,
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
-		chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+
+		log.info("Received message: {}", chatMessageCreateDto.content());
 		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
+		log.info("Message sent to /sub/ws/{}: {}", chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
 	public ResponseEntity<List<String>> getLoggedInVisitors(@PathVariable("chat-room-id") Long chatRoomId) {
 		return ResponseEntity.ok(memberSessionRegistry.getMembersInChatRoom("/sub/ws/" + chatRoomId));
+	}
+
+	@GetMapping("/api/{chat-room-id}/chat-messages")
+	public ResponseEntity<List<ChatMessageReadDto>> getChatMessageList(@PathVariable("chat-room-id") Long chatRoomId) {
+		return ResponseEntity.ok(chatService.getChatMessageList(chatRoomId));
 	}
 }

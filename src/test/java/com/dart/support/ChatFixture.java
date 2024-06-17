@@ -12,7 +12,10 @@ public class ChatFixture {
 	}
 
 	public static ChatRoom createChatRoomEntity(Gallery gallery) {
-		return ChatRoom.createChatRoom(gallery);
+		return ChatRoom.builder()
+			.title(gallery.getTitle())
+			.gallery(gallery)
+			.build();
 	}
 
 	public static ChatMessage createChatMessageEntity() {

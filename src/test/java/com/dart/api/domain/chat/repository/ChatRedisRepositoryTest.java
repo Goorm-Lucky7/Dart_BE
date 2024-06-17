@@ -85,6 +85,9 @@ class ChatRedisRepositoryTest {
 		assertEquals("testSender1", actualMessages.get(0).sender());
 		assertEquals("Hello 👋🏻", actualMessages.get(0).content());
 		assertEquals(LocalDateTime.parse("2023-01-01T12:00:00"), actualMessages.get(0).createdAt());
+		assertEquals("testSender2", actualMessages.get(1).sender());
+		assertEquals("Bye 👋🏻", actualMessages.get(1).content());
+		assertEquals(LocalDateTime.parse("2023-01-01T12:01:00"), actualMessages.get(1).createdAt());
 	}
 
 	@Test

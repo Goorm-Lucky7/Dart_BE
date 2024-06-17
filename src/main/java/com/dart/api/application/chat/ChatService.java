@@ -2,6 +2,8 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,11 +15,13 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
+import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -32,6 +36,7 @@ public class ChatService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatMessageRepository chatMessageRepository;
 	private final MemberRepository memberRepository;
+	private final ChatRedisRepository chatRedisRepository;
 
 	public void createChatRoom(Gallery gallery) {
 		final ChatRoom chatRoom = ChatRoom.createChatRoom(gallery);
@@ -49,18 +54,41 @@ public class ChatService {
 	}
 
 	@Transactional
-	public void saveAndSendChatMessage(
+	public void saveChatMessage(
 		Long chatRoomId,
 		ChatMessageCreateDto chatMessageCreateDto,
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
-
 		final AuthUser authUser = extractAuthUserEmail(simpMessageHeaderAccessor);
 		final Member member = getMemberByEmail(authUser.email());
 
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
-		chatMessageRepository.save(chatMessage);
+		chatRedisRepository.saveChatMessage(
+			chatRoom,
+			chatMessage.getContent(),
+			chatMessage.getSender(),
+			chatMessage.getCreatedAt(),
+			determineExpiry(chatRoom)
+		);
+	}
+
+	public List<ChatMessageReadDto> getChatMessageList(Long chatRoomId) {
+		return chatRedisRepository.getChatMessageReadDto(chatRoomId);
+	}
+
+	public long determineExpiry(ChatRoom chatRoom) {
+		Gallery gallery = chatRoom.getGallery();
+
+		if (!gallery.isPaid() || gallery.getEndDate() == null) {
+			return FREE_MESSAGE_EXPIRY_SECONDS;
+		}
+
+		LocalDateTime currentDate = LocalDateTime.now();
+		LocalDateTime endDate = gallery.getEndDate();
+		long expirySeconds = Duration.between(currentDate, endDate).getSeconds();
+
+		return Math.max(expirySeconds, 0);
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
