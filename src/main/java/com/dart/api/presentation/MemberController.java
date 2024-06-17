@@ -1,8 +1,11 @@
 package com.dart.api.presentation;
 
+import static com.dart.global.common.util.AuthConstant.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -28,7 +31,6 @@ import com.dart.global.auth.annotation.Auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -41,8 +43,9 @@ public class MemberController {
 
 	@PostMapping("/signup")
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto) {
-		memberService.signUp(signUpDto);
+	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto,
+		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
+		memberService.signUp(signUpDto, sessionId);
 		return ResponseEntity.ok("Signup successfully");
 	}
 
@@ -69,18 +72,19 @@ public class MemberController {
 	@PutMapping("/members")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
-		@RequestPart @Valid MemberUpdateDto memberUpdateDto,
-		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage) {
-		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage);
+		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
+		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage,
+		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
+		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId);
 		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
 	@PostMapping("/nickname/check")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> checkNicknameDuplication(
-		@RequestBody NicknameDuplicationCheckDto nicknameDuplicationCheckDto) {
-		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto);
-
+		@RequestBody @Validated NicknameDuplicationCheckDto nicknameDuplicationCheckDto,
+		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
+		memberService.checkNicknameDuplication(nicknameDuplicationCheckDto, sessionId, response);
 		return ResponseEntity.ok("Checked nickname duplication successfully");
 	}
 }

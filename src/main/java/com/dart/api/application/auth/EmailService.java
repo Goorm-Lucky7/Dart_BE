@@ -1,6 +1,7 @@
 package com.dart.api.application.auth;
 
 import static com.dart.global.common.util.AuthConstant.*;
+import static java.lang.Boolean.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -13,10 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.auth.repository.EmailRedisRepository;
-import com.dart.global.error.exception.InvalidVerificationCodeException;
+import com.dart.api.domain.auth.repository.SessionRedisRepository;
+import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.global.common.util.CookieUtil;
+import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.MailSendException;
+import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,21 +35,48 @@ public class EmailService {
 
 	private final JavaMailSender emailSender;
 	private final EmailRedisRepository emailRedisRepository;
+	private final MemberRepository memberRepository;
+	private final SessionRedisRepository sessionRedisRepository;
+
+	private final CookieUtil cookieUtil;
 
 	@Value("${spring.mail.username}")
 	private String sender;
 
-	public void sendEmail(String to) {
-		String code = createCode();
-		SimpleMailMessage emailForm = createEmailForm(to, EMAIL_TITLE, code);
+	public void sendVerificationEmail(String newReceiver, String sessionId, HttpServletResponse response) {
+		validateEmail(newReceiver);
+		updateReceiverEmail(sessionId, newReceiver);
+		checkAndSetSessionId(sessionId, response);
 
-		try {
-			if(emailRedisRepository.checkExistsEmail(to)) emailRedisRepository.deleteEmail(to);
-			emailSender.send(emailForm);
-			emailRedisRepository.setEmail(to, code);
-		} catch (RuntimeException e) {
-			throw new MailSendException(ErrorCode.FAIL_EMAIL_SEND);
+		final String code = createCode();
+		sendEmail(newReceiver, code);
+
+		emailRedisRepository.setEmail(newReceiver, code);
+		sessionRedisRepository.saveSessionEmailMapping(sessionId, newReceiver);
+	}
+
+	public void verifyEmail(String to, int code) {
+		validateExpired(to);
+		validateCode(to, code);
+		emailRedisRepository.setVerified(to);
+	}
+
+	private void checkAndSetSessionId(String sessionId, HttpServletResponse response) {
+		if (sessionId == null || sessionId.isEmpty()) {
+			cookieUtil.setSessionCookie(response);
 		}
+	}
+
+	private void updateReceiverEmail(String sessionId, String newReceiver) {
+		String oldReceiver = sessionRedisRepository.findEmailBySessionId(sessionId);
+		if (oldReceiver != null && !oldReceiver.equals(newReceiver)) {
+			emailRedisRepository.deleteEmail(oldReceiver);
+		}
+	}
+
+	private void sendEmail(String to, String code) {
+		SimpleMailMessage emailForm = createEmailForm(to, EMAIL_TITLE, code);
+		emailSender.send(emailForm);
 	}
 
 	private SimpleMailMessage createEmailForm(String to, String subject, String text) {
@@ -53,14 +87,6 @@ public class EmailService {
 		message.setFrom(sender);
 
 		return message;
-	}
-
-	public void verifyCode(String to, int code) {
-		int storedCode = Integer.parseInt(emailRedisRepository.getEmail(to));
-		if (storedCode != code) {
-			throw new InvalidVerificationCodeException(ErrorCode.FAIL_INCORRECT_EMAIL_CODE);
-		}
-		emailRedisRepository.deleteEmail(to);
 	}
 
 	private String createCode() {
@@ -75,6 +101,27 @@ public class EmailService {
 			return sb.toString();
 		} catch (NoSuchAlgorithmException e) {
 			throw new MailSendException(ErrorCode.FAIL_EMAIL_SEND);
+		}
+	}
+
+	private void validateExpired(String to) {
+		if(!emailRedisRepository.checkExistsEmail(to)) {
+			throw new NotFoundException(ErrorCode.FAIL_INVALID_EMAIL_CODE);
+		}
+	}
+
+	private void validateCode(String to, int code) {
+		if(TRUE.equals(emailRedisRepository.isVerified(to))){
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_VERIFIED_EMAIL);
+		}
+		if(!String.valueOf(code).equals(emailRedisRepository.findVerificationCodeByEmail(to))) {
+			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_EMAIL_CODE);
+		}
+	}
+
+	private void validateEmail(String receiver){
+		if(memberRepository.existsByEmail(receiver)){
+			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
 	}
 }
