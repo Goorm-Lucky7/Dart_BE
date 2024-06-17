@@ -48,7 +48,7 @@ public class MemberService {
 
 		verifyEmailChecked(signUpDto.email());
 		verifyNicknameChecked(signUpDto.nickname());
-		validateExistMember(signUpDto.email());
+		validateMemberExistsByEmail(signUpDto.email());
 
 		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
 		final Member member = Member.signup(signUpDto, encodedPassword);
@@ -59,8 +59,8 @@ public class MemberService {
 	}
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
-		findMemberByNickname(nickname);
-		if(isMember(authUser) && isOwnProfile(nickname, authUser.nickname())) {
+		validateMemberExistsByNickname(nickname);
+		if(isMember(authUser.nickname()) && isOwnProfile(nickname, authUser.nickname())) {
 			return getOwnProfile(nickname);
 		} else {
 			return getOtherProfile(nickname);
@@ -72,8 +72,7 @@ public class MemberService {
 		AuthUser authUser,
 		MemberUpdateDto memberUpdateDto,
 		MultipartFile profileImage,
-		String sessionId,
-		HttpServletResponse response) {
+		String sessionId) {
 
 		Member member = findMemberByEmail(authUser.email());
 		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
@@ -117,11 +116,6 @@ public class MemberService {
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
 		HttpServletResponse response) {
 		nicknameService.checkAndReserveNickname(nicknameDuplicationCheckDto.nickname(), sessionId, response);
-	}
-
-	private boolean isMember(AuthUser authUser) {
-		System.out.println("\n\nisMember\n\n");
-		return authUser != null;
 	}
 
 	private void cleanUpSessionData(String sessionId, String email, String nickname) {
@@ -169,9 +163,19 @@ public class MemberService {
 		}
 	}
 
-	private void validateExistMember(String email) {
+	private void validateMemberExistsByEmail(String email) {
 		if (memberRepository.existsByEmail(email)) {
 			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
+	}
+
+	private void validateMemberExistsByNickname(String nickname) {
+		if (memberRepository.existsByEmail(nickname)) {
+			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
+		}
+	}
+
+	private boolean isMember(String nickname) {
+		return memberRepository.existsByNickname(nickname);
 	}
 }
