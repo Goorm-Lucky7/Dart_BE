@@ -2,6 +2,7 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.ChatFixture;
@@ -202,6 +204,47 @@ class ChatServiceTest {
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(1)).findByEmail(memberEmail);
 		verify(chatMessageRepository, times(0)).save(any(ChatMessage.class));
+	}
+
+	@Test
+	@DisplayName("GET CHAT MESSAGE LIST(⭕️ SUCCESS): 성공적으로 채팅 메시지 목록을 조회했습니다.")
+	void getChatMessageList_void_success() {
+		// GIVEN
+		Long chatRoomId = 1L;
+
+		when(chatRedisRepository.getChatMessageReadDto(chatRoomId)).thenReturn(
+			List.of(
+				new ChatMessageReadDto("testSender1", "Hello 👋🏻", LocalDateTime.parse("2023-01-01T12:00:00")),
+				new ChatMessageReadDto("testSender2", "Bye 👋🏻", LocalDateTime.parse("2023-01-01T12:01:00"))
+			)
+		);
+
+		// WHEN
+		List<ChatMessageReadDto> actualMessages = chatService.getChatMessageList(chatRoomId);
+
+		// THEN
+		assertEquals(2, actualMessages.size());
+		assertEquals("testSender1", actualMessages.get(0).sender());
+		assertEquals("Hello 👋🏻", actualMessages.get(0).content());
+		assertEquals(LocalDateTime.parse("2023-01-01T12:00:00"), actualMessages.get(0).createdAt());
+		assertEquals("testSender2", actualMessages.get(1).sender());
+		assertEquals("Bye 👋🏻", actualMessages.get(1).content());
+		assertEquals(LocalDateTime.parse("2023-01-01T12:01:00"), actualMessages.get(1).createdAt());
+	}
+
+	@Test
+	@DisplayName("GET CHAT MESSAGE LIST(❌ FAILURE): 조회된 채팅 메시지가 없을 때 빈 리스트를 반환합니다.")
+	void getChatMessageList_empty_fail() {
+		// GIVEN
+		Long chatRoomId = 1L;
+
+		when(chatRedisRepository.getChatMessageReadDto(chatRoomId)).thenReturn(List.of());
+
+		// WHEN
+		List<ChatMessageReadDto> actualMessages = chatService.getChatMessageList(chatRoomId);
+
+		// THEN
+		assertTrue(actualMessages.isEmpty());
 	}
 
 	@Test

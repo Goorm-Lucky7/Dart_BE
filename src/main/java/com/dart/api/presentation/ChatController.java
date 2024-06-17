@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.chat.ChatService;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 
 import lombok.RequiredArgsConstructor;
@@ -44,5 +45,10 @@ public class ChatController {
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
 	public ResponseEntity<List<String>> getLoggedInVisitors(@PathVariable("chat-room-id") Long chatRoomId) {
 		return ResponseEntity.ok(memberSessionRegistry.getMembersInChatRoom("/sub/ws/" + chatRoomId));
+	}
+
+	@GetMapping("/api/{chat-room-id}/chat-messages")
+	public ResponseEntity<List<ChatMessageReadDto>> getChatMessageList(@PathVariable("chat-room-id") Long chatRoomId) {
+		return ResponseEntity.ok(chatService.getChatMessageList(chatRoomId));
 	}
 }
