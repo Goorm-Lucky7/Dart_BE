@@ -17,5 +17,5 @@ public class PaymentConstant {
 	public static final String TAX = "0";
 	public static final String CID = "TC0ONETIME";
 	public static final String QUANTITY = "1";
-	public static final long THIRTY_MINUTE = 1800;
+	public static final long THIRTY_MINUTE = 300;
 }
