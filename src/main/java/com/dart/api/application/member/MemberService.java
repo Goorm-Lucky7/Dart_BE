@@ -59,6 +59,7 @@ public class MemberService {
 	}
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
+		findMemberByNickname(nickname);
 		if(isMember(authUser) && isOwnProfile(nickname, authUser.nickname())) {
 			return getOwnProfile(nickname);
 		} else {
@@ -119,6 +120,7 @@ public class MemberService {
 	}
 
 	private boolean isMember(AuthUser authUser) {
+		System.out.println("\n\nisMember\n\n");
 		return authUser != null;
 	}
 

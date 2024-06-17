@@ -4,16 +4,10 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
-import java.time.Duration;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +30,6 @@ import com.dart.global.error.model.ErrorCode;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-
-	@Value("${jwt.refresh-expire}")
-	private long refreshTokenExpire;
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
