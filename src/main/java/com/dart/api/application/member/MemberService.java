@@ -2,8 +2,6 @@ package com.dart.api.application.member;
 
 import static java.lang.Boolean.*;
 
-import java.io.IOException;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +25,6 @@ import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
-
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +58,7 @@ public class MemberService {
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
 		validateMemberExistsByNickname(nickname);
-		if(isMember(authUser.nickname()) && isOwnProfile(nickname, authUser.nickname())) {
+		if(isOwnProfile(authUser.nickname(), nickname)) {
 			return getOwnProfile(nickname);
 		} else {
 			return getOtherProfile(nickname);
@@ -84,6 +80,11 @@ public class MemberService {
 		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
 	}
 
+	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
+		HttpServletResponse response) {
+		nicknameService.checkAndReserveNickname(nicknameDuplicationCheckDto.nickname(), sessionId, response);
+	}
+
 	private void validateNickname(String newNickname, String currentNickname, String sessionId) {
 		if (newNickname != null && !newNickname.equals(currentNickname)) {
 			if (sessionId == null || !nicknameRedisRepository.isReserved(newNickname)) {
@@ -93,19 +94,14 @@ public class MemberService {
 	}
 
 	private String handleProfileImageUpdate(MultipartFile profileImage, String savedProfileImage) {
-		if (profileImage == null || profileImage.isEmpty()) {
-			return null;
+		if (profileImage == null || profileImage.isEmpty()) return savedProfileImage;
+
+		String newProfileImageUrl = s3Service.uploadFile(profileImage);
+		if (savedProfileImage != null) {
+			s3Service.deleteFile(savedProfileImage);
 		}
 
-		try {
-			String newProfileImageUrl = s3Service.uploadFile(profileImage);
-			if (savedProfileImage != null) {
-				s3Service.deleteFile(savedProfileImage);
-			}
-			return newProfileImageUrl;
-		} catch (IOException e) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
-		}
+		return newProfileImageUrl;
 	}
 
 	private void handleNicknameUpdate(String newNickname, String currentNickname, String sessionId) {
@@ -115,11 +111,6 @@ public class MemberService {
 		}
 	}
 
-	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
-		HttpServletResponse response) {
-		nicknameService.checkAndReserveNickname(nicknameDuplicationCheckDto.nickname(), sessionId, response);
-	}
-
 	private void cleanUpSessionData(String sessionId, String email, String nickname) {
 		sessionRedisRepository.deleteSessionEmailMapping(sessionId);
 		sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
@@ -127,8 +118,8 @@ public class MemberService {
 		nicknameRedisRepository.deleteNickname(nickname);
 	}
 
-	private boolean isOwnProfile(String currentNickname, String profileNickname) {
-		return currentNickname.equals(profileNickname);
+	private boolean isOwnProfile(String authUserNickname, String profileNickname) {
+		return authUserNickname.equals(profileNickname);
 	}
 
 	private MemberProfileResDto getOwnProfile(String nickname) {
@@ -175,9 +166,5 @@ public class MemberService {
 		if (memberRepository.existsByEmail(nickname)) {
 			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
-	}
-
-	private boolean isMember(String nickname) {
-		return memberRepository.existsByNickname(nickname);
 	}
 }
