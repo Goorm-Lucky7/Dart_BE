@@ -2,12 +2,10 @@ package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -20,12 +18,11 @@ import com.dart.api.application.chat.ChatService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
-import com.dart.api.domain.gallery.entity.Hashtag;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
-import com.dart.api.domain.gallery.repository.HashtagRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
+import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.domain.review.repository.ReviewRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
@@ -39,7 +36,6 @@ import com.dart.api.dto.gallery.response.ImageResDto;
 import com.dart.api.dto.gallery.response.ReviewGalleryInfoDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
-import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
@@ -57,7 +53,7 @@ public class GalleryService {
 
 	private final MemberRepository memberRepository;
 	private final GalleryRepository galleryRepository;
-	private final HashtagRepository hashtagRepository;
+	private final HashtagService hashtagService;
 	private final ReviewRepository reviewRepository;
 	private final PaymentRepository paymentRepository;
 	private final ImageService imageService;
@@ -68,31 +64,28 @@ public class GalleryService {
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
 		final Member member = findMemberByEmail(authUser.email());
-		try {
-			validateImageCount(createGalleryDto);
-			validateImageFileCount(createGalleryDto, imageFiles);
 
-			final Cost cost = determineCost(createGalleryDto);
+		validateImageCount(createGalleryDto);
+		validateImageFileCount(createGalleryDto, imageFiles);
 
-			validateEndDateForPay(cost, createGalleryDto);
+		final Cost cost = determineCost(createGalleryDto);
 
-			String thumbnailUrl = s3Service.uploadFile(thumbnail);
+		validateEndDateForPay(cost, createGalleryDto);
 
-			final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
-			galleryRepository.save(gallery);
+		String thumbnailUrl = s3Service.uploadFile(thumbnail);
 
-			saveHashtags(createGalleryDto.hashTags(), gallery);
+		final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
+		galleryRepository.save(gallery);
 
-			imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
+		hashtagService.saveHashtags(createGalleryDto.hashtags(), gallery);
 
-			chatService.createChatRoom(gallery);
+		imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
 
-			waitPayment(gallery);
+		chatService.createChatRoom(gallery);
 
-			return gallery.toReadIdDto();
-		} catch (IOException e) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
-		}
+		waitPayment(gallery);
+
+		return gallery.toReadIdDto();
 	}
 
 	@Transactional(readOnly = true)
@@ -134,7 +127,7 @@ public class GalleryService {
 
 		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
 
-		return new GalleryResDto(gallery.getTitle(), hasComment, images);
+		return new GalleryResDto(gallery.getTitle(), hasComment, gallery.getMember().getNickname(), images);
 	}
 
 	@Transactional(readOnly = true)
@@ -145,7 +138,7 @@ public class GalleryService {
 
 		boolean hasTicket = checkIfUserHasTicket(authUser, gallery);
 
-		final List<String> hashtags = findHashtagsByGallery(gallery);
+		final List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
 
 		boolean isOpen = isGalleryOpen(gallery);
 
@@ -173,7 +166,7 @@ public class GalleryService {
 
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
-		deleteHashtagsByGallery(gallery);
+		hashtagService.deleteHashtagsByGallery(gallery);
 		deleteGallery(gallery);
 	}
 
@@ -185,19 +178,6 @@ public class GalleryService {
 	private Member findMemberByNickname(String nickname) {
 		return memberRepository.findByNickname(nickname)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
-	}
-
-	private void saveHashtags(List<String> hashTags, Gallery gallery) {
-		if (hashTags != null) {
-			validateHashtagsSize(hashTags);
-			validateHashTagsLength(hashTags);
-
-			final List<Hashtag> hashtags = hashTags.stream()
-				.map(tag -> Hashtag.builder().tag(tag).gallery(gallery).build())
-				.collect(Collectors.toList());
-
-			hashtagRepository.saveAll(hashtags);
-		}
 	}
 
 	private Cost determineCost(CreateGalleryDto createGalleryDto) {
@@ -225,30 +205,12 @@ public class GalleryService {
 		}
 	}
 
-	private void validateHashtagsSize(List<String> hashTags) {
-		if (hashTags.size() > MAX_HASHTAG_SIZE) {
-			throw new BadRequestException(ErrorCode.FAIL_HASHTAG_SIZE_EXCEEDED);
-		}
-	}
-
-	private void validateHashTagsLength(List<String> hashTags) {
-		final Pattern pattern = Pattern.compile("^[^\\s]{1,10}$");
-
-		boolean invalidTagFound = hashTags.parallelStream().anyMatch(tag -> !pattern.matcher(tag).matches());
-
-		if (invalidTagFound) {
-			throw new BadRequestException(ErrorCode.FAIL_TAG_CONTAINS_SPACE_OR_INVALID_LENGTH);
-		}
-	}
-
 	private List<GalleryAllResDto> mapGalleriesToDto(List<Gallery> galleryList, AuthUser authUser) {
-		return galleryList.stream()
-			.map(gallery -> mapGalleryToDto(gallery, authUser))
-			.toList();
+		return galleryList.stream().map(gallery -> mapGalleryToDto(gallery, authUser)).toList();
 	}
 
 	private GalleryAllResDto mapGalleryToDto(Gallery gallery, AuthUser authUser) {
-		final List<String> hashtags = findHashtagsByGallery(gallery);
+		final List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
 		return createGalleryAllResDto(gallery, hashtags);
 	}
 
@@ -271,13 +233,11 @@ public class GalleryService {
 	}
 
 	private List<GalleryMypageResDto> convertToGalleryMypageResDtos(Page<Gallery> galleryPage) {
-		return galleryPage.stream()
-			.map(this::convertToGalleryMypageResDto)
-			.collect(Collectors.toList());
+		return galleryPage.stream().map(this::convertToGalleryMypageResDto).collect(Collectors.toList());
 	}
 
 	private GalleryMypageResDto convertToGalleryMypageResDto(Gallery gallery) {
-		List<String> hashtags = findHashtagsByGallery(gallery);
+		List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
 
 		return new GalleryMypageResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(),
 			gallery.getStartDate(), gallery.getEndDate(), gallery.getFee(), hashtags);
@@ -333,19 +293,10 @@ public class GalleryService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 	}
 
-	private List<String> findHashtagsByGallery(Gallery gallery) {
-		return hashtagRepository.findTagByGallery(gallery);
-	}
-
 	private boolean isGalleryOpen(Gallery gallery) {
 		LocalDateTime now = LocalDateTime.now();
 		return (gallery.getStartDate().isBefore(now) || gallery.getStartDate().isEqual(now)) &&
 			(gallery.getEndDate() == null || gallery.getEndDate().isAfter(now) || gallery.getEndDate().isEqual(now));
-	}
-
-	private void deleteHashtagsByGallery(Gallery gallery) {
-		List<Hashtag> hashtags = hashtagRepository.findByGallery(gallery);
-		hashtagRepository.deleteAll(hashtags);
 	}
 
 	private void deleteGallery(Gallery gallery) {
