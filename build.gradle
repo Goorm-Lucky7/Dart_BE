@@ -19,6 +19,13 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.testcontainers:testcontainers-bom:1.19.0"
+    }
 }
 
 dependencies {
@@ -77,6 +84,8 @@ dependencies {
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework:spring-websocket'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 tasks.named('test') {

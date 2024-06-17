@@ -1,8 +1,10 @@
 package com.dart.api.application.chat;
 
+import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +23,7 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
+import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
@@ -45,6 +49,9 @@ class ChatServiceTest {
 
 	@Mock
 	private SimpMessageHeaderAccessor simpMessageHeaderAccessor;
+
+	@Mock
+	private ChatRedisRepository chatRedisRepository;
 
 	@InjectMocks
 	private ChatService chatService;
@@ -107,8 +114,8 @@ class ChatServiceTest {
 	}
 
 	@Test
-	@DisplayName("SAVE AND SAVE CHAT MESSAGE(⭕️ SUCCESS): 사용자가 성공적으로 채팅 메시지를 전송 및 저장했습니다.")
-	void saveAndSendChatMessage_void_success() {
+	@DisplayName("SAVE CHAT MESSAGE(⭕️ SUCCESS): 사용자가 성공적으로 채팅 메시지를 전송 및 저장했습니다.")
+	void saveChatMessage_void_success() {
 		// GIVEN
 		Long chatRoomId = 1L;
 		String memberEmail = "test1@example.com";
@@ -119,24 +126,37 @@ class ChatServiceTest {
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.of(member));
 		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
 
 		// WHEN
-		chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		// THEN
-		verify(chatRoomRepository).findById(chatRoomId);
-		verify(memberRepository).findByEmail(memberEmail);
-		verify(chatMessageRepository).save(any(ChatMessage.class));
+		ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> senderCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<LocalDateTime> createdAtCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		ArgumentCaptor<Long> expiryCaptor = ArgumentCaptor.forClass(Long.class);
+
+		verify(chatRedisRepository).saveChatMessage(
+			any(ChatRoom.class),
+			contentCaptor.capture(),
+			senderCaptor.capture(),
+			createdAtCaptor.capture(),
+			expiryCaptor.capture()
+		);
+
+		assertThat(contentCaptor.getValue()).isEqualTo(chatMessageCreateDto.content());
+		assertThat(senderCaptor.getValue()).isEqualTo(member.getNickname());
+		assertThat(expiryCaptor.getValue()).isGreaterThan(0);
 	}
 
 	@Test
-	@DisplayName("SAVE AND SEND CHAT MESSAGE(❌ FAILURE): 존재하지 않은 채팅방으로 채팅 메세지를 전송했습니다.")
-	void saveAndSendChatMessage_chatRoom_NotFoundException_fail() {
+	@DisplayName("SAVE CHAT MESSAGE(❌ FAILURE): 존재하지 않은 채팅방으로 채팅 메세지를 전송했습니다.")
+	void saveChatMessage_chatRoom_NotFoundException_fail() {
 		// GIVEN
 		Long chatRoomId = 1L;
 
@@ -146,7 +166,7 @@ class ChatServiceTest {
 
 		// WHEN & THEN
 		assertThatThrownBy(
-			() -> chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
+			() -> chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 
@@ -156,8 +176,8 @@ class ChatServiceTest {
 	}
 
 	@Test
-	@DisplayName("SAVE AND SEND CHAT MESSAGE(❌ FAILURE): 존재하지 않은 사용자 이메일로 채팅 메세지를 전송했습니다.")
-	void saveAndSendChatMessage_member_UnauthorizedException_fail() {
+	@DisplayName("SAVE CHAT MESSAGE(❌ FAILURE): 존재하지 않은 사용자 이메일로 채팅 메세지를 전송했습니다.")
+	void saveChatMessage_member_UnauthorizedException_fail() {
 		// GIVEN
 		Long chatRoomId = 1L;
 		String memberEmail = "test1@example.com";
@@ -167,7 +187,7 @@ class ChatServiceTest {
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
 		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.empty());
@@ -175,12 +195,40 @@ class ChatServiceTest {
 
 		// WHEN & THEN
 		assertThatThrownBy(
-			() -> chatService.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
+			() -> chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
 			.isInstanceOf(UnauthorizedException.class)
 			.hasMessage("[❎ ERROR] 로그인이 필요한 기능입니다.");
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(1)).findByEmail(memberEmail);
 		verify(chatMessageRepository, times(0)).save(any(ChatMessage.class));
+	}
+
+	@Test
+	@DisplayName("DETERMINE EXPIRY PAID GALLERY(⭕️ SUCCESS): 성공적으로 유료 전시회의 채팅 메시지 만료 시간을 계산했습니다.")
+	void determineExpiry_paid_success() {
+		// GIVEN
+		Gallery gallery = GalleryFixture.createPaidGalleryEntity(5);
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
+
+		// WHEN
+		long actualExpiry = chatService.determineExpiry(chatRoom);
+
+		// THEN
+		assertThat(actualExpiry).isGreaterThan(0);
+	}
+
+	@Test
+	@DisplayName("DETERMINE EXPIRY FREE GALLERY(⭕️ SUCCESS): 성공적으로 무료 전시회의 채팅 메시지 만료 시간을 설정했습니다.")
+	void determineExpiry_free_success() {
+		// GIVEN
+		Gallery gallery = GalleryFixture.createFreeGalleryEntity();
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
+
+		// WHEN
+		long actualExpiry = chatService.determineExpiry(chatRoom);
+
+		// THEN
+		assertThat(actualExpiry).isEqualTo(FREE_MESSAGE_EXPIRY_SECONDS);
 	}
 }

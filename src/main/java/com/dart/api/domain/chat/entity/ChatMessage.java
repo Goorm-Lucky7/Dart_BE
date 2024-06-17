@@ -1,8 +1,11 @@
 package com.dart.api.domain.chat.entity;
 
+import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.CreatedDate;
+
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
-import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "tbl_chat_message")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage extends BaseTimeEntity {
+public class ChatMessage {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,11 +41,16 @@ public class ChatMessage extends BaseTimeEntity {
 	@JoinColumn(name = "chat_room_id")
 	private ChatRoom chatRoom;
 
+	@CreatedDate
+	@Column(name = "created_at", updatable = false, nullable = false)
+	private LocalDateTime createdAt;
+
 	@Builder
 	private ChatMessage(String content, String sender, ChatRoom chatRoom) {
 		this.content = content;
 		this.sender = sender;
 		this.chatRoom = chatRoom;
+		this.createdAt = LocalDateTime.now();
 	}
 
 	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
