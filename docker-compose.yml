@@ -16,25 +16,6 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
 
-  database:
-    container_name: mysql-container
-    image: mysql:latest
-    restart: always
-    expose:
-      - "3306"
-    networks:
-      - dart-network
-    volumes:
-      - ec2-user_db_data:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      TZ: Asia/Seoul
-    env_file:
-      - ./.env
-
   redis:
     container_name: redis-container
     image: redis:latest
@@ -53,7 +34,6 @@ services:
     expose:
       - "8080"
     depends_on:
-      - database
       - redis
     networks:
       - dart-network
@@ -65,7 +45,3 @@ services:
 networks:
   dart-network:
     driver: bridge
-
-volumes:
-  ec2-user_db_data:
-    driver: local
