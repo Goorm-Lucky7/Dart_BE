@@ -5,10 +5,13 @@ import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,9 +21,12 @@ import com.dart.api.domain.coupon.entity.CouponWallet;
 import com.dart.api.domain.coupon.repository.CouponRedisRepository;
 import com.dart.api.domain.coupon.repository.CouponRepository;
 import com.dart.api.domain.coupon.repository.CouponWalletRepository;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
+import com.dart.support.MemberFixture;
 
 @ExtendWith({MockitoExtension.class})
 class CouponManageServiceTest {
@@ -33,8 +39,35 @@ class CouponManageServiceTest {
 	@Mock
 	private CouponWalletRepository couponWalletRepository;
 
+	@Mock
+	private MemberRepository memberRepository;
+
 	@InjectMocks
 	private CouponManageService couponManageService;
+
+	@DisplayName("10명의 사용자가 쿠폰 발행을 성공적으로 한다.")
+	@MethodSource("com.dart.support.CouponFixture#provideValues_String")
+	@ParameterizedTest
+	void publish_all_success(Set<String> values) {
+		// Given
+		Coupon coupon = CouponFixture.create();
+		given(couponRepository.findCouponByDateRange(any(LocalDateTime.class))).willReturn(Optional.of(coupon));
+		given(couponRedisRepository.getCount(eq(coupon.getId()))).willReturn(coupon.getStock() - 1);
+		given(couponRedisRepository.rangeQueue(eq(coupon.getId()), any(long.class), any(long.class)))
+			.willReturn(values);
+
+		values.forEach(email -> {
+			Member mockMember = MemberFixture.createMemberEntity();
+			given(memberRepository.findByEmail(email)).willReturn(Optional.of(mockMember));
+		});
+
+		// When
+		couponManageService.publish();
+
+		// Then
+		verify(couponWalletRepository, times(10)).save(any(CouponWallet.class));
+		verify(memberRepository, times(10)).findByEmail(any(String.class));
+	}
 
 	@DisplayName("현재 발행 가능한 쿠폰이 없다.")
 	@Test
