@@ -58,9 +58,9 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		if (isPaymentKey(expiredKey)) {
 			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
 			handleExpiredGallery(galleryId);
+		} else if (isChatMessageKey(expiredKey)) {
+			chatMessageArchiveService.handleRedisExpiredEvent(expiredKey);
 		}
-
-		chatMessageArchiveService.handleRedisExpiredEvent(expiredKey);
 	}
 
 	public void handleExpiredGallery(Long galleryId) {
@@ -79,5 +79,9 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 
 	private boolean isPaymentKey(String str) {
 		return str.contains(REDIS_PAYMENT_PREFIX);
+	}
+
+	private boolean isChatMessageKey(String str) {
+		return str.contains(REDIS_CHAT_MESSAGE_PREFIX);
 	}
 }
