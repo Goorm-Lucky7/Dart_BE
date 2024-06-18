@@ -41,7 +41,7 @@ public class CouponRedisRepository {
 	}
 
 	public int getCount(Long couponId) {
-		String couponCountKey = REDIS_COUPON_PREFIX + couponId.toString();
+		String couponCountKey = REDIS_COUPON_COUNT_PREFIX + couponId.toString();
 		String count = valueRedisRepository.getValue(couponCountKey);
 
 		if (isNull(count)) {
