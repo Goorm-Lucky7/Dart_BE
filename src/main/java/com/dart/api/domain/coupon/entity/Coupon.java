@@ -1,5 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
+import java.time.LocalDateTime;
+
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -34,20 +36,30 @@ public class Coupon extends BaseTimeEntity {
 	@Column(name = "description", nullable = false)
 	private String description;
 
+	@Column(name = "valid_at", updatable = false, nullable = false)
+	private LocalDateTime validAt;
+
+	@Column(name = "duration_at", updatable = false, nullable = false)
+	private LocalDateTime durationAt;
+
 	@Column(name = "coupon_type")
 	@Enumerated(EnumType.STRING)
 	private CouponType couponType;
 
 	@Builder
-	private Coupon(
+	public Coupon(
 		int stock,
 		String name,
 		String description,
+		LocalDateTime validAt,
+		LocalDateTime durationAt,
 		CouponType couponType
 	) {
 		this.stock = stock;
 		this.name = name;
 		this.description = description;
+		this.validAt = validAt;
+		this.durationAt = durationAt;
 		this.couponType = couponType;
 	}
 
@@ -55,12 +67,16 @@ public class Coupon extends BaseTimeEntity {
 		int stock,
 		String name,
 		String description,
+		LocalDateTime validAt,
+		LocalDateTime durationAt,
 		String couponType
 	) {
 		return Coupon.builder()
 			.stock(stock)
 			.name(name)
 			.description(description)
+			.validAt(validAt)
+			.durationAt(durationAt)
 			.couponType(CouponType.fromName(couponType))
 			.build();
 	}
