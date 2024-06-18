@@ -62,22 +62,4 @@ public class Coupon extends BaseTimeEntity {
 		this.durationAt = durationAt;
 		this.couponType = couponType;
 	}
-
-	public static Coupon create(
-		int stock,
-		String name,
-		String description,
-		LocalDateTime validAt,
-		LocalDateTime durationAt,
-		String couponType
-	) {
-		return Coupon.builder()
-			.stock(stock)
-			.name(name)
-			.description(description)
-			.validAt(validAt)
-			.durationAt(durationAt)
-			.couponType(CouponType.fromName(couponType))
-			.build();
-	}
 }
