@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.dart.api.domain.coupon.entity.Coupon;
 import com.dart.api.domain.coupon.repository.CouponRedisRepository;
 import com.dart.api.domain.coupon.repository.CouponRepository;
+import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
 
@@ -51,8 +52,8 @@ class CouponManageServiceTest {
 	}
 
 	@Test
-	@DisplayName("이미 해당 쿠폰 발급요청을 했다. - ConflictException")
-	void registerQueue_No_BadRequestException() {
+	@DisplayName("이미 해당 쿠폰은 발급받은 쿠폰이다. - ConflictException")
+	void registerQueue_No_ConflictException() {
 		// GIVEN
 		Coupon coupon = CouponFixture.create();
 		String testEmail = "test@example.com";
@@ -64,6 +65,23 @@ class CouponManageServiceTest {
 		// When & Then
 		assertThatThrownBy(() -> couponManageService.registerQueue(coupon.getId(), testEmail))
 			.isInstanceOf(ConflictException.class);
+	}
+
+	@Test
+	@DisplayName("해당 쿠폰은 재고가 마감된 쿠폰이다. - BadRequestException")
+	void registerQueue_No_BadRequestException() {
+		// GIVEN
+		Coupon coupon = CouponFixture.create();
+		String testEmail = "test@example.com";
+
+		given(couponRepository.findCouponByIdAndDateRange(eq(coupon.getId()), any(LocalDateTime.class))).willReturn(
+			Optional.of(coupon));
+		given(couponRedisRepository.hasValue(eq(coupon.getId()), eq(testEmail))).willReturn(false);
+		given(couponRedisRepository.sizeQueue(eq(coupon.getId()))).willReturn(coupon.getStock());
+
+		// When & Then
+		assertThatThrownBy(() -> couponManageService.registerQueue(coupon.getId(), testEmail))
+			.isInstanceOf(BadRequestException.class);
 	}
 }
 
