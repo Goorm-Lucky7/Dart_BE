@@ -2,6 +2,7 @@ package com.dart.api.presentation;
 
 import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -118,8 +119,8 @@ class ChatControllerTest {
 		Long chatRoomId = 1L;
 
 		List<ChatMessageReadDto> chatMessagesList = List.of(
-			new ChatMessageReadDto("testSender1", "Hello 👋🏻", LocalDateTime.parse("2023-01-01T12:00:00")),
-			new ChatMessageReadDto("testSender2", "Bye 👋🏻", LocalDateTime.parse("2023-01-01T12:01:00"))
+			new ChatMessageReadDto("testSender1", "Hello 👋🏻", LocalDateTime.parse("2023-01-01T12:00:00"), false),
+			new ChatMessageReadDto("testSender2", "Bye 👋🏻", LocalDateTime.parse("2023-01-01T12:01:00"), false)
 		);
 
 		given(chatService.getChatMessageList(chatRoomId)).willReturn(chatMessagesList);
