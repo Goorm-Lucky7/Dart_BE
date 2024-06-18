@@ -20,6 +20,6 @@ public class CouponController {
 
 	@PostMapping("/{coupon-id}")
 	public void registerQueue(@PathVariable("coupon-id") Long couponId, @Auth AuthUser authUser) {
-		couponManageService.registerQueue(couponId, authUser);
+		couponManageService.registerQueue(couponId, authUser.email());
 	}
 }
