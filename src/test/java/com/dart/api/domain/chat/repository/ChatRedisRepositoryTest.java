@@ -1,6 +1,7 @@
 package com.dart.api.domain.chat.repository;
 
 import static com.dart.global.common.util.RedisConstant.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -12,7 +13,6 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,7 +38,7 @@ class ChatRedisRepositoryTest {
 		String sender = "testSender";
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
-		long expirySeconds = 86400L;
+		long expirySeconds = 3600;
 		String messageValue = sender + "|" + content + "|" + createdAt.toString();
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
@@ -47,22 +47,42 @@ class ChatRedisRepositoryTest {
 		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expirySeconds);
 
 		// THEN
-		ArgumentCaptor<Double> scoreCaptor = ArgumentCaptor.forClass(Double.class);
-		ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<Long> expiryCaptor = ArgumentCaptor.forClass(Long.class);
-
 		verify(zSetRedisRepository).addElementIfAbsent(
-			keyCaptor.capture(),
-			valueCaptor.capture(),
-			scoreCaptor.capture(),
-			expiryCaptor.capture()
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
+			eq(messageValue),
+			doubleThat(value -> value == createdAt.toEpochSecond(ZoneOffset.UTC)),
+			eq(expirySeconds)
+		);
+	}
+
+	@Test
+	@DisplayName("SAVE CHAT MESSAGE(⭕️ SUCCESS): 만료 시간이 없는 채팅 메시지를 성공적으로 저장했습니다.")
+	void saveChatMessage_expiry_success() {
+		// GIVEN
+		String sender = "testSender";
+		String content = "Hello 👋🏻";
+		LocalDateTime createdAt = LocalDateTime.now();
+		long expirySeconds = -1;
+		String messageValue = sender + "|" + content + "|" + createdAt.toString();
+
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
+
+		// WHEN
+		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expirySeconds);
+
+		// THEN
+		verify(zSetRedisRepository).addElementIfAbsent(
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
+			eq(messageValue),
+			eq((double)createdAt.toEpochSecond(ZoneOffset.UTC)),
+			eq(expirySeconds)
 		);
 
-		assertEquals(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId(), keyCaptor.getValue());
-		assertEquals(messageValue, valueCaptor.getValue());
-		assertEquals(createdAt.toEpochSecond(ZoneOffset.UTC), scoreCaptor.getValue(), 0.1);
-		assertEquals(expirySeconds, expiryCaptor.getValue());
+		verify(zSetRedisRepository, never()).addElement(
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
+			eq(messageValue),
+			anyDouble()
+		);
 	}
 
 	@Test
@@ -70,24 +90,25 @@ class ChatRedisRepositoryTest {
 	void getChatMessageReadDto_void_success() {
 		// GIVEN
 		Long chatRoomId = 1L;
-		Set<Object> messageValues = Set.of(
-			"testSender1|Hello 👋🏻|2023-01-01T12:00:00",
-			"testSender2|Bye 👋🏻|2023-01-01T12:01:00"
-		);
+		String sender = "testSender1";
+		String content = "Hello 👋🏻";
+		LocalDateTime createdAt = LocalDateTime.now();
+		String messageValue = sender + "|" + content + "|" + createdAt.toString();
 
-		when(zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1)).thenReturn(messageValues);
+		Set<Object> messageValues = Set.of(messageValue);
+
+		when(zSetRedisRepository.getRange(eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId), eq(0L), eq(-1L)))
+			.thenReturn(messageValues);
 
 		// WHEN
 		List<ChatMessageReadDto> actualMessages = chatRedisRepository.getChatMessageReadDto(chatRoomId);
 
 		// THEN
-		assertEquals(2, actualMessages.size());
-		assertEquals("testSender1", actualMessages.get(0).sender());
-		assertEquals("Hello 👋🏻", actualMessages.get(0).content());
-		assertEquals(LocalDateTime.parse("2023-01-01T12:00:00"), actualMessages.get(0).createdAt());
-		assertEquals("testSender2", actualMessages.get(1).sender());
-		assertEquals("Bye 👋🏻", actualMessages.get(1).content());
-		assertEquals(LocalDateTime.parse("2023-01-01T12:01:00"), actualMessages.get(1).createdAt());
+		assertThat(actualMessages).isNotEmpty();
+		assertThat(actualMessages).hasSize(1);
+		assertThat(actualMessages.get(0).sender()).isEqualTo(sender);
+		assertThat(actualMessages.get(0).content()).isEqualTo(content);
+		assertThat(actualMessages.get(0).createdAt()).isEqualTo(createdAt);
 	}
 
 	@Test
@@ -97,8 +118,8 @@ class ChatRedisRepositoryTest {
 		Long chatRoomId = 1L;
 		Set<Object> emptyMessageValues = Set.of();
 
-		when(zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1)).thenReturn(
-			emptyMessageValues);
+		when(zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1))
+			.thenReturn(emptyMessageValues);
 
 		// WHEN
 		List<ChatMessageReadDto> actualMessages = chatRedisRepository.getChatMessageReadDto(chatRoomId);

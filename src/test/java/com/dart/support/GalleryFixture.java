@@ -50,13 +50,13 @@ public class GalleryFixture {
 			.build();
 	}
 
-	public static Gallery createPaidGalleryEntity(long daysUntilEnd) {
+	public static Gallery createPaidGalleryEntity(LocalDateTime startDate, LocalDateTime endDate) {
 		return Gallery.builder()
 			.title("D'ART Gallery")
 			.content("This is D'ART Gallery")
 			.thumbnail("https://example.com/thumbnail.jpg")
-			.startDate(LocalDateTime.now())
-			.endDate(LocalDateTime.now().plusDays(daysUntilEnd))
+			.startDate(startDate)
+			.endDate(endDate)
 			.cost(Cost.PAY)
 			.fee(1000)
 			.member(MemberFixture.createMemberEntity())

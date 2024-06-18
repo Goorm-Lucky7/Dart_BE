@@ -22,6 +22,7 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -30,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ChatService {
 
 	private final ChatRoomRepository chatRoomRepository;
@@ -73,6 +73,7 @@ public class ChatService {
 		);
 	}
 
+	@Transactional(readOnly = true)
 	public List<ChatMessageReadDto> getChatMessageList(Long chatRoomId) {
 		return chatRedisRepository.getChatMessageReadDto(chatRoomId);
 	}
@@ -80,15 +81,18 @@ public class ChatService {
 	public long determineExpiry(ChatRoom chatRoom) {
 		Gallery gallery = chatRoom.getGallery();
 
-		if (!gallery.isPaid() || gallery.getEndDate() == null) {
-			return FREE_MESSAGE_EXPIRY_SECONDS;
+		if ((gallery.getEndDate() == null)) {
+			return FREE_MESSAGE_EXPIRY;
 		}
 
 		LocalDateTime currentDate = LocalDateTime.now();
 		LocalDateTime endDate = gallery.getEndDate();
-		long expirySeconds = Duration.between(currentDate, endDate).getSeconds();
 
-		return Math.max(expirySeconds, 0);
+		if (endDate.isBefore(currentDate)) {
+			throw new ConflictException(ErrorCode.FAIL_GALLERY_CONFLICT_ALREADY_ENDED);
+		}
+
+		return Duration.between(currentDate, endDate).getSeconds();
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
