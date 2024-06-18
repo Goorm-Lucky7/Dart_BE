@@ -43,6 +43,7 @@ public enum ErrorCode {
 	FAIL_CREATED_UNPAID_REVIEW("[❎ ERROR] 미결제 전시관에 리뷰를 작성하실 수 없습니다."),
 	FAIL_ALREADY_VERIFIED_EMAIL("[❎ ERROR] 이미 이메일 중복확인이 완료되었습니다."),
 	FAIL_NO_TARGET_MEMBER_PROVIDED("[❎ ERROR] 조회하고 싶은 대상을 입력해 주세요."),
+	FAIL_INVALID_CHAT_ROOM_KEY("[❎ ERROR] 요청하신 키값은 존재하지 않는 채팅방 키값입니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
