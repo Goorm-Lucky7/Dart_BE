@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.coupon.entity.Coupon;
 import com.dart.api.domain.coupon.entity.CouponWallet;
 import com.dart.api.domain.coupon.repository.CouponRedisRepository;
@@ -68,16 +67,16 @@ public class CouponManageService {
 		}
 	}
 
-	public void registerQueue(Long couponId, AuthUser authUser) {
+	public void registerQueue(Long couponId, String email) {
 		final LocalDateTime nowDatetime = LocalDateTime.now();
 		final Coupon coupon = couponRepository.findCouponByIdAndDateRange(couponId, nowDatetime)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
 		final double registerTime = System.currentTimeMillis();
 		final long expiredTime = Duration.between(nowDatetime, coupon.getDurationAt()).getSeconds();
 
-		validateRegisterQueue(coupon, authUser.email());
+		validateRegisterQueue(coupon, email);
 
-		couponRedisRepository.addIfAbsentQueue(couponId, authUser.email(), registerTime, expiredTime);
+		couponRedisRepository.addIfAbsentQueue(couponId, email, registerTime, expiredTime);
 	}
 
 	private void validateRegisterQueue(Coupon coupon, String email) {
