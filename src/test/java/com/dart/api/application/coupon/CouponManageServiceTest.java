@@ -1,5 +1,6 @@
 package com.dart.api.application.coupon;
 
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.dart.api.domain.coupon.entity.Coupon;
 import com.dart.api.domain.coupon.repository.CouponRedisRepository;
 import com.dart.api.domain.coupon.repository.CouponRepository;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
 
 @ExtendWith({MockitoExtension.class})
@@ -46,6 +48,22 @@ class CouponManageServiceTest {
 		// THEN
 		verify(couponRedisRepository)
 			.addIfAbsentQueue(eq(coupon.getId()), eq(testEmail), anyDouble(), anyLong());
+	}
+
+	@Test
+	@DisplayName("이미 해당 쿠폰 발급요청을 했다. - ConflictException")
+	void registerQueue_No_BadRequestException() {
+		// GIVEN
+		Coupon coupon = CouponFixture.create();
+		String testEmail = "test@example.com";
+
+		given(couponRepository.findCouponByIdAndDateRange(eq(coupon.getId()), any(LocalDateTime.class))).willReturn(
+			Optional.of(coupon));
+		given(couponRedisRepository.hasValue(eq(coupon.getId()), eq(testEmail))).willReturn(true);
+
+		// When & Then
+		assertThatThrownBy(() -> couponManageService.registerQueue(coupon.getId(), testEmail))
+			.isInstanceOf(ConflictException.class);
 	}
 }
 
