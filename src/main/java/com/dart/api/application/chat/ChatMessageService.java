@@ -30,24 +30,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatMessageService {
 
 	private final ChatRoomRepository chatRoomRepository;
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
-
-	public void createChatRoom(Gallery gallery) {
-		final ChatRoom chatRoom = ChatRoom.createChatRoom(gallery);
-		chatRoomRepository.save(chatRoom);
-	}
-
-	public void deleteChatRoom(Gallery gallery) {
-		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
-
-		chatRedisRepository.deleteChatMessages(chatRoom.getId());
-		chatRoomRepository.delete(chatRoom);
-	}
 
 	@Transactional
 	public void saveChatMessage(
