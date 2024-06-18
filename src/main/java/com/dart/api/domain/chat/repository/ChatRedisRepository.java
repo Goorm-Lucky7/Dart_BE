@@ -25,7 +25,8 @@ public class ChatRedisRepository {
 	public void saveChatMessage(ChatRoom chatRoom, String content, String sender, LocalDateTime createdAt,
 		long expirySeconds) {
 		String key = REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId();
-		String messageValue = createMessageValue(sender, content, createdAt);
+		boolean isAuthor = chatRoom.getGallery().getMember().getNickname().equals(sender);
+		String messageValue = createMessageValue(sender, content, createdAt, isAuthor);
 
 		addElementToRedis(key, messageValue, createdAt, expirySeconds);
 	}
@@ -46,12 +47,6 @@ public class ChatRedisRepository {
 		zSetRedisRepository.deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
 	}
 
-	public void deleteChatMessage(Long chatRoomId, String content, String sender, LocalDateTime createdAt) {
-		String messageValue = createMessageValue(sender, content, createdAt);
-
-		zSetRedisRepository.removeElement(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, messageValue);
-	}
-
 	private void addElementToRedis(String key, String messageValue, LocalDateTime createdAt, long expirySeconds) {
 		zSetRedisRepository.addElementIfAbsent(key, messageValue, createdAt.toEpochSecond(ZoneOffset.UTC),
 			expirySeconds);
@@ -61,8 +56,8 @@ public class ChatRedisRepository {
 		}
 	}
 
-	private String createMessageValue(String sender, String content, LocalDateTime createdAt) {
-		return sender + "|" + content + "|" + createdAt;
+	private String createMessageValue(String sender, String content, LocalDateTime createdAt, boolean isAuthor) {
+		return sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 	}
 
 	private Set<Object> validateMessageValuesIfAbsent(Set<Object> messageValues) {
@@ -80,6 +75,7 @@ public class ChatRedisRepository {
 			.sender(parts[0])
 			.content(parts[1])
 			.createdAt(LocalDateTime.parse(parts[2]))
+			.isAuthor(Boolean.parseBoolean(parts[3]))
 			.build();
 	}
 }

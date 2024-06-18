@@ -23,9 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -45,9 +43,6 @@ class ChatServiceTest {
 
 	@Mock
 	private ChatRoomRepository chatRoomRepository;
-
-	@Mock
-	private ChatMessageRepository chatMessageRepository;
 
 	@Mock
 	private MemberRepository memberRepository;
@@ -80,21 +75,15 @@ class ChatServiceTest {
 		// GIVEN
 		Gallery gallery = GalleryFixture.createGalleryEntity();
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
-		List<ChatMessage> chatMessages = List.of(
-			ChatFixture.createChatMessageEntity(chatRoom),
-			ChatFixture.createChatMessageEntity(chatRoom)
-		);
 
 		given(chatRoomRepository.findByGallery(gallery)).willReturn(Optional.of(chatRoom));
-		given(chatMessageRepository.findByChatRoom(chatRoom)).willReturn(chatMessages);
 
 		// WHEN
 		chatService.deleteChatRoom(gallery);
 
 		// THEN
 		verify(chatRoomRepository).findByGallery(gallery);
-		verify(chatMessageRepository).findByChatRoom(chatRoom);
-		verify(chatMessageRepository).deleteAll(chatMessages);
+		verify(chatRedisRepository).deleteChatMessages(chatRoom.getId());
 		verify(chatRoomRepository).delete(chatRoom);
 	}
 
@@ -113,8 +102,7 @@ class ChatServiceTest {
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 
 		verify(chatRoomRepository, times(1)).findByGallery(gallery);
-		verify(chatMessageRepository, times(0)).findByChatRoom(any(ChatRoom.class));
-		verify(chatMessageRepository, times(0)).deleteAll(anyList());
+		verify(chatRedisRepository, times(0)).deleteChatMessages(anyLong());
 		verify(chatRoomRepository, times(0)).delete(any(ChatRoom.class));
 	}
 
@@ -177,7 +165,8 @@ class ChatServiceTest {
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(0)).findByEmail(any(String.class));
-		verify(chatMessageRepository, times(0)).save(any(ChatMessage.class));
+		verify(chatRedisRepository, times(0))
+			.saveChatMessage(any(ChatRoom.class), anyString(), anyString(), any(LocalDateTime.class), anyLong());
 	}
 
 	@Test
@@ -206,19 +195,25 @@ class ChatServiceTest {
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(1)).findByEmail(memberEmail);
-		verify(chatMessageRepository, times(0)).save(any(ChatMessage.class));
+		verify(chatRedisRepository, times(0))
+			.saveChatMessage(any(ChatRoom.class), anyString(), anyString(), any(LocalDateTime.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("GET CHAT MESSAGE LIST(⭕️ SUCCESS): 성공적으로 채팅 메시지 목록을 조회했습니다.")
 	void getChatMessageList_void_success() {
 		// GIVEN
-		Long chatRoomId = 1L;
+		Member member = MemberFixture.createMemberEntity();
+		Member author = MemberFixture.createMemberEntityForAuthor();
+
+		Gallery gallery = GalleryFixture.createGalleryEntityForAuthor();
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
+		Long chatRoomId = chatRoom.getId();
 
 		when(chatRedisRepository.getChatMessageReadDto(chatRoomId)).thenReturn(
 			List.of(
-				new ChatMessageReadDto("testSender1", "Hello 👋🏻", LocalDateTime.parse("2023-01-01T12:00:00")),
-				new ChatMessageReadDto("testSender2", "Bye 👋🏻", LocalDateTime.parse("2023-01-01T12:01:00"))
+				new ChatMessageReadDto(member.getNickname(), "Hello 👋🏻", LocalDateTime.now(), false),
+				new ChatMessageReadDto(author.getNickname(), "Have a good time 👏", LocalDateTime.now(), false)
 			)
 		);
 
@@ -227,12 +222,14 @@ class ChatServiceTest {
 
 		// THEN
 		assertEquals(2, actualMessages.size());
-		assertEquals("testSender1", actualMessages.get(0).sender());
+
+		assertEquals(member.getNickname(), actualMessages.get(0).sender());
 		assertEquals("Hello 👋🏻", actualMessages.get(0).content());
-		assertEquals(LocalDateTime.parse("2023-01-01T12:00:00"), actualMessages.get(0).createdAt());
-		assertEquals("testSender2", actualMessages.get(1).sender());
-		assertEquals("Bye 👋🏻", actualMessages.get(1).content());
-		assertEquals(LocalDateTime.parse("2023-01-01T12:01:00"), actualMessages.get(1).createdAt());
+		assertFalse(actualMessages.get(0).isAuthor());
+
+		assertEquals(author.getNickname(), actualMessages.get(1).sender());
+		assertEquals("Have a good time 👏", actualMessages.get(1).content());
+		assertFalse(actualMessages.get(1).isAuthor());
 	}
 
 	@Test

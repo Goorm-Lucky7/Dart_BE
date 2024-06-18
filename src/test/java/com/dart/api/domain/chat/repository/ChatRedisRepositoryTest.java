@@ -39,7 +39,8 @@ class ChatRedisRepositoryTest {
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
 		long expirySeconds = 3600;
-		String messageValue = sender + "|" + content + "|" + createdAt.toString();
+		boolean isAuthor = false;
+		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
@@ -63,7 +64,8 @@ class ChatRedisRepositoryTest {
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
 		long expirySeconds = -1;
-		String messageValue = sender + "|" + content + "|" + createdAt.toString();
+		boolean isAuthor = false;
+		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
@@ -93,7 +95,8 @@ class ChatRedisRepositoryTest {
 		String sender = "testSender1";
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
-		String messageValue = sender + "|" + content + "|" + createdAt.toString();
+		boolean isAuthor = false;
+		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 
 		Set<Object> messageValues = Set.of(messageValue);
 
@@ -139,22 +142,5 @@ class ChatRedisRepositoryTest {
 
 		// THEN
 		verify(zSetRedisRepository).deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
-	}
-
-	@Test
-	@DisplayName("DELETE CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 단일 채팅 메시지를 삭제했습니다.")
-	void deleteChatMessage_void_success() {
-		// GIVEN
-		Long chatRoomId = 1L;
-		String sender = "testSender";
-		String content = "Hello 👋🏻";
-		LocalDateTime createdAt = LocalDateTime.now();
-		String messageValue = sender + "|" + content + "|" + createdAt.toString();
-
-		// WHEN
-		chatRedisRepository.deleteChatMessage(chatRoomId, content, sender, createdAt);
-
-		// THEN
-		verify(zSetRedisRepository).removeElement(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, messageValue);
 	}
 }

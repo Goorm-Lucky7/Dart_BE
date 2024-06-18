@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -34,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 public class ChatService {
 
 	private final ChatRoomRepository chatRoomRepository;
-	private final ChatMessageRepository chatMessageRepository;
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
 
@@ -47,9 +45,7 @@ public class ChatService {
 		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
 
-		final List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoom(chatRoom);
-
-		chatMessageRepository.deleteAll(chatMessages);
+		chatRedisRepository.deleteChatMessages(chatRoom.getId());
 		chatRoomRepository.delete(chatRoom);
 	}
 
@@ -96,8 +92,7 @@ public class ChatService {
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
-		return (AuthUser)Objects
-			.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes(), "SESSION ATTRIBUTE MUST NOT BE NULL")
+		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
 			.get(CHAT_SESSION_USER);
 	}
 

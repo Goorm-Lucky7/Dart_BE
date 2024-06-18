@@ -15,15 +15,30 @@ public class MemberFixture {
 		);
 	}
 
+	public static Member createMemberEntityForAuthor() {
+		return Member.signup(
+			createMemberEntityForAuthorSignUpDto(),
+			"1q2w3e4r!"
+		);
+	}
+
 	public static SignUpDto createMemberEntityForSignUpDto() {
 		return SignUpDto.builder()
 			.email("test1@example.com")
 			.nickname("test1")
 			.password("1q2w3e4r!")
 			.birthday(LocalDate.of(2024, 6, 4))
-			//.bank("example bank")
-			//.account("000-000-000000")
 			.introduce("Hello 👏")
+			.build();
+	}
+
+	public static SignUpDto createMemberEntityForAuthorSignUpDto() {
+		return SignUpDto.builder()
+			.email("author@example.com")
+			.nickname("author")
+			.password("1q2w3e4r!")
+			.birthday(LocalDate.of(2024, 6, 4))
+			.introduce("Have a good time 👏")
 			.build();
 	}
 
@@ -31,6 +46,13 @@ public class MemberFixture {
 		return AuthUser.create(
 			"test1@example.com",
 			"test1"
+		);
+	}
+
+	public static AuthUser createAuthUserEntityForAuthor() {
+		return AuthUser.create(
+			"author@example.com",
+			"author"
 		);
 	}
 }
