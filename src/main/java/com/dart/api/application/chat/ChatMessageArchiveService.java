@@ -12,7 +12,6 @@ import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
-import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -27,8 +26,6 @@ public class ChatMessageArchiveService {
 	private final ChatRoomRepository chatRoomRepository;
 
 	public void handleRedisExpiredEvent(String key) {
-		validateStartWithKey(key);
-
 		final Long chatRoomId = extractChatRoomIdFromKey(key);
 		final List<ChatMessageReadDto> expiredMessages = chatRedisRepository.getChatMessageReadDto(chatRoomId);
 
@@ -49,11 +46,5 @@ public class ChatMessageArchiveService {
 
 	private Long extractChatRoomIdFromKey(String key) {
 		return Long.parseLong(key.replace(REDIS_CHAT_MESSAGE_PREFIX, ""));
-	}
-
-	private void validateStartWithKey(String key) {
-		if (!key.startsWith(REDIS_CHAT_MESSAGE_PREFIX)) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_CHAT_ROOM_KEY);
-		}
 	}
 }
