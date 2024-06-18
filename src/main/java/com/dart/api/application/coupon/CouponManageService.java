@@ -2,6 +2,7 @@ package com.dart.api.application.coupon;
 
 import static com.dart.global.common.util.CouponConstant.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
@@ -68,19 +69,19 @@ public class CouponManageService {
 	}
 
 	public void registerQueue(Long couponId, AuthUser authUser) {
-		final double registerTime = System.currentTimeMillis();
-
-		validateRegisterQueue(couponId, authUser.email());
-
-		couponRedisRepository.addIfAbsentQueue(couponId, authUser.email(), registerTime);
-	}
-
-	private void validateRegisterQueue(Long couponId, String email) {
 		final LocalDateTime nowDatetime = LocalDateTime.now();
 		final Coupon coupon = couponRepository.findCouponByIdAndDateRange(couponId, nowDatetime)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
+		final double registerTime = System.currentTimeMillis();
+		final long expiredTime = Duration.between(nowDatetime, coupon.getDurationAt()).getSeconds();
 
-		if (couponRedisRepository.hasValue(couponId, email)) {
+		validateRegisterQueue(coupon, authUser.email());
+
+		couponRedisRepository.addIfAbsentQueue(couponId, authUser.email(), registerTime, expiredTime);
+	}
+
+	private void validateRegisterQueue(Coupon coupon, String email) {
+		if (couponRedisRepository.hasValue(coupon.getId(), email)) {
 			throw new ConflictException(ErrorCode.FAIL_COUPON_CONFLICT);
 		}
 

@@ -1,6 +1,5 @@
 package com.dart.api.domain.coupon.repository;
 
-import static com.dart.global.common.util.CouponConstant.*;
 import static com.dart.global.common.util.RedisConstant.*;
 import static java.util.Objects.*;
 
@@ -21,12 +20,12 @@ public class CouponRedisRepository {
 	private final ZSetRedisRepository zSetRedisRepository;
 	private final ValueRedisRepository valueRedisRepository;
 
-	public void addIfAbsentQueue(Long couponId, String email, double registerTime) {
+	public void addIfAbsentQueue(Long couponId, String email, double registerTime, long expiredTime) {
 		zSetRedisRepository.addElementIfAbsent(
 			REDIS_COUPON_PREFIX + couponId.toString(),
 			email,
 			registerTime,
-			TWO_DAYS
+			expiredTime
 		);
 	}
 
