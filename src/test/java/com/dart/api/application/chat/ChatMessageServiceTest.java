@@ -5,9 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +29,6 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
-import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.ChatFixture;
@@ -114,9 +111,7 @@ class ChatMessageServiceTest {
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
-		verify(memberRepository, times(0)).findByEmail(any(String.class));
-		verify(chatRedisRepository, times(0))
-			.saveChatMessage(any(ChatRoom.class), anyString(), anyString(), any(LocalDateTime.class), anyLong());
+		verifyNoInteractions(memberRepository, chatRedisRepository);
 	}
 
 	@Test
@@ -145,8 +140,7 @@ class ChatMessageServiceTest {
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(1)).findByEmail(memberEmail);
-		verify(chatRedisRepository, times(0))
-			.saveChatMessage(any(ChatRoom.class), anyString(), anyString(), any(LocalDateTime.class), anyLong());
+		verifyNoInteractions(chatRedisRepository);
 	}
 
 	@Test
@@ -195,51 +189,5 @@ class ChatMessageServiceTest {
 
 		// THEN
 		assertTrue(actualMessages.isEmpty());
-	}
-
-	@Test
-	@DisplayName("DETERMINE EXPIRY FREE GALLERY(⭕️ SUCCESS): 종료 날짜가 없는 무료 전시회의 채팅 메시지 만료 시간을 설정하지 않았습니다.")
-	void determineExpiry_free_success() {
-		// GIVEN
-		Gallery gallery = GalleryFixture.createFreeGalleryEntity();
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
-
-		// WHEN
-		long actualExpiry = chatMessageService.determineExpiry(chatRoom);
-
-		// THEN
-		assertThat(actualExpiry).isEqualTo(FREE_MESSAGE_EXPIRY);
-	}
-
-	@Test
-	@DisplayName("DETERMINE EXPIRY PAID GALLERY(⭕️ SUCCESS): 종료 날짜가 있는 유료 전시회의 채팅 메시지 만료 시간을 설정합니다.")
-	void determineExpiry_paid_success() {
-		// GIVEN
-		LocalDateTime currentDate = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-		LocalDateTime endDate = currentDate.plusDays(5);
-		long expectedExpiry = Duration.between(currentDate, endDate).getSeconds();
-
-		Gallery gallery = GalleryFixture.createPaidGalleryEntity(currentDate, endDate);
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
-
-		// WHEN
-		long actualExpiry = chatMessageService.determineExpiry(chatRoom);
-
-		// THEN
-		assertThat(actualExpiry).isCloseTo(expectedExpiry, within(1L));
-	}
-
-	@Test
-	@DisplayName("DETERMINE EXPIRY PAID GALLERY(❌ FAILURE): 과거에 종료된 유료 전시회의 채팅 메시지 만료 시간을 설정할 수 없습니다.")
-	void determineExpiry_paid_ConflictException_fail() {
-		// GIVEN
-		LocalDateTime currentDate = LocalDateTime.now();
-		Gallery gallery = GalleryFixture.createPaidGalleryEntity(currentDate.minusDays(2), currentDate.minusDays(1));
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
-
-		// WHEN & THEN
-		assertThatThrownBy(() -> chatMessageService.determineExpiry(chatRoom))
-			.isInstanceOf(ConflictException.class)
-			.hasMessage("[❎ ERROR] 해당 전시회는 이미 종료된 전시회입니다.");
 	}
 }
