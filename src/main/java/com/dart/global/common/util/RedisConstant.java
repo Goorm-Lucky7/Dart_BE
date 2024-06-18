@@ -19,7 +19,6 @@ public class RedisConstant {
 	public static final String REDIS_SESSION_NICKNAME_PREFIX = "session-nickname:";
 
 	public static final long FREE_EXHIBITION_MESSAGE_EXPIRY_DAYS = 30;
-	public final static String REDIS_PATTERN_TOPIC = "__keyevent@*__:expired";
 	public final static long ZSET_START_INDEX = 0;
 	public final static long ZSET_END_INDEX_ALL = -1;
 
