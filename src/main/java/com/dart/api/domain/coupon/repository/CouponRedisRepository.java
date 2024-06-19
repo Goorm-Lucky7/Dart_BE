@@ -21,7 +21,7 @@ public class CouponRedisRepository {
 	private final ValueRedisRepository valueRedisRepository;
 
 	public void addIfAbsentQueue(Long couponId, String email, double registerTime, long expiredTime) {
-		zSetRedisRepository.addElementIfAbsent(
+		zSetRedisRepository.addElementWithExpiry(
 			REDIS_COUPON_PREFIX + couponId.toString(),
 			email,
 			registerTime,
