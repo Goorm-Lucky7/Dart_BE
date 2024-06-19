@@ -1,10 +1,9 @@
 package com.dart.api.infrastructure.websocket;
 
-import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
 
-import java.util.Objects;
-
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -23,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
 	private final JwtProviderService jwtProviderService;
@@ -33,23 +33,34 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
 		log.info("MESSAGE: {}", message);
 		log.info("HEADER: {}", stompHeaderAccessor.getMessageHeaders());
-		log.info("ACCESS TOKEN: {}", stompHeaderAccessor.getNativeHeader(ACCESS_TOKEN_HEADER));
 
 		if (StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand())) {
-			String accessToken = Objects
-				.requireNonNull(stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER))
-				.substring(7);
+			String accessToken = getAccessTokenFromQuery(stompHeaderAccessor);
 
-			if (jwtProviderService.isUsable(accessToken)) {
+			if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
 				AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
 				stompHeaderAccessor.setHeader(CHAT_SESSION_USER, authUser);
 				log.info("[✅ LOGGER] USER AUTHORIZED: {}", authUser.nickname());
 			} else {
-				log.warn("[✅ LOGGER] UNAUTHORIZED ACCESS ATTEMPT OR INVALID TOKEN");
+				log.warn("[✅ LOGGER] TOKEN IS INVALID OR EXPIRED");
 				throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
 			}
 		}
 
 		return message;
+	}
+
+	private String getAccessTokenFromQuery(StompHeaderAccessor stompHeaderAccessor) {
+		String query = stompHeaderAccessor.getSessionAttributes().get(TOKEN_PARAM).toString();
+
+		if (query != null && query.contains(TOKEN_PARAM + URL_QUERY_DELIMITER)) {
+			String accessToken = query.split(TOKEN_PARAM + URL_QUERY_DELIMITER)[1];
+			if (accessToken.contains(QUERY_PARAM_SEPARATOR)) {
+				accessToken = accessToken.split(QUERY_PARAM_SEPARATOR)[0];
+			}
+			return accessToken;
+		}
+
+		return null;
 	}
 }
