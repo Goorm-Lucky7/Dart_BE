@@ -38,7 +38,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
 		stompEndpointRegistry.addEndpoint(WEBSOCKET_ENDPOINT)
 			.setHandshakeHandler(new DefaultHandshakeHandler())
-			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN);
+			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN)
+			.withSockJS();
 	}
 
 	@Override
