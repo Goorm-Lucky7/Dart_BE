@@ -47,14 +47,14 @@ public class ChatMessageService {
 		final Member member = getMemberByEmail(authUser.email());
 
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
-		long expiryDays = determineExpirySeconds(chatRoom.getGallery());
+		long expirySeconds = determineExpirySeconds(chatRoom.getGallery());
 
 		chatRedisRepository.saveChatMessage(
 			chatRoom,
 			chatMessage.getContent(),
 			chatMessage.getSender(),
 			chatMessage.getCreatedAt(),
-			expiryDays);
+			expirySeconds);
 	}
 
 	@Transactional(readOnly = true)
@@ -64,7 +64,7 @@ public class ChatMessageService {
 
 	private long determineExpirySeconds(Gallery gallery) {
 		if (gallery.getEndDate() != null) {
-			return Duration.between(LocalDateTime.now(), gallery.getEndDate()).toDays();
+			return Duration.between(LocalDateTime.now(), gallery.getEndDate()).getSeconds();
 		}
 
 		return FREE_EXHIBITION_MESSAGE_EXPIRY_DAYS;

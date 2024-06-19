@@ -18,7 +18,7 @@ public class RedisConstant {
 	public static final String REDIS_SESSION_EMAIL_PREFIX = "session-email:";
 	public static final String REDIS_SESSION_NICKNAME_PREFIX = "session-nickname:";
 
-	public static final long FREE_EXHIBITION_MESSAGE_EXPIRY_DAYS = 30;
+	public static final long FREE_EXHIBITION_MESSAGE_EXPIRY_DAYS = 30 * 24 * 60 * 60;
 	public final static long ZSET_START_INDEX = 0;
 	public final static long ZSET_END_INDEX_ALL = -1;
 

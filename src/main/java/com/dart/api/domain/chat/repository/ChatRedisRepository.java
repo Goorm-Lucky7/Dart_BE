@@ -23,14 +23,14 @@ public class ChatRedisRepository {
 	private final ZSetRedisRepository zSetRedisRepository;
 
 	public void saveChatMessage(ChatRoom chatRoom, String content, String sender, LocalDateTime createdAt,
-		long expiryDays
+		long expirySeconds
 	) {
 		final String key = REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId();
 		final boolean isAuthor = chatRoom.getGallery().getMember().getNickname().equals(sender);
 		final String messageValue = createMessageValue(sender, content, createdAt, isAuthor);
 
 		zSetRedisRepository.addElementWithExpiry(key, messageValue, createdAt.toEpochSecond(ZoneOffset.UTC),
-			expiryDays);
+			expirySeconds);
 	}
 
 	public List<ChatMessageReadDto> getChatMessageReadDto(Long chatRoomId) {
