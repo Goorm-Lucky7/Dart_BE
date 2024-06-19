@@ -18,4 +18,7 @@ public class GlobalConstant {
 	public static final int FIVE_STAR = 5;
 	public static final int ZERO_STAR = 0;
 	public static final float NO_REVIEW_SCORE = 0.0f;
+
+	public static final int THIRTY_MINUTES = 30 * 60;
+	public static final int THIRTY_DAYS = 30 * 24 * 60 * 60;
 }
