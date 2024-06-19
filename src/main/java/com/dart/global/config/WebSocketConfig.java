@@ -4,7 +4,6 @@ import static com.dart.global.common.util.ChatConstant.*;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -13,7 +12,6 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import com.dart.api.application.auth.JwtProviderService;
-import com.dart.api.infrastructure.websocket.AuthChannelInterceptor;
 import com.dart.api.infrastructure.websocket.AuthHandshakeInterceptor;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	private final AuthChannelInterceptor authChannelInterceptor;
+	private final JwtProviderService jwtProviderService;
+
+	@Bean
+	public AuthHandshakeInterceptor authHandshakeInterceptor() {
+		return new AuthHandshakeInterceptor(jwtProviderService);
+	}
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
@@ -34,13 +37,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
 		stompEndpointRegistry.addEndpoint(WEBSOCKET_ENDPOINT)
-			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN)
-			.withSockJS();
-	}
-
-	@Override
-	public void configureClientInboundChannel(ChannelRegistration channelRegistration) {
-		channelRegistration.interceptors(authChannelInterceptor);
+			.setHandshakeHandler(new DefaultHandshakeHandler())
+			// .addInterceptors(authHandshakeInterceptor())
+			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN);
 	}
 
 	@Override
