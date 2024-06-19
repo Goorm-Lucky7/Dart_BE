@@ -37,21 +37,21 @@ class ChatRedisRepositoryTest {
 		String sender = "testSender";
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
-		long expiryDays = 7;
+		long expirySeconds = 7 * 24 * 60 * 60;
 		boolean isAuthor = false;
 
 		String messageValue = ChatFixture.createMessageValue(sender, content, createdAt, isAuthor);
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		// WHEN
-		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expiryDays);
+		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expirySeconds);
 
 		// THEN
 		verify(zSetRedisRepository).addElementWithExpiry(
 			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
 			eq(messageValue),
 			doubleThat(value -> value == createdAt.toEpochSecond(ZoneOffset.UTC)),
-			eq(expiryDays)
+			eq(expirySeconds)
 		);
 	}
 
