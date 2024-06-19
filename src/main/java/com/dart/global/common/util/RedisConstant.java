@@ -14,6 +14,8 @@ public class RedisConstant {
 	public static final String REDIS_PAYMENT_PREFIX = "payment:";
 	public static final String REDIS_CHAT_MESSAGE_PREFIX = "chatMessage:";
 	public static final String REDIS_NICKNAME_PREFIX = "nickname:";
+	public static final String REDIS_COUPON_PREFIX = "coupon:";
+	public static final String REDIS_COUPON_COUNT_PREFIX = "coupon_count:";
 
 	public static final String REDIS_SESSION_EMAIL_PREFIX = "session-email:";
 	public static final String REDIS_SESSION_NICKNAME_PREFIX = "session-nickname:";
@@ -30,5 +32,4 @@ public class RedisConstant {
 	public static final long NICKNAME_VERIFICATION_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 	public static final int SESSION_EMAIL_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 	public static final int SESSION_NICKNAME_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
-
 }
