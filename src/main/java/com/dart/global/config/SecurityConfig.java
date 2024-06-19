@@ -45,8 +45,7 @@ public class SecurityConfig {
 			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/kakao/**")
 			.requestMatchers("/api/login")
-			.requestMatchers("/api/reissue")
-			.requestMatchers("/ws/**");
+			.requestMatchers("/api/reissue");
 	}
 
 	@Bean
