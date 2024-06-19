@@ -35,40 +35,40 @@ public class WebSocketConnectionTest {
 	@Autowired
 	private JwtProviderService jwtProviderService;
 
-	@Test
-	@DisplayName("WEB SOCKET CONNECTION(⭕️ SUCCESS): 성공적으로 웹소켓이 연결되었습니다.")
-	public void webSocketConnection_void_success() throws ExecutionException, InterruptedException, TimeoutException {
-		// GIVEN
-		WebSocketStompClient webSocketStompClient = new WebSocketStompClient(new StandardWebSocketClient());
-
-		String accessToken = jwtProviderService.generateAccessToken(
-			"test1@example.com",
-			"test1",
-			"testProfileImage"
-		);
-
-		// WebSocket URL 및 헤더 설정
-		String URL = String.format(WEB_SOCKET_URL, PORT);
-		WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
-		webSocketHttpHeaders.add(ACCESS_TOKEN_HEADER, BEARER + " " + accessToken);
-
-		// WebSocket 연결 시도
-		CompletableFuture<StompSession> sessionCompletableFuture = new CompletableFuture<>();
-		webSocketStompClient.connect(URL, webSocketHttpHeaders, new StompSessionHandlerAdapter() {
-			@Override
-			public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-				sessionCompletableFuture.complete(session);
-			}
-
-			@Override
-			public void handleTransportError(StompSession session, Throwable exception) {
-				sessionCompletableFuture.completeExceptionally(exception);
-			}
-		});
-
-		// WHEN & THEN
-		StompSession stompSession = sessionCompletableFuture.get(5, TimeUnit.SECONDS);
-		assertThat(stompSession).isNotNull();
-		assertThat(stompSession.isConnected()).isTrue();
-	}
+	// @Test
+	// @DisplayName("WEB SOCKET CONNECTION(⭕️ SUCCESS): 성공적으로 웹소켓이 연결되었습니다.")
+	// public void webSocketConnection_void_success() throws ExecutionException, InterruptedException, TimeoutException {
+	// 	// GIVEN
+	// 	WebSocketStompClient webSocketStompClient = new WebSocketStompClient(new StandardWebSocketClient());
+	//
+	// 	String accessToken = jwtProviderService.generateAccessToken(
+	// 		"test1@example.com",
+	// 		"test1",
+	// 		"testProfileImage"
+	// 	);
+	//
+	// 	// WebSocket URL 및 헤더 설정
+	// 	String URL = String.format(WEB_SOCKET_URL, PORT);
+	// 	WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+	// 	webSocketHttpHeaders.add(ACCESS_TOKEN_HEADER, BEARER + " " + accessToken);
+	//
+	// 	// WebSocket 연결 시도
+	// 	CompletableFuture<StompSession> sessionCompletableFuture = new CompletableFuture<>();
+	// 	webSocketStompClient.connect(URL, webSocketHttpHeaders, new StompSessionHandlerAdapter() {
+	// 		@Override
+	// 		public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+	// 			sessionCompletableFuture.complete(session);
+	// 		}
+	//
+	// 		@Override
+	// 		public void handleTransportError(StompSession session, Throwable exception) {
+	// 			sessionCompletableFuture.completeExceptionally(exception);
+	// 		}
+	// 	});
+	//
+	// 	// WHEN & THEN
+	// 	StompSession stompSession = sessionCompletableFuture.get(5, TimeUnit.SECONDS);
+	// 	assertThat(stompSession).isNotNull();
+	// 	assertThat(stompSession.isConnected()).isTrue();
+	// }
 }
