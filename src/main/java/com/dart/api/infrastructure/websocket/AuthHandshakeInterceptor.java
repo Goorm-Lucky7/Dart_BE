@@ -1,6 +1,5 @@
 package com.dart.api.infrastructure.websocket;
 
-import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
 
 import java.util.Map;
@@ -37,23 +36,18 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		if (serverHttpRequest instanceof ServletServerHttpRequest) {
 			HttpServletRequest httpServletRequest = ((ServletServerHttpRequest)serverHttpRequest).getServletRequest();
-			String query = httpServletRequest.getQueryString();
+			String token = extractTokenFromQuery(httpServletRequest);
 
-			if (query != null && query.contains("token=")) {
-				String accessToken = query.split("token=")[1];
-
-				if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
-					AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-					attributes.put(CHAT_SESSION_USER, authUser);
-					log.info("[✅ LOGGER] SUCCESS MEMBER AUTHORIZATION: {}", authUser.nickname());
-
-					return true;
-				}
+			if (authenticateToken(token, attributes)) {
+				return true;
 			}
 
 			log.warn("[❎ LOGGER] JWT TOKEN IS INVALID OR NOT PRESENT");
 			serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
+
+			return false;
 		}
+
 		return true;
 	}
 
@@ -69,5 +63,32 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 		if (exception != null) {
 			log.error("[❎ LOGGER] EXCEPTION DURING HANDSHAKE: ", exception);
 		}
+	}
+
+	private String extractTokenFromQuery(HttpServletRequest httpServletRequest) {
+		String query = httpServletRequest.getQueryString();
+
+		if (query != null && query.contains(TOKEN_PARAM + URL_QUERY_DELIMITER)) {
+			String token = query.split(TOKEN_PARAM + URL_QUERY_DELIMITER)[1];
+
+			if (token.contains(QUERY_PARAM_SEPARATOR)) {
+				token = token.split(QUERY_PARAM_SEPARATOR)[0];
+			}
+
+			return token;
+		}
+
+		return null;
+	}
+
+	private boolean authenticateToken(String token, Map<String, Object> attributes) {
+		if (token != null && jwtProviderService.isUsable(token)) {
+			AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(token);
+			attributes.put(CHAT_SESSION_USER, authUser);
+			log.info("[✅ LOGGER] SUCCESS MEMBER AUTHORIZATION: {}", authUser.nickname());
+
+			return true;
+		}
+		return false;
 	}
 }
