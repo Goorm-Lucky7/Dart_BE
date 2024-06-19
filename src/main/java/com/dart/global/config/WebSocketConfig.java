@@ -2,6 +2,7 @@ package com.dart.global.config;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -9,8 +10,11 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
+import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.infrastructure.websocket.AuthChannelInterceptor;
+import com.dart.api.infrastructure.websocket.AuthHandshakeInterceptor;
 
 import lombok.RequiredArgsConstructor;
 
