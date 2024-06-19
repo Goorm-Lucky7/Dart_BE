@@ -80,4 +80,13 @@ public class ChatMessage {
 			.chatRoom(chatRoom)
 			.build();
 	}
+
+	public ChatMessageReadDto getChatMessageReadDto() {
+		return ChatMessageReadDto.builder()
+			.sender(this.sender)
+			.content(this.content)
+			.createdAt(this.createdAt)
+			.isAuthor(this.isAuthor)
+			.build();
+	}
 }
