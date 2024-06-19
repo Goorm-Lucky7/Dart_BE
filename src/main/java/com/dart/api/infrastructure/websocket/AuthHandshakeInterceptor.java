@@ -47,7 +47,6 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 			return false;
 		}
-
 		return true;
 	}
 
@@ -74,10 +73,10 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 			if (token.contains(QUERY_PARAM_SEPARATOR)) {
 				token = token.split(QUERY_PARAM_SEPARATOR)[0];
 			}
-
+			log.info("[✅ LOGGER] EXTRACTED TOKEN: {}", token);
 			return token;
 		}
-
+		log.warn("[❎ LOGGER] TOKEN NOT FOUND IN QUERY");
 		return null;
 	}
 
@@ -89,6 +88,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 			return true;
 		}
+		log.warn("[❎ LOGGER] TOKEN IS INVALID OR NOT USABLE");
 		return false;
 	}
 }
