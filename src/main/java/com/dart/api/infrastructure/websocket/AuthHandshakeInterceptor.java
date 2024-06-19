@@ -37,17 +37,22 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		if (serverHttpRequest instanceof ServletServerHttpRequest) {
 			HttpServletRequest httpServletRequest = ((ServletServerHttpRequest)serverHttpRequest).getServletRequest();
-			String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, httpServletRequest);
+			String query = httpServletRequest.getQueryString();
 
-			if (accessToken == null || !jwtProviderService.isUsable(accessToken)) {
-				log.warn("[❎ LOGGER] JWT TOKEN IS INVALID OR NOT PRESENT");
-				serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
-				return false;
+			if (query != null && query.contains("token=")) {
+				String accessToken = query.split("token=")[1];
+
+				if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
+					AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
+					attributes.put(CHAT_SESSION_USER, authUser);
+					log.info("[✅ LOGGER] SUCCESS MEMBER AUTHORIZATION: {}", authUser.nickname());
+
+					return true;
+				}
 			}
 
-			AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-			attributes.put(CHAT_SESSION_USER, authUser);
-			log.info("[✅ LOGGER] SUCCESS MEMBER AUTHORIZATION: {}", authUser.nickname());
+			log.warn("[❎ LOGGER] JWT TOKEN IS INVALID OR NOT PRESENT");
+			serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
 		}
 		return true;
 	}
