@@ -2,6 +2,8 @@ package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.util.List;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
@@ -51,14 +53,17 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	}
 
 	private String getAccessTokenFromQuery(StompHeaderAccessor stompHeaderAccessor) {
-		String query = stompHeaderAccessor.getSessionAttributes().get(TOKEN_PARAM).toString();
+		List<String> tokenList = stompHeaderAccessor.getNativeHeader(TOKEN_PARAM);
 
-		if (query != null && query.contains(TOKEN_PARAM + URL_QUERY_DELIMITER)) {
-			String accessToken = query.split(TOKEN_PARAM + URL_QUERY_DELIMITER)[1];
-			if (accessToken.contains(QUERY_PARAM_SEPARATOR)) {
-				accessToken = accessToken.split(QUERY_PARAM_SEPARATOR)[0];
+		if (tokenList != null && !tokenList.isEmpty()) {
+			String query = tokenList.get(0);
+			if (query.contains(TOKEN_PARAM + URL_QUERY_DELIMITER)) {
+				String accessToken = query.split(TOKEN_PARAM + URL_QUERY_DELIMITER)[1];
+				if (accessToken.contains(QUERY_PARAM_SEPARATOR)) {
+					accessToken = accessToken.split(QUERY_PARAM_SEPARATOR)[0];
+				}
+				return accessToken;
 			}
-			return accessToken;
 		}
 
 		return null;
