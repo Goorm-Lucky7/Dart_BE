@@ -45,4 +45,16 @@ public class ZSetRedisRepository {
 	public void deleteAllElements(String key) {
 		redisTemplate.delete(requireNonNull(key));
 	}
+
+	public Double score(String key, String value) {
+		return redisTemplate
+			.opsForZSet()
+			.score(key, value);
+	}
+
+	public Long size(String key) {
+		return redisTemplate
+			.opsForZSet()
+			.zCard(key);
+	}
 }
