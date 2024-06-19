@@ -1,6 +1,6 @@
 package com.dart.api.infrastructure.websocket;
 
-import static com.dart.global.common.util.AuthConstant.*;
+import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -59,9 +59,10 @@ class AuthHandshakeInterceptorTest {
 		// GIVEN
 		String accessToken = "testAccessToken";
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		String query = TOKEN_PARAM + URL_QUERY_DELIMITER + accessToken;
 
 		given(servletServerHttpRequest.getServletRequest()).willReturn(httpServletRequest);
-		given(jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, httpServletRequest)).willReturn(accessToken);
+		given(httpServletRequest.getQueryString()).willReturn(query);
 		given(jwtProviderService.isUsable(accessToken)).willReturn(true);
 		given(jwtProviderService.extractAuthUserByAccessToken(accessToken)).willReturn(authUser);
 
@@ -70,12 +71,11 @@ class AuthHandshakeInterceptorTest {
 			.beforeHandshake(servletServerHttpRequest, servletServerHttpResponse, webSocketHandler, attributes);
 
 		// THEN
-		verify(jwtProviderService, times(1)).extractToken(ACCESS_TOKEN_HEADER, httpServletRequest);
 		verify(jwtProviderService, times(1)).isUsable(accessToken);
 		verify(jwtProviderService, times(1)).extractAuthUserByAccessToken(accessToken);
 
 		assertThat(actual).isTrue();
-		assertThat(attributes).containsEntry("authUser", authUser);
+		assertThat(attributes).containsEntry(CHAT_SESSION_USER, authUser);
 	}
 
 	@Test
@@ -83,14 +83,13 @@ class AuthHandshakeInterceptorTest {
 	void beforeHandshake_noToken_fail() {
 		// GIVEN
 		given(servletServerHttpRequest.getServletRequest()).willReturn(httpServletRequest);
-		given(jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, httpServletRequest)).willReturn(null);
+		given(httpServletRequest.getQueryString()).willReturn(null);
 
 		// WHEN
 		boolean actual = authHandshakeInterceptor.beforeHandshake(servletServerHttpRequest, servletServerHttpResponse,
 			webSocketHandler, attributes);
 
 		// THEN
-		verify(jwtProviderService, times(1)).extractToken(ACCESS_TOKEN_HEADER, httpServletRequest);
 		verify(jwtProviderService, times(0)).isUsable(null);
 		verify(jwtProviderService, times(0)).extractAuthUserByAccessToken(null);
 		assertThat(actual).isFalse();
@@ -102,9 +101,10 @@ class AuthHandshakeInterceptorTest {
 	void beforeHandshake_invalidToken_fail() {
 		// GIVEN
 		String accessToken = "invalidToken";
+		String query = TOKEN_PARAM + URL_QUERY_DELIMITER + accessToken;
 
 		given(servletServerHttpRequest.getServletRequest()).willReturn(httpServletRequest);
-		given(jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, httpServletRequest)).willReturn(accessToken);
+		given(httpServletRequest.getQueryString()).willReturn(query);
 		given(jwtProviderService.isUsable(accessToken)).willReturn(false);
 
 		// WHEN
@@ -112,7 +112,6 @@ class AuthHandshakeInterceptorTest {
 			webSocketHandler, attributes);
 
 		// THEN
-		verify(jwtProviderService, times(1)).extractToken(ACCESS_TOKEN_HEADER, httpServletRequest);
 		verify(jwtProviderService, times(1)).isUsable(accessToken);
 		verify(jwtProviderService, times(0)).extractAuthUserByAccessToken(accessToken);
 		assertThat(actual).isFalse();
@@ -125,6 +124,9 @@ class AuthHandshakeInterceptorTest {
 		// WHEN
 		authHandshakeInterceptor.afterHandshake(servletServerHttpRequest, servletServerHttpResponse, webSocketHandler,
 			null);
+
+		// THEN
+		verifyNoInteractions(servletServerHttpResponse);
 	}
 
 	@Test
@@ -136,5 +138,8 @@ class AuthHandshakeInterceptorTest {
 		// WHEN
 		authHandshakeInterceptor.afterHandshake(servletServerHttpRequest, servletServerHttpResponse, webSocketHandler,
 			exception);
+
+		// THEN
+		verifyNoInteractions(servletServerHttpResponse);
 	}
 }
