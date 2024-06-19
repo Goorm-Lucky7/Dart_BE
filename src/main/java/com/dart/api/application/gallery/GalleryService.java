@@ -1,6 +1,7 @@
 package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
+import com.dart.api.domain.gallery.repository.TrieRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
@@ -27,6 +29,7 @@ import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.domain.review.repository.ReviewRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
+import com.dart.api.dto.gallery.request.ImageInfoDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
 import com.dart.api.dto.gallery.response.GalleryMypageResDto;
@@ -59,6 +62,7 @@ public class GalleryService {
 	private final ImageService imageService;
 	private final S3Service s3Service;
 	private final PaymentRedisRepository paymentRedisRepository;
+	private final TrieRedisRepository trieRedisRepository;
 	private final ChatService chatService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -84,6 +88,8 @@ public class GalleryService {
 		chatService.createChatRoom(gallery);
 
 		waitPayment(gallery);
+
+		addKeywordsToTrie(createGalleryDto, authUser);
 
 		return gallery.toReadIdDto();
 	}
@@ -316,5 +322,18 @@ public class GalleryService {
 				String.valueOf(gallery.getTitle())
 			);
 		}
+	}
+
+	private void addKeywordsToTrie(CreateGalleryDto createGalleryDto, AuthUser authUser) {
+		List<String> titles = createGalleryDto.informations().stream()
+			.map(ImageInfoDto::imageTitle)
+			.collect(Collectors.toList());
+
+		List<String> hashtags = createGalleryDto.hashtags();
+		String author = authUser.nickname();
+
+		titles.forEach(title -> trieRedisRepository.insert(TITLE, title));
+		trieRedisRepository.insert(AUTHOR, author);
+		hashtags.forEach(hashtag -> trieRedisRepository.insert(HASHTAG, hashtag));
 	}
 }
