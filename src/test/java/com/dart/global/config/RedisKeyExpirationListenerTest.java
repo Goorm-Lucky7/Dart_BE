@@ -19,9 +19,9 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.dart.api.application.chat.ChatMessageArchiveService;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
@@ -47,7 +47,7 @@ class RedisKeyExpirationListenerTest {
 	private ChatRoomRepository chatRoomRepository;
 
 	@Mock
-	private ChatRedisRepository chatRedisRepository;
+	private ChatMessageArchiveService chatMessageArchiveService;
 
 	@InjectMocks
 	private RedisKeyExpirationListener redisKeyExpirationListener;
@@ -57,8 +57,14 @@ class RedisKeyExpirationListenerTest {
 
 	@BeforeEach
 	void setUp() {
-		redisKeyExpirationListener = new RedisKeyExpirationListener(redisMessageListenerContainer, galleryRepository,
-			imageService, hashtagRepository, chatRoomRepository, chatRedisRepository);
+		redisKeyExpirationListener = new RedisKeyExpirationListener(
+			redisMessageListenerContainer,
+			galleryRepository,
+			imageService,
+			hashtagRepository,
+			chatRoomRepository,
+			chatMessageArchiveService
+		);
 	}
 
 	@Test
@@ -130,7 +136,7 @@ class RedisKeyExpirationListenerTest {
 		redisKeyExpirationListener.onMessage(message, null);
 
 		// THEN
-		verify(chatRedisRepository).deleteChatMessages(chatRoomId);
+		verify(chatMessageArchiveService).handleRedisExpiredEvent(expiredKey);
 	}
 
 	@Test
@@ -146,6 +152,6 @@ class RedisKeyExpirationListenerTest {
 
 		// THEN
 		verifyNoInteractions(galleryRepository, imageService, hashtagRepository, chatRoomRepository,
-			chatRedisRepository);
+			chatMessageArchiveService);
 	}
 }

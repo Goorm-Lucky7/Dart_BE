@@ -27,7 +27,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.dart.api.application.chat.ChatService;
+import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
@@ -39,7 +39,7 @@ import com.dart.support.MemberFixture;
 class ChatControllerTest {
 
 	@Mock
-	private ChatService chatService;
+	private ChatMessageService chatMessageService;
 
 	@Mock
 	private SimpMessageSendingOperations simpMessageSendingOperations;
@@ -73,7 +73,7 @@ class ChatControllerTest {
 		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		// THEN
-		verify(chatService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 		verify(simpMessageSendingOperations).convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
@@ -123,7 +123,7 @@ class ChatControllerTest {
 			new ChatMessageReadDto("testSender2", "Bye 👋🏻", LocalDateTime.parse("2023-01-01T12:01:00"), false)
 		);
 
-		given(chatService.getChatMessageList(chatRoomId)).willReturn(chatMessagesList);
+		given(chatMessageService.getChatMessageList(chatRoomId)).willReturn(chatMessagesList);
 
 		// WHEN
 		mockMvc = MockMvcBuilders.standaloneSetup(chatController).build();
@@ -146,7 +146,7 @@ class ChatControllerTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 
-		given(chatService.getChatMessageList(chatRoomId)).willReturn(List.of());
+		given(chatMessageService.getChatMessageList(chatRoomId)).willReturn(List.of());
 
 		// WHEN
 		mockMvc = MockMvcBuilders.standaloneSetup(chatController).build();

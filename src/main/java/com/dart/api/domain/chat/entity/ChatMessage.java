@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -65,6 +66,18 @@ public class ChatMessage {
 			.sender(member.getNickname())
 			.content(chatMessageCreateDto.content())
 			.isAuthor(chatRoom.getGallery().getMember().equals(member))
+			.build();
+	}
+
+	public static ChatMessage createChatMessageFromChatMessageReadDto(
+		ChatMessageReadDto chatMessageReadDto,
+		ChatRoom chatRoom
+	) {
+		return ChatMessage.builder()
+			.content(chatMessageReadDto.content())
+			.sender(chatMessageReadDto.sender())
+			.isAuthor(chatMessageReadDto.isAuthor())
+			.chatRoom(chatRoom)
 			.build();
 	}
 }

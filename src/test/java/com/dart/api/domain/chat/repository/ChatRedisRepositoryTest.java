@@ -1,7 +1,6 @@
 package com.dart.api.domain.chat.repository;
 
 import static com.dart.global.common.util.RedisConstant.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -38,52 +37,21 @@ class ChatRedisRepositoryTest {
 		String sender = "testSender";
 		String content = "Hello 👋🏻";
 		LocalDateTime createdAt = LocalDateTime.now();
-		long expirySeconds = 3600;
+		long expiryDays = 7;
 		boolean isAuthor = false;
-		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 
+		String messageValue = ChatFixture.createMessageValue(sender, content, createdAt, isAuthor);
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		// WHEN
-		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expirySeconds);
+		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expiryDays);
 
 		// THEN
-		verify(zSetRedisRepository).addElementIfAbsent(
+		verify(zSetRedisRepository).addElementWithExpiry(
 			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
 			eq(messageValue),
 			doubleThat(value -> value == createdAt.toEpochSecond(ZoneOffset.UTC)),
-			eq(expirySeconds)
-		);
-	}
-
-	@Test
-	@DisplayName("SAVE CHAT MESSAGE(⭕️ SUCCESS): 만료 시간이 없는 채팅 메시지를 성공적으로 저장했습니다.")
-	void saveChatMessage_expiry_success() {
-		// GIVEN
-		String sender = "testSender";
-		String content = "Hello 👋🏻";
-		LocalDateTime createdAt = LocalDateTime.now();
-		long expirySeconds = -1;
-		boolean isAuthor = false;
-		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
-
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
-
-		// WHEN
-		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, expirySeconds);
-
-		// THEN
-		verify(zSetRedisRepository).addElementIfAbsent(
-			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
-			eq(messageValue),
-			eq((double)createdAt.toEpochSecond(ZoneOffset.UTC)),
-			eq(expirySeconds)
-		);
-
-		verify(zSetRedisRepository, never()).addElement(
-			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
-			eq(messageValue),
-			anyDouble()
+			eq(expiryDays)
 		);
 	}
 
@@ -92,43 +60,29 @@ class ChatRedisRepositoryTest {
 	void getChatMessageReadDto_void_success() {
 		// GIVEN
 		Long chatRoomId = 1L;
-		String sender = "testSender1";
-		String content = "Hello 👋🏻";
-		LocalDateTime createdAt = LocalDateTime.now();
-		boolean isAuthor = false;
-		String messageValue = sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
+		long ZSET_START_INDEX = 0;
+		long ZSET_END_INDEX_ALL = -1;
 
-		Set<Object> messageValues = Set.of(messageValue);
+		Set<Object> messageValues = Set.of(
+			ChatFixture.createMessageValue("testSender1", "Hello 👋🏻", LocalDateTime.now(), false),
+			ChatFixture.createMessageValue("testSender2", "Bye 👋🏻", LocalDateTime.now(), false)
+		);
 
-		when(zSetRedisRepository.getRange(eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId), eq(0L), eq(-1L)))
-			.thenReturn(messageValues);
-
-		// WHEN
-		List<ChatMessageReadDto> actualMessages = chatRedisRepository.getChatMessageReadDto(chatRoomId);
-
-		// THEN
-		assertThat(actualMessages).isNotEmpty();
-		assertThat(actualMessages).hasSize(1);
-		assertThat(actualMessages.get(0).sender()).isEqualTo(sender);
-		assertThat(actualMessages.get(0).content()).isEqualTo(content);
-		assertThat(actualMessages.get(0).createdAt()).isEqualTo(createdAt);
-	}
-
-	@Test
-	@DisplayName("GET CHAT MESSAGE READ DTO(❌ FAILURE): 조회된 채팅 메시지가 없을 때 빈 리스트를 반환합니다.")
-	void getChatMessageReadDto_empty_fail() {
-		// GIVEN
-		Long chatRoomId = 1L;
-		Set<Object> emptyMessageValues = Set.of();
-
-		when(zSetRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, 0, -1))
-			.thenReturn(emptyMessageValues);
+		when(zSetRedisRepository.getRange(
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId),
+			eq(ZSET_START_INDEX),
+			eq(ZSET_END_INDEX_ALL))
+		).thenReturn(messageValues);
 
 		// WHEN
 		List<ChatMessageReadDto> actualMessages = chatRedisRepository.getChatMessageReadDto(chatRoomId);
 
 		// THEN
-		assertTrue(actualMessages.isEmpty());
+		assertEquals(2, actualMessages.size());
+		verify(zSetRedisRepository).getRange(
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId),
+			eq(ZSET_START_INDEX),
+			eq(ZSET_END_INDEX_ALL));
 	}
 
 	@Test

@@ -1,9 +1,12 @@
 package com.dart.support;
 
+import java.time.LocalDateTime;
+
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 
 public class ChatFixture {
 
@@ -52,5 +55,20 @@ public class ChatFixture {
 		return ChatMessageCreateDto.builder()
 			.content(content)
 			.build();
+	}
+
+	public static ChatMessageReadDto createChatMessageReadDto(String sender, String content, LocalDateTime createdAt,
+		boolean isAuthor
+	) {
+		return ChatMessageReadDto.builder()
+			.sender(sender)
+			.content(content)
+			.createdAt(createdAt)
+			.isAuthor(isAuthor)
+			.build();
+	}
+
+	public static String createMessageValue(String sender, String content, LocalDateTime createdAt, boolean isAuthor) {
+		return sender + "|" + content + "|" + createdAt.toString() + "|" + isAuthor;
 	}
 }
