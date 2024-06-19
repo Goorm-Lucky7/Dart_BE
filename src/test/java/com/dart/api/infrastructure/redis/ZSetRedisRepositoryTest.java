@@ -51,20 +51,39 @@ class ZSetRedisRepositoryTest {
 		String expectedKey = "testKey";
 		String expectedValue = "testValue";
 		double expectedScore = 1.0;
-		long expectedExpiry = 600;
+
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+		when(zSetOperations.addIfAbsent(eq(expectedKey), eq(expectedValue), eq(expectedScore))).thenReturn(true);
+
+		// WHEN
+		boolean actualElement = zSetRedisRepository.addElementIfAbsent(expectedKey, expectedValue, expectedScore);
+
+		// THEN
+		assertTrue(actualElement);
+		verify(zSetOperations).addIfAbsent(eq(expectedKey), eq(expectedValue), eq(expectedScore));
+	}
+
+	@Test
+	@DisplayName("ADD ELEMENT WITH EXPIRY(⭕️ SUCCESS): 성공적으로 ZSet에 요소를 추가하고 만료일을 설정했습니다.")
+	void addElementWithExpiry_void_success() {
+		// GIVEN
+		String expectedKey = "testKey";
+		String expectedValue = "testValue";
+		double expectedScore = 1.0;
+		long expectedExpiryDays = 30;
 
 		when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
 
 		// WHEN
-		zSetRedisRepository.addElementIfAbsent(expectedKey, expectedValue, expectedScore, expectedExpiry);
+		zSetRedisRepository.addElementWithExpiry(expectedKey, expectedValue, expectedScore, expectedExpiryDays);
 
 		// THEN
-		verify(zSetOperations).addIfAbsent(eq(expectedKey), eq(expectedValue), eq(expectedScore));
-		verify(redisTemplate).expire(eq(expectedKey), eq(Duration.ofSeconds(expectedExpiry)));
+		verify(zSetOperations).add(eq(expectedKey), eq(expectedValue), eq(expectedScore));
+		verify(redisTemplate).expire(eq(expectedKey), eq(Duration.ofDays(expectedExpiryDays)));
 	}
 
 	@Test
-	@DisplayName("GET RANGE(⭕️ SUCCESS): 성공적으로 ZSet에서 범위 내의 요소를 조회했습니다.")
+	@DisplayName("GET RANGE(⭕️ SUCCESS): 성공적으로 ZSet 범위 내의 요소를 조회했습니다.")
 	void getRange_void_success() {
 		// GIVEN
 		String expectedKey = "testKey";

@@ -20,6 +20,12 @@ public class ValueRedisRepository {
 		valueOperations.set(key, value, expireDuration);
 	}
 
+	public Long increment(String key, long delta) {
+		return redisTemplate
+			.opsForValue()
+			.increment(key, delta);
+	}
+
 	public String getValue(String key) {
 		ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
 		return valueOperations.get(key);

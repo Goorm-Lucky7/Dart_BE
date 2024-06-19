@@ -8,6 +8,7 @@ import lombok.Builder;
 public record ChatMessageReadDto(
 	String sender,
 	String content,
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+	boolean isAuthor
 ) {
 }

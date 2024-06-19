@@ -1,6 +1,7 @@
 package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -30,28 +30,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class ChatService {
+public class ChatMessageService {
 
 	private final ChatRoomRepository chatRoomRepository;
-	private final ChatMessageRepository chatMessageRepository;
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
-
-	public void createChatRoom(Gallery gallery) {
-		final ChatRoom chatRoom = ChatRoom.createChatRoom(gallery);
-		chatRoomRepository.save(chatRoom);
-	}
-
-	public void deleteChatRoom(Gallery gallery) {
-		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
-
-		final List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoom(chatRoom);
-
-		chatMessageRepository.deleteAll(chatMessages);
-		chatRoomRepository.delete(chatRoom);
-	}
 
 	@Transactional
 	public void saveChatMessage(
@@ -64,36 +47,31 @@ public class ChatService {
 		final Member member = getMemberByEmail(authUser.email());
 
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
+		long expiryDays = determineExpirySeconds(chatRoom.getGallery());
+
 		chatRedisRepository.saveChatMessage(
 			chatRoom,
 			chatMessage.getContent(),
 			chatMessage.getSender(),
 			chatMessage.getCreatedAt(),
-			determineExpiry(chatRoom)
-		);
+			expiryDays);
 	}
 
+	@Transactional(readOnly = true)
 	public List<ChatMessageReadDto> getChatMessageList(Long chatRoomId) {
 		return chatRedisRepository.getChatMessageReadDto(chatRoomId);
 	}
 
-	public long determineExpiry(ChatRoom chatRoom) {
-		Gallery gallery = chatRoom.getGallery();
-
-		if (!gallery.isPaid() || gallery.getEndDate() == null) {
-			return FREE_MESSAGE_EXPIRY_SECONDS;
+	private long determineExpirySeconds(Gallery gallery) {
+		if (gallery.getEndDate() != null) {
+			return Duration.between(LocalDateTime.now(), gallery.getEndDate()).toDays();
 		}
 
-		LocalDateTime currentDate = LocalDateTime.now();
-		LocalDateTime endDate = gallery.getEndDate();
-		long expirySeconds = Duration.between(currentDate, endDate).getSeconds();
-
-		return Math.max(expirySeconds, 0);
+		return FREE_EXHIBITION_MESSAGE_EXPIRY_DAYS;
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
-		return (AuthUser)Objects
-			.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes(), "SESSION ATTRIBUTE MUST NOT BE NULL")
+		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
 			.get(CHAT_SESSION_USER);
 	}
 

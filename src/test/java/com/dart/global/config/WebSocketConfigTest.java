@@ -33,10 +33,10 @@ class WebSocketConfigTest {
 	private WebSocketTransportRegistration webSocketTransportRegistration;
 
 	@Mock
-	private SockJsServiceRegistration sockJsServiceRegistration;
+	private MessageBrokerRegistry messageBrokerRegistry;
 
 	@Mock
-	private MessageBrokerRegistry messageBrokerRegistry;
+	private SockJsServiceRegistration sockJsServiceRegistration;
 
 	@InjectMocks
 	private WebSocketConfig webSocketConfig;
@@ -68,6 +68,8 @@ class WebSocketConfigTest {
 			.thenReturn(stompWebSocketEndpointRegistration);
 		when(stompWebSocketEndpointRegistration.setAllowedOriginPatterns(any(String[].class)))
 			.thenReturn(stompWebSocketEndpointRegistration);
+		when(stompWebSocketEndpointRegistration.withSockJS())
+			.thenReturn(sockJsServiceRegistration);
 
 		// WHEN
 		webSocketConfig.registerStompEndpoints(stompEndpointRegistry);
@@ -77,6 +79,7 @@ class WebSocketConfigTest {
 		verify(stompWebSocketEndpointRegistration).setHandshakeHandler(any(DefaultHandshakeHandler.class));
 		verify(stompWebSocketEndpointRegistration).addInterceptors(any(AuthHandshakeInterceptor.class));
 		verify(stompWebSocketEndpointRegistration).setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN);
+		verify(stompWebSocketEndpointRegistration).withSockJS();
 	}
 
 	@Test

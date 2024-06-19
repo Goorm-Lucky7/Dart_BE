@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.dart.api.application.chat.ChatService;
+import com.dart.api.application.chat.ChatRoomService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -62,8 +62,8 @@ public class GalleryService {
 	private final ImageService imageService;
 	private final S3Service s3Service;
 	private final PaymentRedisRepository paymentRedisRepository;
+	private final ChatRoomService chatRoomService;
 	private final TrieRedisRepository trieRedisRepository;
-	private final ChatService chatService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -85,7 +85,7 @@ public class GalleryService {
 
 		imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
 
-		chatService.createChatRoom(gallery);
+		chatRoomService.createChatRoom(gallery);
 
 		waitPayment(gallery);
 
@@ -168,7 +168,7 @@ public class GalleryService {
 
 		validateUserOwnership(member, gallery);
 
-		chatService.deleteChatRoom(gallery);
+		chatRoomService.deleteChatRoom(gallery);
 
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);

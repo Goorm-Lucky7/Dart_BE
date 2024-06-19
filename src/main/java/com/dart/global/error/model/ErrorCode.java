@@ -43,6 +43,7 @@ public enum ErrorCode {
 	FAIL_CREATED_UNPAID_REVIEW("[❎ ERROR] 미결제 전시관에 리뷰를 작성하실 수 없습니다."),
 	FAIL_ALREADY_VERIFIED_EMAIL("[❎ ERROR] 이미 이메일 중복확인이 완료되었습니다."),
 	FAIL_NO_TARGET_MEMBER_PROVIDED("[❎ ERROR] 조회하고 싶은 대상을 입력해 주세요."),
+	FAIL_INVALID_STOCK_END("[❎ ERROR] 쿠폰 재고가 마감되었습니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
@@ -65,10 +66,13 @@ public enum ErrorCode {
 	FAIL_TOKEN_NOT_FOUND("[❎ ERROR] 요청하신 토큰을 찾을 수 없습니다."),
 	FAIL_REGISTRATION_NOT_FOUND("[❎ ERROR] 요청하신 서비스 제공자를 찾을 수 없습니다."),
 	FAIL_CHAT_ROOM_NOT_FOUND("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다."),
+	FAIL_COUPON_NOT_FOUND("[❎ ERROR] 요청하신 쿠폰을 찾을 수 없습니다."),
 
 	// 409 Conflict
 	FAIL_EMAIL_CONFLICT("[❎ ERROR] 이미 존재하는 이메일입니다."),
 	FAIL_NICKNAME_CONFLICT("[❎ ERROR] 이미 존재하는 닉네임입니다."),
+	FAIL_GALLERY_CONFLICT_ALREADY_ENDED("[❎ ERROR] 해당 전시회는 이미 종료된 전시회입니다."),
+	FAIL_COUPON_CONFLICT("[❎ ERROR] 이미 쿠폰을 발급 받으셨습니다."),
 
 	// 500 Server Error
 	FAIL_INTERNAL_SERVER_ERROR("[❎ ERROR] 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
