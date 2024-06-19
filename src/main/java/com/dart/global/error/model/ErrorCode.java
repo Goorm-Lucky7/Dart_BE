@@ -69,6 +69,7 @@ public enum ErrorCode {
 	// 409 Conflict
 	FAIL_EMAIL_CONFLICT("[❎ ERROR] 이미 존재하는 이메일입니다."),
 	FAIL_NICKNAME_CONFLICT("[❎ ERROR] 이미 존재하는 닉네임입니다."),
+	FAIL_GALLERY_CONFLICT_ALREADY_ENDED("[❎ ERROR] 해당 전시회는 이미 종료된 전시회입니다."),
 	FAIL_COUPON_CONFLICT("[❎ ERROR] 이미 쿠폰을 발급 받으셨습니다."),
 
 	// 500 Server Error
