@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.StompWebSocketEndpointRegistration;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
@@ -31,9 +30,6 @@ class WebSocketConfigTest {
 
 	@Mock
 	private WebSocketTransportRegistration webSocketTransportRegistration;
-
-	@Mock
-	private SockJsServiceRegistration sockJsServiceRegistration;
 
 	@Mock
 	private MessageBrokerRegistry messageBrokerRegistry;

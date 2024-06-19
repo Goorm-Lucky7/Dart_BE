@@ -10,9 +10,9 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.application.chat.ChatMessageArchiveService;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Hashtag;
@@ -21,14 +21,18 @@ import com.dart.api.domain.gallery.repository.HashtagRepository;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 @Transactional
 public class RedisKeyExpirationListener extends KeyExpirationEventMessageListener {
+
 	private final GalleryRepository galleryRepository;
 	private final ImageService imageService;
 	private final HashtagRepository hashtagRepository;
 	private final ChatRoomRepository chatRoomRepository;
-	private final ChatRedisRepository chatRedisRepository;
+	private final ChatMessageArchiveService chatMessageArchiveService;
 
 	public RedisKeyExpirationListener(
 		RedisMessageListenerContainer listenerContainer,
@@ -36,26 +40,26 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		ImageService imageService,
 		HashtagRepository hashtagRepository,
 		ChatRoomRepository chatRoomRepository,
-		ChatRedisRepository chatRedisRepository
+		ChatMessageArchiveService chatMessageArchiveService
 	) {
 		super(listenerContainer);
 		this.galleryRepository = galleryRepository;
 		this.imageService = imageService;
 		this.hashtagRepository = hashtagRepository;
 		this.chatRoomRepository = chatRoomRepository;
-		this.chatRedisRepository = chatRedisRepository;
+		this.chatMessageArchiveService = chatMessageArchiveService;
 	}
 
 	@Override
 	public void onMessage(Message message, byte[] pattern) {
 		final String expiredKey = message.toString();
+		log.info("[✅ LOGGER] REDIS KEY EXPIRED: {}", expiredKey);
 
 		if (isPaymentKey(expiredKey)) {
 			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
 			handleExpiredGallery(galleryId);
 		} else if (isChatMessageKey(expiredKey)) {
-			final Long chatRoomId = Long.parseLong(expiredKey.replace(REDIS_CHAT_MESSAGE_PREFIX, ""));
-			handleExpiredChatMessages(chatRoomId);
+			chatMessageArchiveService.handleRedisExpiredEvent(expiredKey);
 		}
 	}
 
@@ -73,15 +77,11 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 		galleryRepository.delete(gallery);
 	}
 
-	public void handleExpiredChatMessages(Long chatRoomId) {
-		chatRedisRepository.deleteChatMessages(chatRoomId);
-	}
-
 	private boolean isPaymentKey(String str) {
 		return str.contains(REDIS_PAYMENT_PREFIX);
 	}
 
 	private boolean isChatMessageKey(String str) {
-		return str.startsWith(REDIS_CHAT_MESSAGE_PREFIX);
+		return str.contains(REDIS_CHAT_MESSAGE_PREFIX);
 	}
 }

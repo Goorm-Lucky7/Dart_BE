@@ -12,7 +12,6 @@ public record MemberUpdateDto(
 	@Pattern(regexp = "^[A-Za-z\\d가-힣]+$", message = "[❎ ERROR] 닉네임은 한글과 영어만 사용가능합니다.")
 	String nickname,
 
-	boolean isCheckedNickname,
 	String introduce
 ) {
 }

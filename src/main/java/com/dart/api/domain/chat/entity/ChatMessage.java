@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,20 +38,24 @@ public class ChatMessage {
 	@Column(name = "sender", nullable = false)
 	private String sender;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "chat_room_id")
-	private ChatRoom chatRoom;
-
 	@CreatedDate
 	@Column(name = "created_at", updatable = false, nullable = false)
 	private LocalDateTime createdAt;
 
+	@Column(name = "is_author", nullable = false)
+	private boolean isAuthor;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "chat_room_id")
+	private ChatRoom chatRoom;
+
 	@Builder
-	private ChatMessage(String content, String sender, ChatRoom chatRoom) {
+	private ChatMessage(String content, String sender, boolean isAuthor, ChatRoom chatRoom) {
 		this.content = content;
 		this.sender = sender;
-		this.chatRoom = chatRoom;
 		this.createdAt = LocalDateTime.now();
+		this.isAuthor = isAuthor;
+		this.chatRoom = chatRoom;
 	}
 
 	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
@@ -60,6 +65,19 @@ public class ChatMessage {
 			.chatRoom(chatRoom)
 			.sender(member.getNickname())
 			.content(chatMessageCreateDto.content())
+			.isAuthor(chatRoom.getGallery().getMember().equals(member))
+			.build();
+	}
+
+	public static ChatMessage createChatMessageFromChatMessageReadDto(
+		ChatMessageReadDto chatMessageReadDto,
+		ChatRoom chatRoom
+	) {
+		return ChatMessage.builder()
+			.content(chatMessageReadDto.content())
+			.sender(chatMessageReadDto.sender())
+			.isAuthor(chatMessageReadDto.isAuthor())
+			.chatRoom(chatRoom)
 			.build();
 	}
 }
