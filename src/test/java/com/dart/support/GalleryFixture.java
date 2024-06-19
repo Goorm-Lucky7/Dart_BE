@@ -24,6 +24,15 @@ public class GalleryFixture {
 		);
 	}
 
+	public static Gallery createGalleryEntityForAuthor() {
+		return Gallery.create(
+			createGalleryEntityForCreateGalleryDto(),
+			"https://example.com/thumbnail.jpg",
+			Cost.FREE,
+			MemberFixture.createMemberEntityForAuthor()
+		);
+	}
+
 	public static Gallery createGalleryEntity(Member member) {
 		return Gallery.builder()
 			.title("D'ART Gallery")

@@ -62,9 +62,11 @@ public class SecurityConfig {
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/reviews/{gallery-id}/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
+			.requestMatchers("/ws/**").permitAll()
 			.anyRequest().authenticated()
 		);
 

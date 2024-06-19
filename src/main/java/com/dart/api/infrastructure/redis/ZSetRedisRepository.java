@@ -20,9 +20,18 @@ public class ZSetRedisRepository {
 		redisTemplate.opsForZSet().add(requireNonNull(key), requireNonNull(value), score);
 	}
 
-	public void addElementIfAbsent(String key, Object value, double score, long expire) {
-		redisTemplate.opsForZSet().addIfAbsent(requireNonNull(key), requireNonNull(value), score);
-		redisTemplate.expire(key, Duration.ofSeconds(expire));
+	public boolean addElementIfAbsent(String key, Object value, double score) {
+		return Boolean.TRUE.equals(
+			redisTemplate.opsForZSet().addIfAbsent(requireNonNull(key), requireNonNull(value), score)
+		);
+	}
+
+	public void addElementWithExpiry(String key, Object value, double score, long expire) {
+		redisTemplate.opsForZSet().add(requireNonNull(key), requireNonNull(value), score);
+
+		if (expire > 0) {
+			redisTemplate.expire(key, Duration.ofDays(expire));
+		}
 	}
 
 	public Set<Object> getRange(String key, long start, long end) {
@@ -35,5 +44,17 @@ public class ZSetRedisRepository {
 
 	public void deleteAllElements(String key) {
 		redisTemplate.delete(requireNonNull(key));
+	}
+
+	public Double score(String key, String value) {
+		return redisTemplate
+			.opsForZSet()
+			.score(key, value);
+	}
+
+	public Long size(String key) {
+		return redisTemplate
+			.opsForZSet()
+			.zCard(key);
 	}
 }

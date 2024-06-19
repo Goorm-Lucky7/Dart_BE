@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dart.api.application.chat.ChatService;
+import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChatController {
 
-	private final ChatService chatService;
+	private final ChatMessageService chatMessageService;
 	private final MemberSessionRegistry memberSessionRegistry;
 	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
@@ -35,7 +35,7 @@ public class ChatController {
 		@Payload ChatMessageCreateDto chatMessageCreateDto,
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
-		chatService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		log.info("Received message: {}", chatMessageCreateDto.content());
 		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
@@ -49,6 +49,6 @@ public class ChatController {
 
 	@GetMapping("/api/{chat-room-id}/chat-messages")
 	public ResponseEntity<List<ChatMessageReadDto>> getChatMessageList(@PathVariable("chat-room-id") Long chatRoomId) {
-		return ResponseEntity.ok(chatService.getChatMessageList(chatRoomId));
+		return ResponseEntity.ok(chatMessageService.getChatMessageList(chatRoomId));
 	}
 }

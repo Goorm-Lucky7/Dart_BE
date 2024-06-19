@@ -16,9 +16,6 @@ import org.springframework.web.socket.config.annotation.SockJsServiceRegistratio
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.StompWebSocketEndpointRegistration;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
-import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
-
-import com.dart.api.infrastructure.websocket.AuthHandshakeInterceptor;
 
 @ExtendWith(MockitoExtension.class)
 class WebSocketConfigTest {
@@ -33,10 +30,10 @@ class WebSocketConfigTest {
 	private WebSocketTransportRegistration webSocketTransportRegistration;
 
 	@Mock
-	private SockJsServiceRegistration sockJsServiceRegistration;
+	private MessageBrokerRegistry messageBrokerRegistry;
 
 	@Mock
-	private MessageBrokerRegistry messageBrokerRegistry;
+	private SockJsServiceRegistration sockJsServiceRegistration;
 
 	@InjectMocks
 	private WebSocketConfig webSocketConfig;
@@ -62,21 +59,18 @@ class WebSocketConfigTest {
 	void registerStompEndpoints_void_success() {
 		when(stompEndpointRegistry.addEndpoint(any(String.class)))
 			.thenReturn(stompWebSocketEndpointRegistration);
-		when(stompWebSocketEndpointRegistration.setHandshakeHandler(any(DefaultHandshakeHandler.class)))
-			.thenReturn(stompWebSocketEndpointRegistration);
-		when(stompWebSocketEndpointRegistration.addInterceptors(any(AuthHandshakeInterceptor.class)))
-			.thenReturn(stompWebSocketEndpointRegistration);
 		when(stompWebSocketEndpointRegistration.setAllowedOriginPatterns(any(String[].class)))
 			.thenReturn(stompWebSocketEndpointRegistration);
+		when(stompWebSocketEndpointRegistration.withSockJS())
+			.thenReturn(sockJsServiceRegistration);
 
 		// WHEN
 		webSocketConfig.registerStompEndpoints(stompEndpointRegistry);
 
 		// THEN
 		verify(stompEndpointRegistry).addEndpoint(WEBSOCKET_ENDPOINT);
-		verify(stompWebSocketEndpointRegistration).setHandshakeHandler(any(DefaultHandshakeHandler.class));
-		verify(stompWebSocketEndpointRegistration).addInterceptors(any(AuthHandshakeInterceptor.class));
 		verify(stompWebSocketEndpointRegistration).setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN);
+		verify(stompWebSocketEndpointRegistration).withSockJS();
 	}
 
 	@Test
