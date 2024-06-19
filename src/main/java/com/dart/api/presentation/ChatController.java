@@ -10,11 +10,13 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
+import com.dart.api.dto.page.PageResponse;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 
 import lombok.RequiredArgsConstructor;
@@ -48,7 +50,11 @@ public class ChatController {
 	}
 
 	@GetMapping("/api/{chat-room-id}/chat-messages")
-	public ResponseEntity<List<ChatMessageReadDto>> getChatMessageList(@PathVariable("chat-room-id") Long chatRoomId) {
-		return ResponseEntity.ok(chatMessageService.getChatMessageList(chatRoomId));
+	public ResponseEntity<PageResponse<ChatMessageReadDto>> getChatMessageList(
+		@PathVariable("chat-room-id") Long chatRoomId,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size
+	) {
+		return ResponseEntity.ok(chatMessageService.getChatMessageList(chatRoomId, page, size));
 	}
 }
