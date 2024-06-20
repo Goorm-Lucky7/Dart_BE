@@ -25,9 +25,7 @@ import com.dart.global.error.model.ErrorCode;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -46,7 +44,7 @@ public class EmailService {
 	public void sendVerificationEmail(String newReceiver, String sessionId, HttpServletResponse response) {
 		validateEmail(newReceiver);
 		updateReceiverEmail(sessionId, newReceiver);
-		checkAndSetSessionId(sessionId, response);
+		sessionId = checkAndSetSessionId(sessionId, response);
 
 		final String code = createCode();
 		sendEmail(newReceiver, code);
@@ -55,16 +53,18 @@ public class EmailService {
 		sessionRedisRepository.saveSessionEmailMapping(sessionId, newReceiver);
 	}
 
-	public void verifyEmail(String to, int code) {
+	public void verifyEmail(String to, String code) {
 		validateExpired(to);
 		validateCode(to, code);
 		emailRedisRepository.setVerified(to);
 	}
 
-	private void checkAndSetSessionId(String sessionId, HttpServletResponse response) {
+	private String checkAndSetSessionId(String sessionId, HttpServletResponse response) {
 		if (sessionId == null || sessionId.isEmpty()) {
-			cookieUtil.setSessionCookie(response);
+			sessionId = cookieUtil.setSessionCookie(response);
 		}
+
+		return sessionId;
 	}
 
 	private void updateReceiverEmail(String sessionId, String newReceiver) {
@@ -110,11 +110,11 @@ public class EmailService {
 		}
 	}
 
-	private void validateCode(String to, int code) {
+	private void validateCode(String to, String code) {
 		if(TRUE.equals(emailRedisRepository.isVerified(to))){
 			throw new BadRequestException(ErrorCode.FAIL_ALREADY_VERIFIED_EMAIL);
 		}
-		if(!String.valueOf(code).equals(emailRedisRepository.findVerificationCodeByEmail(to))) {
+		if(!code.equals(emailRedisRepository.findVerificationCodeByEmail(to))) {
 			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_EMAIL_CODE);
 		}
 	}
