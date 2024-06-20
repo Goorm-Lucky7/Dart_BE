@@ -1,6 +1,7 @@
 package com.dart.global.common.util;
 
 import static com.dart.global.common.util.AuthConstant.*;
+import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.util.UUID;
 
@@ -18,11 +19,11 @@ public class CookieUtil {
 	public void setCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
 		ResponseCookie cookie = ResponseCookie.from(name, value)
 			.httpOnly(true)
-			//.secure(true)
+			.secure(true)
 			.path("/")
 			.maxAge(maxAgeSeconds)
 			.sameSite("None")
-			//.domain(COOKIE_DOMAIN)
+			.domain(COOKIE_DOMAIN)
 			.build();
 
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
