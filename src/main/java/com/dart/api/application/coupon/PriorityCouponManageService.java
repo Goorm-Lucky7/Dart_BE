@@ -54,7 +54,7 @@ public class PriorityCouponManageService {
 		}
 
 		final Set<String> emails = priorityCouponRedisRepository
-			.rangeQueue(priorityCoupon.getId(), currentCount, currentCount + TEM_PERSON);
+			.rangeQueue(priorityCoupon.getId(), currentCount, currentCount + TEN_PERSON);
 
 		if (emails.isEmpty()) {
 			return;
