@@ -23,23 +23,37 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
+	public static final String STOMP_COMMAND_HEADER = "stompCommand";
+
 	private final JwtProviderService jwtProviderService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
-		if (StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand())) {
-			String accessToken = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
+		final String authorizationHeader = String.valueOf(
+			stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER));
 
-			if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
-				AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-				stompHeaderAccessor.setHeader(CHAT_SESSION_USER, authUser);
-				log.info("[✅ LOGGER] USER AUTHORIZED: {}", authUser.nickname());
-			} else {
-				log.warn("[✅ LOGGER] TOKEN IS INVALID OR EXPIRED");
-				throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
-			}
+		final String command = String.valueOf(
+			stompHeaderAccessor.getHeader(STOMP_COMMAND_HEADER));
+
+		if (!command.equals("SEND")) {
+			return message;
+		}
+
+		if (authorizationHeader == null || authorizationHeader.equals("null")) {
+			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
+		}
+
+		final String token = authorizationHeader.substring(7);
+
+		try {
+			jwtProviderService.isUsable(token);
+			final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(token);
+			stompHeaderAccessor.setHeader(CHAT_SESSION_USER, authUser);
+		} catch (Exception e) {
+			log.error("FAIL VALIDATE JWT TOKEN: {}", e.getMessage(), e);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 
 		return message;

@@ -10,7 +10,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.application.chat.ChatMessageArchiveService;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
@@ -32,22 +31,19 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 	private final ImageService imageService;
 	private final HashtagRepository hashtagRepository;
 	private final ChatRoomRepository chatRoomRepository;
-	private final ChatMessageArchiveService chatMessageArchiveService;
 
 	public RedisKeyExpirationListener(
 		RedisMessageListenerContainer listenerContainer,
 		GalleryRepository galleryRepository,
 		ImageService imageService,
 		HashtagRepository hashtagRepository,
-		ChatRoomRepository chatRoomRepository,
-		ChatMessageArchiveService chatMessageArchiveService
+		ChatRoomRepository chatRoomRepository
 	) {
 		super(listenerContainer);
 		this.galleryRepository = galleryRepository;
 		this.imageService = imageService;
 		this.hashtagRepository = hashtagRepository;
 		this.chatRoomRepository = chatRoomRepository;
-		this.chatMessageArchiveService = chatMessageArchiveService;
 	}
 
 	@Override
@@ -59,7 +55,7 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 			final Long galleryId = Long.parseLong(expiredKey.replace(REDIS_PAYMENT_PREFIX, ""));
 			handleExpiredGallery(galleryId);
 		} else if (isChatMessageKey(expiredKey)) {
-			chatMessageArchiveService.handleRedisExpiredEvent(expiredKey);
+			log.info("[✅ LOGGER] REDIS KEY FOR CHAT MESSAGES EXPIRED: {}", expiredKey);
 		}
 	}
 

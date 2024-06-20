@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.application.chat.ChatRoomService;
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.chat.entity.ChatRoom;
+import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Template;
@@ -61,6 +63,7 @@ public class GalleryService {
 	private final S3Service s3Service;
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
+	private final ChatRoomRepository chatRoomRepository;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -129,8 +132,16 @@ public class GalleryService {
 
 		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
 
-		return new GalleryResDto(gallery.getTitle(), hasComment, gallery.getMember().getNickname(),
-			gallery.getTemplate().toString(), images);
+		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
+
+		return new GalleryResDto(
+			gallery.getTitle(),
+			hasComment,
+			gallery.getMember().getNickname(),
+			gallery.getTemplate().toString(),
+			images,
+			chatRoom.getId());
 	}
 
 	@Transactional(readOnly = true)

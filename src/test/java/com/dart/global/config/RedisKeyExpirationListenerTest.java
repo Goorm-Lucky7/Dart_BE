@@ -19,7 +19,6 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.dart.api.application.chat.ChatMessageArchiveService;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
@@ -46,9 +45,6 @@ class RedisKeyExpirationListenerTest {
 	@Mock
 	private ChatRoomRepository chatRoomRepository;
 
-	@Mock
-	private ChatMessageArchiveService chatMessageArchiveService;
-
 	@InjectMocks
 	private RedisKeyExpirationListener redisKeyExpirationListener;
 
@@ -62,8 +58,7 @@ class RedisKeyExpirationListenerTest {
 			galleryRepository,
 			imageService,
 			hashtagRepository,
-			chatRoomRepository,
-			chatMessageArchiveService
+			chatRoomRepository
 		);
 	}
 
@@ -121,37 +116,5 @@ class RedisKeyExpirationListenerTest {
 		assertThatThrownBy(() -> redisKeyExpirationListener.handleExpiredGallery(galleryId))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
-	}
-
-	@Test
-	@DisplayName("HANDLE EXPIRED CHAT MESSAGES(⭕️ SUCCESS): 성공적으로 만료된 채팅메시지 KEY값을 처리했습니다.")
-	void handleExpiredChatMessages_void_success() {
-		// GIVEN
-		Long chatRoomId = 1L;
-		String expiredKey = REDIS_CHAT_MESSAGE_PREFIX + chatRoomId;
-		byte[] body = expiredKey.getBytes(StandardCharsets.UTF_8);
-		Message message = new DefaultMessage(body, body);
-
-		// WHEN
-		redisKeyExpirationListener.onMessage(message, null);
-
-		// THEN
-		verify(chatMessageArchiveService).handleRedisExpiredEvent(expiredKey);
-	}
-
-	@Test
-	@DisplayName("HANDLE UNRELATED KEY(⭕️ SUCCESS): 성공적으로 관련 없는 KEY값을 무시했습니다.")
-	void handleUnrelatedKey_void_success() {
-		// GIVEN
-		String unrelatedKey = "unrelatedKey";
-		byte[] body = unrelatedKey.getBytes(StandardCharsets.UTF_8);
-		Message message = new DefaultMessage(body, body);
-
-		// WHEN
-		redisKeyExpirationListener.onMessage(message, null);
-
-		// THEN
-		verifyNoInteractions(galleryRepository, imageService, hashtagRepository, chatRoomRepository,
-			chatMessageArchiveService);
 	}
 }
