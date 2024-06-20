@@ -53,7 +53,7 @@ public class ChatController {
 	public ResponseEntity<PageResponse<ChatMessageReadDto>> getChatMessageList(
 		@PathVariable("chat-room-id") Long chatRoomId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size
+		@RequestParam(defaultValue = "99") int size
 	) {
 		return ResponseEntity.ok(chatMessageService.getChatMessageList(chatRoomId, page, size));
 	}
