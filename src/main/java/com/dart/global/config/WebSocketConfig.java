@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 import com.dart.api.infrastructure.websocket.AuthChannelInterceptor;
+import com.dart.api.infrastructure.websocket.WebSocketErrorHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final AuthChannelInterceptor authChannelInterceptor;
+	private final WebSocketErrorHandler webSocketErrorHandler;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
@@ -32,6 +34,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		stompEndpointRegistry.addEndpoint(WEBSOCKET_ENDPOINT)
 			.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERN)
 			.withSockJS();
+
+		stompEndpointRegistry.setErrorHandler(webSocketErrorHandler);
 	}
 
 	@Override

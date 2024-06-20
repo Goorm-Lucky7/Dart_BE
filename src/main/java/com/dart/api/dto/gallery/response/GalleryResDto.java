@@ -7,6 +7,8 @@ public record GalleryResDto(
 	boolean hasComment,
 	String nickname,
 	String template,
-	List<ImageResDto> images
+	List<ImageResDto> images,
+	Long chatRoomId,
+	boolean hasTicket
 ) {
 }

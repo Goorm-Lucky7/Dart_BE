@@ -30,7 +30,7 @@ public class ZSetRedisRepository {
 		redisTemplate.opsForZSet().add(requireNonNull(key), requireNonNull(value), score);
 
 		if (expire > 0) {
-			redisTemplate.expire(key, Duration.ofDays(expire));
+			redisTemplate.expire(key, Duration.ofSeconds(expire));
 		}
 	}
 

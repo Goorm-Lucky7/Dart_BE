@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +19,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
+import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -29,6 +36,8 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
+import com.dart.api.dto.page.PageInfo;
+import com.dart.api.dto.page.PageResponse;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.ChatFixture;
@@ -50,6 +59,9 @@ class ChatMessageServiceTest {
 	@Mock
 	private ChatRedisRepository chatRedisRepository;
 
+	@Mock
+	private ChatMessageRepository chatMessageRepository;
+
 	@InjectMocks
 	private ChatMessageService chatMessageService;
 
@@ -65,33 +77,29 @@ class ChatMessageServiceTest {
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
-		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put(CHAT_SESSION_USER, authUser);
+		when(simpMessageHeaderAccessor.getSessionAttributes()).thenReturn(Map.of(CHAT_SESSION_USER, authUser));
 
-		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(chatRoom));
-		given(memberRepository.findByEmail(memberEmail)).willReturn(Optional.of(member));
-		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
+		when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
+		when(memberRepository.findByEmail(memberEmail)).thenReturn(Optional.of(member));
+
+		ArgumentCaptor<ChatMessage> chatMessageArgumentCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
 		// WHEN
 		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
 
 		// THEN
-		ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> senderCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<LocalDateTime> createdAtCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-		ArgumentCaptor<Long> expiryCaptor = ArgumentCaptor.forClass(Long.class);
-
+		verify(chatMessageRepository).save(chatMessageArgumentCaptor.capture());
 		verify(chatRedisRepository).saveChatMessage(
-			any(ChatRoom.class),
-			contentCaptor.capture(),
-			senderCaptor.capture(),
-			createdAtCaptor.capture(),
-			expiryCaptor.capture()
+			eq(chatRoom),
+			eq(chatMessageArgumentCaptor.getValue().getContent()),
+			eq(chatMessageArgumentCaptor.getValue().getSender()),
+			any(LocalDateTime.class),
+			eq(CHAT_MESSAGE_EXPIRY_SECONDS)
 		);
 
-		assertThat(contentCaptor.getValue()).isEqualTo(chatMessageCreateDto.content());
-		assertThat(senderCaptor.getValue()).isEqualTo(member.getNickname());
-		assertThat(expiryCaptor.getValue()).isGreaterThan(0);
+		assertEquals(chatMessageCreateDto.content(), chatMessageArgumentCaptor.getValue().getContent());
+		assertEquals(member.getNickname(), chatMessageArgumentCaptor.getValue().getSender());
+		assertEquals(chatRoom, chatMessageArgumentCaptor.getValue().getChatRoom());
 	}
 
 	@Test
@@ -102,7 +110,7 @@ class ChatMessageServiceTest {
 
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
-		given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.empty());
+		when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.empty());
 
 		// WHEN & THEN
 		assertThatThrownBy(
@@ -111,7 +119,6 @@ class ChatMessageServiceTest {
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
-		verifyNoInteractions(memberRepository, chatRedisRepository);
 	}
 
 	@Test
@@ -140,54 +147,102 @@ class ChatMessageServiceTest {
 
 		verify(chatRoomRepository, times(1)).findById(chatRoomId);
 		verify(memberRepository, times(1)).findByEmail(memberEmail);
-		verifyNoInteractions(chatRedisRepository);
 	}
 
 	@Test
-	@DisplayName("GET CHAT MESSAGE LIST(⭕️ SUCCESS): 성공적으로 채팅 메시지 목록을 조회했습니다.")
-	void getChatMessageList_void_success() {
+	@DisplayName("GET CHAT MESSAGE LIST(⭕️ SUCCESS): 성공적으로 Redis에서 채팅 메시지 목록을 조회했습니다.")
+	void getChatMessageList_Redis_void_success() {
 		// GIVEN
+		int page = 0;
+		int size = 10;
+
 		Member member = MemberFixture.createMemberEntity();
 		Member author = MemberFixture.createMemberEntityForAuthor();
-
 		Gallery gallery = GalleryFixture.createGalleryEntityForAuthor();
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
 		Long chatRoomId = chatRoom.getId();
 
-		when(chatRedisRepository.getChatMessageReadDto(chatRoomId)).thenReturn(
-			List.of(
-				new ChatMessageReadDto(member.getNickname(), "Hello 👋🏻", LocalDateTime.now(), false),
-				new ChatMessageReadDto(author.getNickname(), "Have a good time 👏", LocalDateTime.now(), false)
-			)
+		List<ChatMessageReadDto> redisMessages = List.of(
+			new ChatMessageReadDto(member.getNickname(), "Hello 👋🏻", LocalDateTime.now(), false),
+			new ChatMessageReadDto(author.getNickname(), "Have a good time 👏", LocalDateTime.now(), false)
 		);
 
+		PageResponse<ChatMessageReadDto> redisResponse = new PageResponse<>(redisMessages, new PageInfo(page, true));
+
+		// Redis에서 데이터를 가져오는 경우
+		when(chatRedisRepository.getChatMessageReadDto(chatRoomId, page, size)).thenReturn(redisResponse);
+
 		// WHEN
-		List<ChatMessageReadDto> actualMessages = chatMessageService.getChatMessageList(chatRoomId);
+		PageResponse<ChatMessageReadDto> actualResponse = chatMessageService.getChatMessageList(chatRoomId, page, size);
 
 		// THEN
-		assertEquals(2, actualMessages.size());
+		assertEquals(2, actualResponse.pages().size());
 
-		assertEquals(member.getNickname(), actualMessages.get(0).sender());
-		assertEquals("Hello 👋🏻", actualMessages.get(0).content());
-		assertFalse(actualMessages.get(0).isAuthor());
+		ChatMessageReadDto firstMessage = actualResponse.pages().get(0);
+		assertEquals(member.getNickname(), firstMessage.sender());
+		assertEquals("Hello 👋🏻", firstMessage.content());
+		assertFalse(firstMessage.isAuthor());
 
-		assertEquals(author.getNickname(), actualMessages.get(1).sender());
-		assertEquals("Have a good time 👏", actualMessages.get(1).content());
-		assertFalse(actualMessages.get(1).isAuthor());
+		ChatMessageReadDto secondMessage = actualResponse.pages().get(1);
+		assertEquals(author.getNickname(), secondMessage.sender());
+		assertEquals("Have a good time 👏", secondMessage.content());
+		assertFalse(secondMessage.isAuthor());
+
+		// Redis가 호출된 것을 확인
+		verify(chatRedisRepository, times(1)).getChatMessageReadDto(chatRoomId, page, size);
+		verifyNoInteractions(chatRoomRepository);
+		verifyNoInteractions(chatMessageRepository);
 	}
 
 	@Test
-	@DisplayName("GET CHAT MESSAGE LIST(❌ FAILURE): 조회된 채팅 메시지가 없을 때 빈 리스트를 반환합니다.")
-	void getChatMessageList_empty_fail() {
+	@DisplayName("GET CHAT MESSAGE LIST(⭕️ SUCCESS): 성공적으로 MySQL에서 채팅 메시지 목록을 조회했습니다.")
+	void getChatMessageList_MySQL_void_success() {
 		// GIVEN
-		Long chatRoomId = 1L;
+		int page = 0;
+		int size = 10;
 
-		when(chatRedisRepository.getChatMessageReadDto(chatRoomId)).thenReturn(List.of());
+		Member member = MemberFixture.createMemberEntity();
+		Member author = MemberFixture.createMemberEntityForAuthor();
+		Gallery gallery = GalleryFixture.createGalleryEntityForAuthor();
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
+		Long chatRoomId = chatRoom.getId();
+
+		Pageable pageable = PageRequest.of(page, size);
+
+		List<ChatMessage> chatMessageList = List.of(
+			ChatMessage.createChatMessage(chatRoom, member, new ChatMessageCreateDto("Hello 👋🏻")),
+			ChatMessage.createChatMessage(chatRoom, author, new ChatMessageCreateDto("Have a good time 👏"))
+		);
+
+		Page<ChatMessage> mySQLMessages = new PageImpl<>(chatMessageList, pageable, chatMessageList.size());
+
+		// Redis에 데이터가 없는 경우
+		when(chatRedisRepository.getChatMessageReadDto(chatRoomId, page, size))
+			.thenReturn(new PageResponse<>(new ArrayList<>(), new PageInfo(page, false)));
+		when(chatRoomRepository.findById(chatRoomId))
+			.thenReturn(Optional.of(chatRoom));
+		when(chatMessageRepository.findByChatRoom(any(ChatRoom.class), any(Pageable.class)))
+			.thenReturn(mySQLMessages);
 
 		// WHEN
-		List<ChatMessageReadDto> actualMessages = chatMessageService.getChatMessageList(chatRoomId);
+		PageResponse<ChatMessageReadDto> actualResponse = chatMessageService.getChatMessageList(chatRoomId, page, size);
 
 		// THEN
-		assertTrue(actualMessages.isEmpty());
+		assertEquals(2, actualResponse.pages().size());
+
+		ChatMessageReadDto firstMessage = actualResponse.pages().get(0);
+		assertEquals(member.getNickname(), firstMessage.sender());
+		assertEquals("Hello 👋🏻", firstMessage.content());
+		assertFalse(firstMessage.isAuthor());
+
+		ChatMessageReadDto secondMessage = actualResponse.pages().get(1);
+		assertEquals(author.getNickname(), secondMessage.sender());
+		assertEquals("Have a good time 👏", secondMessage.content());
+		assertFalse(secondMessage.isAuthor());
+
+		// DB와 Redis가 호출된 것을 확인
+		verify(chatRedisRepository, times(1)).getChatMessageReadDto(chatRoomId, page, size);
+		verify(chatRoomRepository, times(1)).findById(chatRoomId);
+		verify(chatMessageRepository, times(1)).findByChatRoom(any(ChatRoom.class), any(Pageable.class));
 	}
 }
