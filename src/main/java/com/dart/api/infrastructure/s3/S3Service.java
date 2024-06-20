@@ -29,6 +29,9 @@ public class S3Service {
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucket;
 
+	@Value("${cloud.aws.cloudfront.domain}")
+	private String cloudFrontDomain;
+
 	public String uploadFile(MultipartFile multipartFile) {
 		String originalFilename = multipartFile.getOriginalFilename();
 		String fileName = generateUniqueFilename(originalFilename);
@@ -54,17 +57,17 @@ public class S3Service {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 		}
 
-		return amazonS3.getUrl(bucket, fileName).toString();
-	}
-
-	private boolean isValidImageFile(String fileName) {
-		String ext = getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png");
+		return convertToCloudFrontUrl(fileName);
 	}
 
 	public void deleteFile(String fileUrl) {
 		String fileKey = extractFileKeyFromUrl(fileUrl);
 		amazonS3.deleteObject(new DeleteObjectRequest(bucket, fileKey));
+	}
+
+	private boolean isValidImageFile(String fileName) {
+		String ext = getFileExtension(fileName);
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png");
 	}
 
 	private String extractFileKeyFromUrl(String fileUrl) {
@@ -103,5 +106,9 @@ public class S3Service {
 			return "";
 		}
 		return filename.substring(lastIndex + 1);
+	}
+
+	private String convertToCloudFrontUrl(String fileName) {
+		return String.format("%s/%s", cloudFrontDomain, fileName);
 	}
 }
