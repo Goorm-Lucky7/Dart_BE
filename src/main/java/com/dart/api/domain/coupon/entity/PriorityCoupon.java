@@ -1,8 +1,6 @@
 package com.dart.api.domain.coupon.entity;
 
-import java.time.LocalDateTime;
-
-import com.dart.global.common.entity.BaseTimeEntity;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,9 +17,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "tbl_coupon")
+@Table(name = "tbl_priority_coupon")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Coupon extends BaseTimeEntity {
+public class PriorityCoupon {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,30 +34,30 @@ public class Coupon extends BaseTimeEntity {
 	@Column(name = "description", nullable = false)
 	private String description;
 
-	@Column(name = "valid_at", updatable = false, nullable = false)
-	private LocalDateTime validAt;
+	@Column(name = "started_at", updatable = false, nullable = false)
+	private LocalDate startedAt;
 
-	@Column(name = "duration_at", updatable = false, nullable = false)
-	private LocalDateTime durationAt;
+	@Column(name = "ended_at", updatable = false, nullable = false)
+	private LocalDate endedAt;
 
 	@Column(name = "coupon_type")
 	@Enumerated(EnumType.STRING)
 	private CouponType couponType;
 
 	@Builder
-	public Coupon(
+	public PriorityCoupon(
 		int stock,
 		String name,
 		String description,
-		LocalDateTime validAt,
-		LocalDateTime durationAt,
+		LocalDate startedAt,
+		LocalDate endedAt,
 		CouponType couponType
 	) {
 		this.stock = stock;
 		this.name = name;
 		this.description = description;
-		this.validAt = validAt;
-		this.durationAt = durationAt;
+		this.startedAt = startedAt;
+		this.endedAt = endedAt;
 		this.couponType = couponType;
 	}
 }
