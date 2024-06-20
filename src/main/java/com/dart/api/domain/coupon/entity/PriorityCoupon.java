@@ -28,11 +28,8 @@ public class PriorityCoupon {
 	@Column(name = "stock", nullable = false)
 	private int stock;
 
-	@Column(name = "name", nullable = false)
-	private String name;
-
-	@Column(name = "description", nullable = false)
-	private String description;
+	@Column(name = "title", nullable = false)
+	private String title;
 
 	@Column(name = "started_at", updatable = false, nullable = false)
 	private LocalDate startedAt;
@@ -47,15 +44,13 @@ public class PriorityCoupon {
 	@Builder
 	public PriorityCoupon(
 		int stock,
-		String name,
-		String description,
+		String title,
 		LocalDate startedAt,
 		LocalDate endedAt,
 		CouponType couponType
 	) {
 		this.stock = stock;
-		this.name = name;
-		this.description = description;
+		this.title = title;
 		this.startedAt = startedAt;
 		this.endedAt = endedAt;
 		this.couponType = couponType;
