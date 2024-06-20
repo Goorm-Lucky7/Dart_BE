@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum CouponType {
 	TEN_PERCENT("10%", 10),
+	FIFTEEN_PERCENT("15%", 15),
 	TWENTY_PERCENT("20%", 20),
 	THIRTY_PERCENT("30%", 30);
 
