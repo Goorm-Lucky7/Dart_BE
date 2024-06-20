@@ -33,7 +33,6 @@ public class CookieUtil {
 			.domain(domain);
 
 		if(!isLocal) {
-			System.out.println("\n\nWow\n\n");
 			cookieBuilder.secure(true);
 		}
 
@@ -65,7 +64,6 @@ public class CookieUtil {
 	private boolean isLocalActiveProfile() {
 		for (String profile : env.getActiveProfiles()) {
 			if ("local".equals(profile)) {
-				System.out.println(profile);
 				return true;
 			}
 		}
