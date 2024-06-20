@@ -6,6 +6,7 @@ public record GalleryResDto(
 	String title,
 	boolean hasComment,
 	String nickname,
-	List<ImageResDto> images
+	List<ImageResDto> images,
+	Long chatRoomId
 ) {
 }
