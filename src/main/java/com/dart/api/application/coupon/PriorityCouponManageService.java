@@ -76,7 +76,7 @@ public class PriorityCouponManageService {
 	public void registerQueue(PriorityCouponPublishDto dto, String email) {
 		final LocalDate nowDate = LocalDate.now();
 		final LocalDateTime nowDateTime = LocalDateTime.now();
-		final PriorityCoupon priorityCoupon = priorityCouponCacheService.getByNameAndStartAt(dto.priorityCouponId(),
+		final PriorityCoupon priorityCoupon = priorityCouponCacheService.getByIdAndStartAt(dto.priorityCouponId(),
 			nowDate);
 		final LocalDateTime endDateTime = priorityCoupon.getEndedAt().minusDays(1).atTime(LocalTime.MAX);
 		final double registerTime = System.currentTimeMillis();
