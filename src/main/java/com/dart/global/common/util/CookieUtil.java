@@ -33,9 +33,10 @@ public class CookieUtil {
 		setCookie(response, REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_EXPIRATION_TIME_SECONDS);
 	}
 
-	public void setSessionCookie(HttpServletResponse response) {
+	public String setSessionCookie(HttpServletResponse response) {
 		String sessionId = UUID.randomUUID().toString();
 		setCookie(response, SESSION_ID, sessionId, SESSION_EXPIRATION_TIME_SECONDS);
+		return sessionId;
 	}
 
 	public String getCookie(HttpServletRequest request, String name) {
