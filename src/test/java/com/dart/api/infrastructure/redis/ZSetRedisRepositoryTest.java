@@ -70,16 +70,16 @@ class ZSetRedisRepositoryTest {
 		String expectedKey = "testKey";
 		String expectedValue = "testValue";
 		double expectedScore = 1.0;
-		long expectedExpiryDays = 30;
+		long expectedExpirySeconds = 30 * 24 * 60 * 60;
 
 		when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
 
 		// WHEN
-		zSetRedisRepository.addElementWithExpiry(expectedKey, expectedValue, expectedScore, expectedExpiryDays);
+		zSetRedisRepository.addElementWithExpiry(expectedKey, expectedValue, expectedScore, expectedExpirySeconds);
 
 		// THEN
 		verify(zSetOperations).add(eq(expectedKey), eq(expectedValue), eq(expectedScore));
-		verify(redisTemplate).expire(eq(expectedKey), eq(Duration.ofDays(expectedExpiryDays)));
+		verify(redisTemplate).expire(eq(expectedKey), eq(Duration.ofSeconds(expectedExpirySeconds)));
 	}
 
 	@Test
