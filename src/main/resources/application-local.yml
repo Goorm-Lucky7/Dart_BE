@@ -87,3 +87,5 @@ cloud:
       auto: false
     stack:
       auto: false
+    cloudfront:
+      domain: ${cloud.aws.cloudfront.domain}

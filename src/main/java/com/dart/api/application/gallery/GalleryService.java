@@ -216,13 +216,12 @@ public class GalleryService {
 	}
 
 	private GalleryAllResDto mapGalleryToDto(Gallery gallery, AuthUser authUser) {
-		final List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
-		return createGalleryAllResDto(gallery, hashtags);
+		return createGalleryAllResDto(gallery);
 	}
 
-	private GalleryAllResDto createGalleryAllResDto(Gallery gallery, List<String> hashtags) {
+	private GalleryAllResDto createGalleryAllResDto(Gallery gallery) {
 		return new GalleryAllResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(), gallery.getStartDate(),
-			gallery.getEndDate(), hashtags);
+			gallery.getEndDate());
 	}
 
 	private void validateRequest(String nickname, AuthUser authUser) {
