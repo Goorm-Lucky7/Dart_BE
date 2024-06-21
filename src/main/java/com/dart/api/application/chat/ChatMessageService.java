@@ -60,17 +60,14 @@ public class ChatMessageService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<ChatMessageReadDto> getChatMessageList(Long chatRoomId, int page, int size) {
-		List<ChatMessageReadDto> chatMessageReadDtoList = new ArrayList<>();
-
 		PageResponse<ChatMessageReadDto> redisChatMessageReadDtoList = chatRedisRepository
 			.getChatMessageReadDto(chatRoomId, page, size);
 
-		if (redisChatMessageReadDtoList == null || redisChatMessageReadDtoList.pages().isEmpty()) {
-			chatMessageReadDtoList = fetchChatMessagesFromDBAndCache(chatRoomId, page, size);
-		} else {
-			chatMessageReadDtoList.addAll(redisChatMessageReadDtoList.pages());
+		if (redisChatMessageReadDtoList != null && !redisChatMessageReadDtoList.pages().isEmpty()) {
+			return createPageResponse(new ArrayList<>(redisChatMessageReadDtoList.pages()), page, size);
 		}
 
+		List<ChatMessageReadDto> chatMessageReadDtoList = fetchChatMessagesFromDBAndCache(chatRoomId, page, size);
 		return createPageResponse(chatMessageReadDtoList, page, size);
 	}
 
