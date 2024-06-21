@@ -50,7 +50,7 @@ public class AuthenticationService {
 
 		setTokensInResponse(response, accessToken, refreshToken);
 
-		return new LoginResDto(accessToken);
+		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
