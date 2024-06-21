@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,7 +69,7 @@ public class MemberController {
 		return ResponseEntity.ok(memberService.getMemberProfile(nickname, authUser));
 	}
 
-	@PatchMapping(path = "/members", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+	@PostMapping(path = "/members", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
