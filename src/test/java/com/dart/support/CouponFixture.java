@@ -1,23 +1,22 @@
 package com.dart.support;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.provider.Arguments;
 
-import com.dart.api.domain.coupon.entity.Coupon;
 import com.dart.api.domain.coupon.entity.CouponType;
+import com.dart.api.domain.coupon.entity.PriorityCoupon;
 
 public class CouponFixture {
-	public static Coupon create() {
-		return Coupon.builder()
+	public static PriorityCoupon create() {
+		return PriorityCoupon.builder()
 			.stock(100)
-			.name("coupon-test")
-			.description("coupon-description")
-			.durationAt(LocalDateTime.now().plusDays(1))
-			.validAt(LocalDateTime.now().plusDays(2))
+			.title("오픈기념선착순")
+			.startedAt(LocalDate.now().minusDays(1))
+			.endedAt(LocalDate.now().plusDays(1))
 			.couponType(CouponType.TEN_PERCENT)
 			.build();
 	}

@@ -1,6 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
 import com.dart.api.domain.member.entity.Member;
+import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,28 +18,28 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "tbl_coupon_wallet")
+@Table(name = "tbl_priority_coupon_wallet")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CouponWallet {
+public class PriorityCouponWallet extends BaseTimeEntity {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "coupon_id")
-	private Coupon coupon;
+	@JoinColumn(name = "priority_coupon_id")
+	private PriorityCoupon priorityCoupon;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	private CouponWallet(Coupon coupon, Member member) {
-		this.coupon = coupon;
+	public PriorityCouponWallet(PriorityCoupon priorityCoupon, Member member) {
+		this.priorityCoupon = priorityCoupon;
 		this.member = member;
 	}
 
-	public static CouponWallet create(Coupon coupon, Member member) {
-		return new CouponWallet(coupon, member);
+	public static PriorityCouponWallet create(PriorityCoupon priorityCoupon, Member member) {
+		return new PriorityCouponWallet(priorityCoupon, member);
 	}
 }

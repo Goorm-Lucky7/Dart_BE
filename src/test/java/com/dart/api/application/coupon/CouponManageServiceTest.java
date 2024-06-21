@@ -3,7 +3,7 @@ package com.dart.api.application.coupon;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.BDDMockito.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 
@@ -16,13 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.dart.api.domain.coupon.entity.Coupon;
-import com.dart.api.domain.coupon.entity.CouponWallet;
-import com.dart.api.domain.coupon.repository.CouponRedisRepository;
-import com.dart.api.domain.coupon.repository.CouponRepository;
-import com.dart.api.domain.coupon.repository.CouponWalletRepository;
+import com.dart.api.domain.coupon.entity.PriorityCoupon;
+import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
+import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
+import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.api.dto.prioritycoupon.request.PriorityCouponPublishDto;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
@@ -31,29 +31,30 @@ import com.dart.support.MemberFixture;
 @ExtendWith({MockitoExtension.class})
 class CouponManageServiceTest {
 	@Mock
-	private CouponRepository couponRepository;
+	private PriorityCouponCacheService priorityCouponCacheService;
 
 	@Mock
-	private CouponRedisRepository couponRedisRepository;
+	private PriorityCouponRedisRepository priorityCouponRedisRepository;
 
 	@Mock
-	private CouponWalletRepository couponWalletRepository;
+	private PriorityCouponWalletRepository priorityCouponWalletRepository;
 
 	@Mock
 	private MemberRepository memberRepository;
 
 	@InjectMocks
-	private CouponManageService couponManageService;
+	private PriorityCouponManageService priorityCouponManageService;
 
 	@DisplayName("10명의 사용자가 쿠폰 발행을 성공적으로 한다.")
 	@MethodSource("com.dart.support.CouponFixture#provideValues_String")
 	@ParameterizedTest
 	void publish_all_success(Set<String> values) {
 		// Given
-		Coupon coupon = CouponFixture.create();
-		given(couponRepository.findCouponByDateRange(any(LocalDateTime.class))).willReturn(Optional.of(coupon));
-		given(couponRedisRepository.getCount(eq(coupon.getId()))).willReturn(coupon.getStock() - 1);
-		given(couponRedisRepository.rangeQueue(eq(coupon.getId()), any(long.class), any(long.class)))
+		PriorityCoupon priorityCoupon = CouponFixture.create();
+		given(priorityCouponCacheService.getByStartAt(any(LocalDate.class))).willReturn(Optional.of(priorityCoupon));
+		given(priorityCouponRedisRepository.getCount(eq(priorityCoupon.getId()))).willReturn(
+			priorityCoupon.getStock() - 1);
+		given(priorityCouponRedisRepository.rangeQueue(eq(priorityCoupon.getId()), any(long.class), any(long.class)))
 			.willReturn(values);
 
 		values.forEach(email -> {
@@ -62,10 +63,10 @@ class CouponManageServiceTest {
 		});
 
 		// When
-		couponManageService.publish();
+		priorityCouponManageService.publish();
 
 		// Then
-		verify(couponWalletRepository, times(10)).save(any(CouponWallet.class));
+		verify(priorityCouponWalletRepository, times(10)).save(any(PriorityCouponWallet.class));
 		verify(memberRepository, times(10)).findByEmail(any(String.class));
 	}
 
@@ -73,16 +74,16 @@ class CouponManageServiceTest {
 	@Test
 	void publish_not_durationAt() {
 		// Given
-		given(couponRepository.findCouponByDateRange(any(LocalDateTime.class))).willReturn(Optional.empty());
+		given(priorityCouponCacheService.getByStartAt(any(LocalDate.class))).willReturn(Optional.empty());
 
 		// When
-		couponManageService.publish();
+		priorityCouponManageService.publish();
 
 		// Then
-		verify(couponWalletRepository, times(0)).save(any(CouponWallet.class));
-		verify(couponRedisRepository, times(0)).getCount(any(Long.class));
-		verify(couponRedisRepository, times(0)).increase(any(Long.class), any(long.class));
-		verify(couponRedisRepository, times(0))
+		verify(priorityCouponWalletRepository, times(0)).save(any(PriorityCouponWallet.class));
+		verify(priorityCouponRedisRepository, times(0)).getCount(any(Long.class));
+		verify(priorityCouponRedisRepository, times(0)).increase(any(Long.class), any(long.class));
+		verify(priorityCouponRedisRepository, times(0))
 			.rangeQueue(any(Long.class), any(long.class), any(long.class));
 	}
 
@@ -90,35 +91,39 @@ class CouponManageServiceTest {
 	@DisplayName("쿠폰 발급 요청을 성공적으로 대기열 큐에 등록한다. - Void")
 	void registerQueue_Success() {
 		// GIVEN
-		Coupon coupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.create();
 		String testEmail = "test@example.com";
+		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
-		given(couponRepository.findCouponByIdAndDateRange(eq(coupon.getId()), any(LocalDateTime.class))).willReturn(
-			Optional.of(coupon));
-		given(couponRedisRepository.hasValue(eq(coupon.getId()), eq(testEmail))).willReturn(false);
-		given(couponRedisRepository.sizeQueue(eq(coupon.getId()))).willReturn(coupon.getStock() - 1);
+		given(priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()),
+			any(LocalDate.class))).willReturn((priorityCoupon));
+		given(priorityCouponRedisRepository.hasValue(eq(priorityCoupon.getId()), eq(testEmail))).willReturn(false);
+		given(priorityCouponRedisRepository.sizeQueue(eq(priorityCoupon.getId()))).willReturn(
+			priorityCoupon.getStock() - 1);
 
 		// WHEN
-		couponManageService.registerQueue(coupon.getId(), testEmail);
+		priorityCouponManageService.registerQueue(dto, testEmail);
 
 		// THEN
-		verify(couponRedisRepository)
-			.addIfAbsentQueue(eq(coupon.getId()), eq(testEmail), anyDouble(), anyLong());
+		verify(priorityCouponRedisRepository)
+			.addIfAbsentQueue(eq(priorityCoupon.getId()), eq(testEmail), anyDouble(), anyLong());
 	}
 
 	@Test
 	@DisplayName("이미 해당 쿠폰은 발급받은 쿠폰이다. - ConflictException")
 	void registerQueue_No_ConflictException() {
 		// GIVEN
-		Coupon coupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.create();
 		String testEmail = "test@example.com";
+		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
-		given(couponRepository.findCouponByIdAndDateRange(eq(coupon.getId()), any(LocalDateTime.class))).willReturn(
-			Optional.of(coupon));
-		given(couponRedisRepository.hasValue(eq(coupon.getId()), eq(testEmail))).willReturn(true);
+		given(
+			priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()), any(LocalDate.class))).willReturn(
+			(priorityCoupon));
+		given(priorityCouponRedisRepository.hasValue(eq(priorityCoupon.getId()), eq(testEmail))).willReturn(true);
 
 		// When & Then
-		assertThatThrownBy(() -> couponManageService.registerQueue(coupon.getId(), testEmail))
+		assertThatThrownBy(() -> priorityCouponManageService.registerQueue(dto, testEmail))
 			.isInstanceOf(ConflictException.class);
 	}
 
@@ -126,16 +131,19 @@ class CouponManageServiceTest {
 	@DisplayName("해당 쿠폰은 재고가 마감된 쿠폰이다. - BadRequestException")
 	void registerQueue_No_BadRequestException() {
 		// GIVEN
-		Coupon coupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.create();
 		String testEmail = "test@example.com";
+		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
-		given(couponRepository.findCouponByIdAndDateRange(eq(coupon.getId()), any(LocalDateTime.class))).willReturn(
-			Optional.of(coupon));
-		given(couponRedisRepository.hasValue(eq(coupon.getId()), eq(testEmail))).willReturn(false);
-		given(couponRedisRepository.sizeQueue(eq(coupon.getId()))).willReturn(coupon.getStock());
+		given(
+			priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()), any(LocalDate.class))).willReturn(
+			(priorityCoupon));
+		given(priorityCouponRedisRepository.hasValue(eq(priorityCoupon.getId()), eq(testEmail))).willReturn(false);
+		given(priorityCouponRedisRepository.sizeQueue(eq(priorityCoupon.getId()))).willReturn(
+			priorityCoupon.getStock());
 
 		// When & Then
-		assertThatThrownBy(() -> couponManageService.registerQueue(coupon.getId(), testEmail))
+		assertThatThrownBy(() -> priorityCouponManageService.registerQueue(dto, testEmail))
 			.isInstanceOf(BadRequestException.class);
 	}
 }
