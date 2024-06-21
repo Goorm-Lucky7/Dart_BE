@@ -2,6 +2,8 @@ package com.dart.api.domain.coupon.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,8 +22,11 @@ public class GeneralCoupon {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "title", nullable = false)
 	private String title;
 
+	@Column(name = "coupon_type")
+	@Enumerated(EnumType.STRING)
 	private CouponType couponType;
 
 	public GeneralCoupon(String title, CouponType couponType) {
