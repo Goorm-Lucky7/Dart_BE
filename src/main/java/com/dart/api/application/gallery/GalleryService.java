@@ -272,6 +272,10 @@ public class GalleryService {
 	}
 
 	private boolean checkIfUserHasTicket(AuthUser authUser, Gallery gallery) {
+		if (isFreeGallery(gallery)) {
+			return true;
+		}
+
 		if (isAuthUserNull(authUser)) {
 			return false;
 		}
@@ -301,6 +305,10 @@ public class GalleryService {
 
 	private boolean isAuthUserNull(AuthUser authUser) {
 		return authUser == null;
+	}
+
+	private boolean isFreeGallery(Gallery gallery) {
+		return gallery.getCost() == Cost.FREE;
 	}
 
 	private boolean isGalleryOwner(Gallery gallery, Member member) {
