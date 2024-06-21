@@ -21,7 +21,7 @@ public class CookieUtil {
 
 	private final Environment env;
 
-	public void setCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds){
+	public void setCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
 		boolean isLocal = isLocalActiveProfile();
 		String domain = isLocal ? LOCAL_DOMAIN : COOKIE_DOMAIN;
 
@@ -32,7 +32,7 @@ public class CookieUtil {
 			.sameSite("None")
 			.domain(domain);
 
-		if(!isLocal) {
+		if (!isLocal) {
 			cookieBuilder.secure(true);
 		}
 

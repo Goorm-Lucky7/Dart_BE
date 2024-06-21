@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class CouponRedisRepository {
+public class PriorityCouponRedisRepository {
 	private final ZSetRedisRepository zSetRedisRepository;
 	private final ValueRedisRepository valueRedisRepository;
 
