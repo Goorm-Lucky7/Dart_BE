@@ -59,6 +59,9 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "fee", nullable = false)
 	private int fee;
 
+	@Column(name = "generated_cost", nullable = false)
+	private int generatedCost;
+
 	@Column(name = "is_paid")
 	private boolean isPaid;
 
@@ -68,7 +71,7 @@ public class Gallery extends BaseTimeEntity {
 
 	@Builder
 	public Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
-		Cost cost, Template template, int fee, Member member) {
+		Cost cost, Template template, int fee, int generatedCost, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
@@ -77,6 +80,7 @@ public class Gallery extends BaseTimeEntity {
 		this.template = template;
 		this.endDate = endDate;
 		this.fee = fee;
+		this.generatedCost = generatedCost;
 		this.isPaid = !Cost.PAY.equals(cost);
 		this.member = member;
 	}
@@ -90,6 +94,7 @@ public class Gallery extends BaseTimeEntity {
 			.cost(cost)
 			.template(Template.fromValue(createGalleryDto.template()))
 			.fee(createGalleryDto.fee())
+			.generatedCost(createGalleryDto.generatedCost())
 			.thumbnail(thumbnailUrl)
 			.member(member)
 			.build();

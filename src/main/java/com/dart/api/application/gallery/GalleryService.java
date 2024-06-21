@@ -130,6 +130,8 @@ public class GalleryService {
 
 		boolean hasComment = checkIfUserHasCommented(gallery, authUser);
 
+		boolean hasTicket = checkIfUserHasTicket(authUser, gallery);
+
 		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
 
 		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
@@ -141,7 +143,9 @@ public class GalleryService {
 			gallery.getMember().getNickname(),
 			gallery.getTemplate().toString(),
 			images,
-			chatRoom.getId());
+			chatRoom.getId(),
+			hasTicket);
+
 	}
 
 	@Transactional(readOnly = true)
