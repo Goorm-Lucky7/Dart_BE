@@ -15,7 +15,7 @@ import com.dart.api.domain.coupon.repository.GeneralCouponWalletRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.GeneralCouponPublishDto;
-import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -39,7 +39,7 @@ public class GeneralCouponManageService {
 
 	public void publish(GeneralCouponPublishDto dto, AuthUser authUser) {
 		final GeneralCoupon generalCoupon = generalCouponRepository.findById(dto.generalCouponId())
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
 		final Member member = memberRepository.findByEmail(authUser.email())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
@@ -51,7 +51,7 @@ public class GeneralCouponManageService {
 
 	private void validateAlreadyCoupon(GeneralCoupon generalCoupon, Member member) {
 		if (generalCouponWalletRepository.existsByGeneralCouponAndMember(generalCoupon, member)) {
-			throw new BadRequestException(ErrorCode.FAIL_MEMBER_NOT_FOUND);
+			throw new ConflictException(ErrorCode.FAIL_COUPON_CONFLICT);
 		}
 	}
 }
