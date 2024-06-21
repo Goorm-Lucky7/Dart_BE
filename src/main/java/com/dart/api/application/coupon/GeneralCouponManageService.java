@@ -1,9 +1,13 @@
 package com.dart.api.application.coupon;
 
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.coupon.entity.CouponEventType;
 import com.dart.api.domain.coupon.entity.GeneralCoupon;
 import com.dart.api.domain.coupon.entity.GeneralCouponWallet;
 import com.dart.api.domain.coupon.repository.GeneralCouponRepository;
@@ -24,6 +28,14 @@ public class GeneralCouponManageService {
 	private final GeneralCouponRepository generalCouponRepository;
 	private final GeneralCouponWalletRepository generalCouponWalletRepository;
 	private final MemberRepository memberRepository;
+
+	@Scheduled(cron = "0 0 0 1 * ?")
+	public void reset() {
+		final List<GeneralCouponWallet> generalCouponWallets = generalCouponWalletRepository
+			.findByGeneralCoupon_CouponEventType(CouponEventType.MONTHLY_COUPON);
+
+		generalCouponWalletRepository.deleteAll(generalCouponWallets);
+	}
 
 	public void publish(GeneralCouponPublishDto dto, AuthUser authUser) {
 		final GeneralCoupon generalCoupon = generalCouponRepository.findById(dto.generalCouponId())
