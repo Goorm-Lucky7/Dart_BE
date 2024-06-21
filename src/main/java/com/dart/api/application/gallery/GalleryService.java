@@ -20,6 +20,7 @@ import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
+import com.dart.api.domain.gallery.entity.Template;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -74,6 +75,7 @@ public class GalleryService {
 		final Cost cost = determineCost(createGalleryDto);
 
 		validateEndDateForPay(cost, createGalleryDto);
+		validateTemplate(createGalleryDto.template());
 
 		String thumbnailUrl = s3Service.uploadFile(thumbnail);
 
@@ -137,6 +139,7 @@ public class GalleryService {
 			gallery.getTitle(),
 			hasComment,
 			gallery.getMember().getNickname(),
+			gallery.getTemplate().toString(),
 			images,
 			chatRoom.getId());
 	}
@@ -196,6 +199,12 @@ public class GalleryService {
 			return Cost.FREE;
 		}
 		return Cost.PAY;
+	}
+
+	private void validateTemplate(String template) {
+		if (!Template.isValidTemplate(template)) {
+			throw new BadRequestException(ErrorCode.FAIL_TEMPLATE_NOT_FOUND);
+		}
 	}
 
 	private void validateImageCount(CreateGalleryDto createGalleryDto) {

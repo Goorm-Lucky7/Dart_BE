@@ -52,6 +52,10 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "cost", nullable = false)
 	private Cost cost;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "template", nullable = false)
+	private Template template;
+
 	@Column(name = "fee", nullable = false)
 	private int fee;
 
@@ -64,12 +68,13 @@ public class Gallery extends BaseTimeEntity {
 
 	@Builder
 	public Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
-		Cost cost, int fee, Member member) {
+		Cost cost, Template template, int fee, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
 		this.startDate = startDate;
 		this.cost = cost;
+		this.template = template;
 		this.endDate = endDate;
 		this.fee = fee;
 		this.isPaid = !Cost.PAY.equals(cost);
@@ -83,6 +88,7 @@ public class Gallery extends BaseTimeEntity {
 			.startDate(createGalleryDto.startDate())
 			.endDate(createGalleryDto.endDate())
 			.cost(cost)
+			.template(Template.fromValue(createGalleryDto.template()))
 			.fee(createGalleryDto.fee())
 			.thumbnail(thumbnailUrl)
 			.member(member)
