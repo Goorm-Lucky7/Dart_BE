@@ -70,7 +70,7 @@ public class MemberController {
 		return ResponseEntity.ok(memberService.getMemberProfile(nickname, authUser));
 	}
 
-	@PutMapping(path = "/members",  consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+	@PutMapping(path = "/members", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
