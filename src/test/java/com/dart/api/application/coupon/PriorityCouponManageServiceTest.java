@@ -29,7 +29,7 @@ import com.dart.support.CouponFixture;
 import com.dart.support.MemberFixture;
 
 @ExtendWith({MockitoExtension.class})
-class CouponManageServiceTest {
+class PriorityCouponManageServiceTest {
 	@Mock
 	private PriorityCouponCacheService priorityCouponCacheService;
 
