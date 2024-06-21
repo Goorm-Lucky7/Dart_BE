@@ -13,6 +13,7 @@ public class ChatConstant {
 	public static final String CHAT_SESSION_USER = "authUser";
 	public final static String SORT_FIELD_CREATED_AT = "createdAt";
 	public final static long CHAT_MESSAGE_EXPIRY_SECONDS = 60 * 60;
+	public static final String STOMP_COMMAND_HEADER = "stompCommand";
 
 	public static final int MESSAGE_SIZE_LIMIT = 160 * 64 * 1024;
 	public static final int SEND_TIME_LIMIT = 100 * 10000;
