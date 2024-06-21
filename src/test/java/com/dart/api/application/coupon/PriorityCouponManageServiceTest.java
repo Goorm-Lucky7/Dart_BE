@@ -50,7 +50,7 @@ class PriorityCouponManageServiceTest {
 	@ParameterizedTest
 	void publish_all_success(Set<String> values) {
 		// Given
-		PriorityCoupon priorityCoupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		given(priorityCouponCacheService.getByStartAt(any(LocalDate.class))).willReturn(Optional.of(priorityCoupon));
 		given(priorityCouponRedisRepository.getCount(eq(priorityCoupon.getId()))).willReturn(
 			priorityCoupon.getStock() - 1);
@@ -91,7 +91,7 @@ class PriorityCouponManageServiceTest {
 	@DisplayName("쿠폰 발급 요청을 성공적으로 대기열 큐에 등록한다. - Void")
 	void registerQueue_Success() {
 		// GIVEN
-		PriorityCoupon priorityCoupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
@@ -113,7 +113,7 @@ class PriorityCouponManageServiceTest {
 	@DisplayName("이미 해당 쿠폰은 발급받은 쿠폰이다. - ConflictException")
 	void registerQueue_No_ConflictException() {
 		// GIVEN
-		PriorityCoupon priorityCoupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
@@ -131,7 +131,7 @@ class PriorityCouponManageServiceTest {
 	@DisplayName("해당 쿠폰은 재고가 마감된 쿠폰이다. - BadRequestException")
 	void registerQueue_No_BadRequestException() {
 		// GIVEN
-		PriorityCoupon priorityCoupon = CouponFixture.create();
+		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
 
