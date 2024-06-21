@@ -22,7 +22,7 @@ import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.dto.prioritycoupon.request.PriorityCouponPublishDto;
+import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;

@@ -1,4 +1,4 @@
-package com.dart.api.dto.prioritycoupon.request;
+package com.dart.api.dto.coupon.request;
 
 import jakarta.validation.constraints.NotNull;
 

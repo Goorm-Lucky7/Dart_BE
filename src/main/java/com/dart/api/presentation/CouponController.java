@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
-public class PriorityCouponController {
+public class CouponController {
 	private final PriorityCouponManageService priorityCouponManageService;
 	private final GeneralCouponManageService generalCouponManageService;
 
