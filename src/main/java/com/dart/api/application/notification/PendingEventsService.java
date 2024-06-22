@@ -15,4 +15,8 @@ public class PendingEventsService {
 	public void addEvent(String clientId, Object event) {
 		pendingEventsDB.computeIfAbsent(clientId, clientIdKey -> new CopyOnWriteArrayList<>()).add(event);
 	}
+
+	public List<Object> getPendingEvents(String clientId) {
+		return pendingEventsDB.getOrDefault(clientId, new CopyOnWriteArrayList<>());
+	}
 }
