@@ -19,4 +19,8 @@ public class PendingEventsService {
 	public List<Object> getPendingEvents(String clientId) {
 		return pendingEventsDB.getOrDefault(clientId, new CopyOnWriteArrayList<>());
 	}
+
+	public void clearPendingEvents(String clientId) {
+		pendingEventsDB.remove(clientId);
+	}
 }
