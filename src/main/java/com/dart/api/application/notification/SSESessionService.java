@@ -21,4 +21,16 @@ public class SSESessionService {
 
 		return sseEmitter;
 	}
+
+	public void sendEvent(String clientId, Object event) {
+		SseEmitter sseEmitter = sseSessionDB.get(clientId);
+
+		if (sseEmitter != null) {
+			try {
+				sseEmitter.send(event);
+			} catch (Exception e) {
+				sseSessionDB.remove(clientId);
+			}
+		}
+	}
 }
