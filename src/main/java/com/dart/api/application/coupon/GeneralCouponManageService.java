@@ -1,5 +1,7 @@
 package com.dart.api.application.coupon;
 
+import static com.dart.global.common.util.CouponConstant.*;
+
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +31,7 @@ public class GeneralCouponManageService {
 	private final GeneralCouponWalletRepository generalCouponWalletRepository;
 	private final MemberRepository memberRepository;
 
-	@Scheduled(cron = "0 0 0 1 * ?")
+	@Scheduled(cron = EVERY_MONTH_FIRST_DAY)
 	public void reset() {
 		final List<GeneralCouponWallet> generalCouponWallets = generalCouponWalletRepository
 			.findByGeneralCoupon_CouponEventType(CouponEventType.MONTHLY_COUPON);
