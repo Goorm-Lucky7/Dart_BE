@@ -33,4 +33,10 @@ public class SSESessionService {
 			}
 		}
 	}
+
+	public void sendEventToAll(Object event) {
+		for (String clientId : sseSessionDB.keySet()) {
+			sendEvent(clientId, event);
+		}
+	}
 }
