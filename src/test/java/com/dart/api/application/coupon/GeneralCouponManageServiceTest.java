@@ -3,16 +3,20 @@ package com.dart.api.application.coupon;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.coupon.entity.CouponEventType;
 import com.dart.api.domain.coupon.entity.GeneralCoupon;
 import com.dart.api.domain.coupon.entity.GeneralCouponWallet;
 import com.dart.api.domain.coupon.repository.GeneralCouponRepository;
@@ -37,6 +41,21 @@ class GeneralCouponManageServiceTest {
 
 	@InjectMocks
 	private GeneralCouponManageService generalCouponManageService;
+
+	@DisplayName("5명 사용자의 쿠폰을 초기화한다.")
+	@MethodSource("com.dart.support.CouponFixture#provideGeneralCouponWallet_total5")
+	@ParameterizedTest
+	void reset_all_success(List<GeneralCouponWallet> values) {
+		// GIVEN
+		given(generalCouponWalletRepository.findByGeneralCoupon_CouponEventType(any(CouponEventType.class)))
+			.willReturn(values);
+
+		// WHEN
+		generalCouponManageService.reset();
+
+		// THEN
+		verify(generalCouponWalletRepository, times(1)).deleteAll(values);
+	}
 
 	@Test
 	@DisplayName("일반 쿠폰을 성공적으로 발급한다. - Void")
