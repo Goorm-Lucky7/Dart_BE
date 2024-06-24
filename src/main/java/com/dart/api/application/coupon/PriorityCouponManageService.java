@@ -5,7 +5,6 @@ import static com.dart.global.common.util.CouponConstant.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,6 +19,7 @@ import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
+import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
@@ -35,6 +35,7 @@ public class PriorityCouponManageService {
 	private final PriorityCouponWalletRepository priorityCouponWalletRepository;
 	private final PriorityCouponRedisRepository priorityCouponRedisRepository;
 	private final PriorityCouponCacheService priorityCouponCacheService;
+	private final ClockHolder clockHolder;
 
 	@Scheduled(fixedDelay = ONE_SECOND)
 	public void publish() {
@@ -78,7 +79,7 @@ public class PriorityCouponManageService {
 		final LocalDateTime nowDateTime = LocalDateTime.now();
 		final PriorityCoupon priorityCoupon = priorityCouponCacheService.getByIdAndStartAt(dto.priorityCouponId(),
 			nowDate);
-		final LocalDateTime endDateTime = priorityCoupon.getEndedAt().minusDays(1).atTime(LocalTime.MAX);
+		final LocalDateTime endDateTime = clockHolder.minusOneDaysAtTime(priorityCoupon.getEndedAt());
 		final double registerTime = System.currentTimeMillis();
 		final long expiredTime = Duration.between(nowDateTime, endDateTime).getSeconds();
 
