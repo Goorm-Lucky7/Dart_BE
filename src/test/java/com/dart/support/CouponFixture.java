@@ -31,6 +31,14 @@ public class CouponFixture {
 		return new GeneralCoupon("10%할인", CouponType.TEN_PERCENT, CouponEventType.MONTHLY_COUPON);
 	}
 
+	public static List<PriorityCoupon> createPriorityCouponList() {
+		return List.of(createPriorityCoupon());
+	}
+
+	public static List<GeneralCoupon> createGeneralCouponList() {
+		return List.of(createGeneralCoupon());
+	}
+
 	public static Stream<Arguments> provideValues_String() {
 		Set<Object> values = new HashSet<>();
 		values.add("test1@naver.com");

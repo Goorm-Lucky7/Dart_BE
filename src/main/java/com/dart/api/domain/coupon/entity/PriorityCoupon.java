@@ -2,6 +2,8 @@ package com.dart.api.domain.coupon.entity;
 
 import java.time.LocalDate;
 
+import com.dart.api.dto.coupon.response.PriorityCouponDetail;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -54,5 +56,17 @@ public class PriorityCoupon {
 		this.startedAt = startedAt;
 		this.endedAt = endedAt;
 		this.couponType = couponType;
+	}
+
+	public PriorityCouponDetail toDetail(boolean isFinished) {
+		return PriorityCouponDetail.builder()
+			.priorityCouponId(this.id)
+			.stock(this.stock)
+			.startDate(this.startedAt)
+			.endDate(this.endedAt)
+			.title(this.title)
+			.couponType(this.couponType.getValue())
+			.isFinished(isFinished)
+			.build();
 	}
 }
