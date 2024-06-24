@@ -47,10 +47,11 @@ public class Notification extends BaseTimeEntity {
 		this.url = url;
 	}
 
-	public static Notification createNotification(String message, NotificationType notificationType) {
+	public static Notification createNotification(String message, NotificationType notificationType, String url) {
 		return Notification.builder()
 			.message(message)
 			.notificationType(notificationType)
+			.url(url)
 			.build();
 	}
 
