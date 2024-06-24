@@ -49,7 +49,7 @@ class CouponServiceTest {
 
 	@DisplayName("일반 쿠폰과 선착순 쿠폰을 성공적으로 조회한다. - CouponReadAllDto")
 	@Test
-	void getById_success() {
+	void readAll_success() {
 		// Given
 		List<PriorityCoupon> priorityCoupons = CouponFixture.createPriorityCouponList();
 		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
@@ -73,5 +73,29 @@ class CouponServiceTest {
 		// Then
 		assertThat(actual.generalCoupon()).hasSameSizeAs(generalCoupons);
 		assertThat(actual.priorityCoupon()).hasSameSizeAs(priorityCoupons);
+	}
+
+	@DisplayName("이미 발급받은 일반 쿠폰을 조회한다. - CouponReadAllDto")
+	@Test
+	void readAll_hasCoupon_true() {
+		// Given
+		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
+		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		LocalDate nowDate = LocalDate.of(2024, 6, 24);
+
+		given(clockHolder.nowDate()).willReturn(nowDate);
+		given(generalCouponRepository.findAll()).willReturn(generalCoupons);
+
+		Member member = MemberFixture.createMemberEntity();
+
+		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.ofNullable(member));
+		given(generalCouponWalletRepository.existsByGeneralCouponAndMember(any(GeneralCoupon.class),
+			eq(member))).willReturn(true);
+
+		// When
+		CouponReadAllDto actual = couponService.readAll(authUser);
+
+		// Then
+		assertThat(actual.generalCoupon().get(0).hasCoupon()).isTrue();
 	}
 }
