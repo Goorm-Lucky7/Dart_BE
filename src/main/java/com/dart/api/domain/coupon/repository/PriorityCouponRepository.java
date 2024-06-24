@@ -1,6 +1,7 @@
 package com.dart.api.domain.coupon.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,6 @@ public interface PriorityCouponRepository extends JpaRepository<PriorityCoupon, 
 
 	@Query("SELECT pc FROM PriorityCoupon pc WHERE pc.startedAt <= :nowDate AND pc.endedAt > :nowDate")
 	Optional<PriorityCoupon> findCouponByDateRange(LocalDate nowDate);
+
+	List<PriorityCoupon> findByStartedAt(LocalDate startedAt);
 }
