@@ -77,7 +77,7 @@ public class GalleryService {
 		validateEndDateForPay(cost, createGalleryDto);
 		validateTemplate(createGalleryDto.template());
 
-		String thumbnailUrl = s3Service.uploadFile(thumbnail);
+		String thumbnailUrl = s3Service.uploadThumbnail(thumbnail);
 
 		final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
 		galleryRepository.save(gallery);
@@ -139,6 +139,8 @@ public class GalleryService {
 
 		return new GalleryResDto(
 			gallery.getTitle(),
+			gallery.getThumbnail(),
+			gallery.getContent(),
 			hasComment,
 			gallery.getMember().getNickname(),
 			gallery.getTemplate().toString(),
