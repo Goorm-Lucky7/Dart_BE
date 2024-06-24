@@ -23,4 +23,6 @@ public class GlobalConstant {
 
 	public static final int THIRTY_MINUTES = 30 * 60;
 	public static final int THIRTY_DAYS = 30 * 24 * 60 * 60;
+
+	public static final int THUMBNAIL_RESIZING_SIZE = 800;
 }
