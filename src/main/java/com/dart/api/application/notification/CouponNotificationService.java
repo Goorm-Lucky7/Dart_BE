@@ -62,7 +62,11 @@ public class CouponNotificationService {
 	private void saveCommonNotification(String message) {
 		validateMessageAndNotificationTypeExists();
 
-		final Notification notification = Notification.createNotification(message, NotificationType.COUPON_START);
+		final Notification notification = Notification.createNotification(
+			message,
+			NotificationType.COUPON_START,
+			PRIORITY_COUPON_EVENT_URL
+		);
 		notificationRepository.save(notification);
 	}
 
