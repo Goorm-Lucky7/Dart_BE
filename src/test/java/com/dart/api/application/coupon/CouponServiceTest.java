@@ -54,7 +54,7 @@ class CouponServiceTest {
 		List<PriorityCoupon> priorityCoupons = CouponFixture.createPriorityCouponList();
 		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
-		LocalDate nowDate = LocalDate.of(2024, 6, 24);
+		LocalDate nowDate = LocalDate.now();
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
 		given(priorityCouponRepository.findAllWithStartedAtBeforeOrEqual(any(LocalDate.class))).willReturn(
@@ -81,7 +81,7 @@ class CouponServiceTest {
 		// Given
 		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
-		LocalDate nowDate = LocalDate.of(2024, 6, 24);
+		LocalDate nowDate = LocalDate.now();
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
 		given(generalCouponRepository.findAll()).willReturn(generalCoupons);
@@ -97,5 +97,22 @@ class CouponServiceTest {
 
 		// Then
 		assertThat(actual.generalCoupon().get(0).hasCoupon()).isTrue();
+	}
+
+	@DisplayName("비로그인 사용자는 가지고 있는 쿠폰이 없다 - CouponReadAllDto")
+	@Test
+	void readAll_hasCoupon_false() {
+		// Given
+		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
+		LocalDate nowDate = LocalDate.now();
+
+		given(clockHolder.nowDate()).willReturn(nowDate);
+		given(generalCouponRepository.findAll()).willReturn(generalCoupons);
+
+		// When
+		CouponReadAllDto actual = couponService.readAll(null);
+
+		// Then
+		assertThat(actual.generalCoupon().get(0).hasCoupon()).isFalse();
 	}
 }
