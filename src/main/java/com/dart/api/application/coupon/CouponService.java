@@ -33,7 +33,7 @@ public class CouponService {
 
 	public CouponReadAllDto readAll(AuthUser authUser) {
 		final LocalDate date = clockHolder.nowDate();
-		final List<PriorityCoupon> priorityCoupons = priorityCouponRepository.findAll();
+		final List<PriorityCoupon> priorityCoupons = priorityCouponRepository.findAllWithStartedAtBeforeOrEqual(date);
 		final List<GeneralCoupon> generalCoupons = generalCouponRepository.findAll()
 			.stream()
 			.sorted((gc1, gc2) -> gc2.getCouponType().getValue() - gc1.getCouponType().getValue())
@@ -50,7 +50,7 @@ public class CouponService {
 	}
 
 	private boolean isFinished(LocalDate endedAt, LocalDate nowDate) {
-		return endedAt.isAfter(nowDate);
+		return nowDate.isAfter(endedAt);
 	}
 
 	private boolean isAlreadyCoupon(GeneralCoupon generalCoupon, AuthUser authUser) {
