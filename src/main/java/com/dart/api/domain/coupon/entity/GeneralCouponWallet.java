@@ -33,8 +33,16 @@ public class GeneralCouponWallet {
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	public GeneralCouponWallet(GeneralCoupon generalCoupon, Member member) {
+	@Column(name = "is_used")
+	private boolean isUsed;
+
+	private GeneralCouponWallet(GeneralCoupon generalCoupon, Member member) {
 		this.generalCoupon = generalCoupon;
 		this.member = member;
+		this.isUsed = false;
+	}
+
+	public static GeneralCouponWallet create(GeneralCoupon generalCoupon, Member member) {
+		return new GeneralCouponWallet(generalCoupon, member);
 	}
 }

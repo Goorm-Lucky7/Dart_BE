@@ -29,8 +29,13 @@ public class GeneralCoupon {
 	@Enumerated(EnumType.STRING)
 	private CouponType couponType;
 
-	public GeneralCoupon(String title, CouponType couponType) {
+	@Column(name = "coupon_event_type")
+	@Enumerated(EnumType.STRING)
+	private CouponEventType couponEventType;
+
+	public GeneralCoupon(String title, CouponType couponType, CouponEventType couponEventType) {
 		this.title = title;
 		this.couponType = couponType;
+		this.couponEventType = couponEventType;
 	}
 }
