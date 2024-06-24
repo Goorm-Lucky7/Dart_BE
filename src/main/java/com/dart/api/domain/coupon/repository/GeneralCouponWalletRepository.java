@@ -15,4 +15,6 @@ public interface GeneralCouponWalletRepository extends JpaRepository<GeneralCoup
 	boolean existsByGeneralCouponAndMember(GeneralCoupon generalCoupon, Member member);
 
 	List<GeneralCouponWallet> findByGeneralCoupon_CouponEventType(CouponEventType couponEventType);
+
+	List<GeneralCouponWallet> findByMemberAndIsUsedFalse(Member member);
 }
