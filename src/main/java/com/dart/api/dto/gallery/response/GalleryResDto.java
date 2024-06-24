@@ -4,6 +4,8 @@ import java.util.List;
 
 public record GalleryResDto(
 	String title,
+	String thumbnail,
+	String content,
 	boolean hasComment,
 	String nickname,
 	String template,
