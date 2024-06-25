@@ -140,8 +140,8 @@ public class KakaoPayService {
 		if (couponId != FREE) {
 			if (isPriority) {
 				final PriorityCouponWallet priorityCouponWallet = findPriorityCouponWallet(member.getId(), couponId);
-
 				priorityCouponWallet.use();
+
 				return;
 			}
 
