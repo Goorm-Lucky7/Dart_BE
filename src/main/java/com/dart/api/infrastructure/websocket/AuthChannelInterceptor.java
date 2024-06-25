@@ -4,6 +4,7 @@ import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 import org.springframework.messaging.Message;
@@ -41,7 +42,10 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 		validateAuthenticateToken(token);
 
 		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(token);
-		stompHeaderAccessor.setHeader(CHAT_SESSION_USER, authUser);
+		if (stompHeaderAccessor.getSessionAttributes() == null) {
+			stompHeaderAccessor.setSessionAttributes(new HashMap<>());
+		}
+		stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
 
 		return message;
 	}
