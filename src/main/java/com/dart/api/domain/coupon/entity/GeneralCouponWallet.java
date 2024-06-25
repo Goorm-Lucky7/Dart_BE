@@ -55,4 +55,8 @@ public class GeneralCouponWallet {
 			.isPriority(false)
 			.build();
 	}
+
+	public void use() {
+		this.isUsed = true;
+	}
 }
