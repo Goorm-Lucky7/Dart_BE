@@ -152,19 +152,19 @@ public class KakaoPayService {
 
 	public String decideCost(PaymentCreateDto dto, Gallery gallery, Long memberId) {
 		if (dto.couponId() == FREE) {
-			return calculateCostWithoutCoupon(dto.order(), gallery);
+			return calculateWithoutCoupon(dto.order(), gallery);
 		}
 
 		if (dto.isPriority()) {
 			final PriorityCouponWallet priorityCouponWallet = findPriorityCouponWallet(dto.couponId(), memberId);
 
-			return calculateDiscountedCost(dto.order(), gallery,
+			return calculateWithCoupon(dto.order(), gallery,
 				priorityCouponWallet.getPriorityCoupon().getCouponType().getValue());
 		}
 
 		final GeneralCouponWallet generalCouponWallet = findGeneralCouponWallet(dto.couponId(), memberId);
 
-		return calculateDiscountedCost(dto.order(), gallery,
+		return calculateWithCoupon(dto.order(), gallery,
 			generalCouponWallet.getGeneralCoupon().getCouponType().getValue());
 	}
 
@@ -202,7 +202,7 @@ public class KakaoPayService {
 		}
 	}
 
-	private String calculateCostWithoutCoupon(String order, Gallery gallery) {
+	private String calculateWithoutCoupon(String order, Gallery gallery) {
 		if (Order.TICKET.getValue().equals(order)) {
 			return String.valueOf(gallery.getFee());
 		}
@@ -210,7 +210,7 @@ public class KakaoPayService {
 		return String.valueOf(gallery.getGeneratedCost());
 	}
 
-	private String calculateDiscountedCost(String order, Gallery gallery, int couponValue) {
+	private String calculateWithCoupon(String order, Gallery gallery, int couponValue) {
 		if (Order.TICKET.getValue().equals(order)) {
 			return String.valueOf((int)((double)(100 - couponValue) / 100 * gallery.getFee()));
 		}
