@@ -1,5 +1,7 @@
 package com.dart.api.application.gallery;
 
+import static com.dart.global.common.util.GlobalConstant.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -22,7 +24,7 @@ public class GalleryProgressService {
 	public void updateProgress(Long galleryId, int progress) {
 		sseSessionRepository.sendEvent(galleryId, progress, "Progress Update");
 
-		if (progress == 100) {
+		if (progress == ONE_HUNDRED_PERCENT) {
 			sseSessionRepository.deleteSSEEmitterByClientId(galleryId);
 			deleteProgressFromRedis(galleryId);
 		} else {
