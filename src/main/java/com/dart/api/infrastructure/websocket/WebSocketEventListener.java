@@ -2,8 +2,6 @@ package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
-import java.util.Objects;
-
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Component;
@@ -13,7 +11,6 @@ import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.error.exception.BadRequestException;
-import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -68,8 +65,7 @@ public class WebSocketEventListener {
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor
 			.wrap(abstractSubProtocolEvent.getMessage());
 
-		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
-			.get(CHAT_SESSION_USER);
+		return (AuthUser)simpMessageHeaderAccessor.getSessionAttributes().get(CHAT_SESSION_USER);
 	}
 
 	private void validateSessionIdPresent(String sessionId) {
@@ -86,7 +82,7 @@ public class WebSocketEventListener {
 
 	private void validateAuthUserPresent(AuthUser authUser) {
 		if (authUser == null) {
-			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
+			log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
 		}
 	}
 }
