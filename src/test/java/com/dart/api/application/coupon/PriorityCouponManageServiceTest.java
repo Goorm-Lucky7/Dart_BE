@@ -4,6 +4,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 import java.util.Set;
 
@@ -23,6 +25,7 @@ import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
+import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
@@ -41,6 +44,9 @@ class PriorityCouponManageServiceTest {
 
 	@Mock
 	private MemberRepository memberRepository;
+
+	@Mock
+	private ClockHolder clockHolder;
 
 	@InjectMocks
 	private PriorityCouponManageService priorityCouponManageService;
@@ -94,9 +100,12 @@ class PriorityCouponManageServiceTest {
 		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
+		LocalDate nowDate = LocalDate.now();
+		LocalDateTime localDateTime = nowDate.minusDays(1).atTime(LocalTime.MAX);
 
 		given(priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()),
-			any(LocalDate.class))).willReturn((priorityCoupon));
+			eq(nowDate))).willReturn((priorityCoupon));
+		given(clockHolder.minusOneDaysAtTime(eq(priorityCoupon.getEndedAt()))).willReturn(localDateTime);
 		given(priorityCouponRedisRepository.hasValue(eq(priorityCoupon.getId()), eq(testEmail))).willReturn(false);
 		given(priorityCouponRedisRepository.sizeQueue(eq(priorityCoupon.getId()))).willReturn(
 			priorityCoupon.getStock() - 1);
@@ -116,7 +125,10 @@ class PriorityCouponManageServiceTest {
 		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
+		LocalDate nowDate = LocalDate.now();
+		LocalDateTime localDateTime = nowDate.minusDays(1).atTime(LocalTime.MAX);
 
+		given(clockHolder.minusOneDaysAtTime(eq(priorityCoupon.getEndedAt()))).willReturn(localDateTime);
 		given(
 			priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()), any(LocalDate.class))).willReturn(
 			(priorityCoupon));
@@ -134,7 +146,10 @@ class PriorityCouponManageServiceTest {
 		PriorityCoupon priorityCoupon = CouponFixture.createPriorityCoupon();
 		String testEmail = "test@example.com";
 		PriorityCouponPublishDto dto = new PriorityCouponPublishDto(priorityCoupon.getId());
+		LocalDate nowDate = LocalDate.now();
+		LocalDateTime localDateTime = nowDate.minusDays(1).atTime(LocalTime.MAX);
 
+		given(clockHolder.minusOneDaysAtTime(eq(priorityCoupon.getEndedAt()))).willReturn(localDateTime);
 		given(
 			priorityCouponCacheService.getByIdAndStartAt(eq(priorityCoupon.getId()), any(LocalDate.class))).willReturn(
 			(priorityCoupon));
