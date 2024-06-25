@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ public class ChatMessageService {
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
 	private final ChatMessageRepository chatMessageRepository;
+	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Transactional
 	public void saveChatMessage(
@@ -52,9 +54,10 @@ public class ChatMessageService {
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
 
 		chatMessageRepository.save(chatMessage);
-
 		chatRedisRepository.saveChatMessage(chatRoom, chatMessage.getContent(), chatMessage.getSender(),
 			chatMessage.getCreatedAt(), CHAT_MESSAGE_EXPIRY_SECONDS);
+
+		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@Transactional(readOnly = true)

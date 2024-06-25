@@ -7,7 +7,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,7 +26,6 @@ public class ChatController {
 
 	private final ChatMessageService chatMessageService;
 	private final MemberSessionRegistry memberSessionRegistry;
-	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@MessageMapping(value = "/ws/{chat-room-id}/chat-messages")
 	public void saveAndSendChatMessage(
@@ -36,7 +34,6 @@ public class ChatController {
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
 		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
-		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
