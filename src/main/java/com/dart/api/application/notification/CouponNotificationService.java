@@ -29,8 +29,7 @@ public class CouponNotificationService {
 	private final SSESessionRepository sseSessionRepository;
 	private final PriorityCouponRepository priorityCouponRepository;
 
-	//@Scheduled(cron = DAILY_AT_MIDNIGHT)
-	@Scheduled(fixedRate = 10000)
+	@Scheduled(cron = DAILY_AT_MIDNIGHT)
 	@Transactional
 	public void sendCouponPublishNotification() {
 		List<PriorityCoupon> priorityCouponList = getTodayCoupons();
