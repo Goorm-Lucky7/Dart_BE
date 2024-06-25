@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.dart.api.domain.coupon.entity.PriorityCoupon;
@@ -23,4 +24,7 @@ public interface PriorityCouponRepository extends JpaRepository<PriorityCoupon, 
 	Optional<PriorityCoupon> findCouponByDateRange(LocalDate nowDate);
 
 	List<PriorityCoupon> findByStartedAt(LocalDate startedAt);
+
+	@Query("SELECT p FROM PriorityCoupon p WHERE p.startedAt <= :nowDate")
+	List<PriorityCoupon> findAllWithStartedAtBeforeOrEqual(@Param("nowDate") LocalDate nowDate);
 }
