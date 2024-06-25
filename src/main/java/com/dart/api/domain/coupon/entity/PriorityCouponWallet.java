@@ -56,4 +56,8 @@ public class PriorityCouponWallet extends BaseTimeEntity {
 			.isPriority(true)
 			.build();
 	}
+
+	public void use() {
+		this.isUsed = true;
+	}
 }
