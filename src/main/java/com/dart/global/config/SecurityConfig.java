@@ -56,10 +56,11 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
 
 		httpSecurity.authorizeHttpRequests((auth) -> auth
+			.requestMatchers("/favicon.ico").permitAll()
+			.requestMatchers("/ws/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
 			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
-			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
