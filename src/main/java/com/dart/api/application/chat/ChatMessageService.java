@@ -55,7 +55,7 @@ public class ChatMessageService {
 
 		chatMessageRepository.save(chatMessage);
 		chatRedisRepository.saveChatMessage(chatRoom, chatMessage.getContent(), chatMessage.getSender(),
-			chatMessage.getCreatedAt(), CHAT_MESSAGE_EXPIRY_SECONDS);
+			chatMessage.getCreatedAt(), CHAT_MESSAGE_EXPIRY_SECONDS, member.getProfileImageUrl());
 
 		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
@@ -105,7 +105,12 @@ public class ChatMessageService {
 	private void cachingChatMessages(ChatRoom chatRoom, List<ChatMessageReadDto> chatMessageReadDtoList) {
 		chatMessageReadDtoList.forEach(
 			chatMessages -> chatRedisRepository.saveChatMessage(
-				chatRoom, chatMessages.content(), chatMessages.sender(), chatMessages.createdAt(), 60 * 60
+				chatRoom,
+				chatMessages.content(),
+				chatMessages.sender(),
+				chatMessages.createdAt(),
+				CHAT_MESSAGE_EXPIRY_SECONDS,
+				chatMessages.profileImageUrl()
 			)
 		);
 	}
