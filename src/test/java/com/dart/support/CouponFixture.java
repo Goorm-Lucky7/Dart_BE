@@ -1,25 +1,51 @@
 package com.dart.support;
 
-import java.time.LocalDateTime;
+import static com.dart.support.MemberFixture.*;
+
+import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.provider.Arguments;
 
-import com.dart.api.domain.coupon.entity.Coupon;
+import com.dart.api.domain.coupon.entity.CouponEventType;
 import com.dart.api.domain.coupon.entity.CouponType;
+import com.dart.api.domain.coupon.entity.GeneralCoupon;
+import com.dart.api.domain.coupon.entity.GeneralCouponWallet;
+import com.dart.api.domain.coupon.entity.PriorityCoupon;
+import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 
 public class CouponFixture {
-	public static Coupon create() {
-		return Coupon.builder()
+	public static PriorityCoupon createPriorityCoupon() {
+		return PriorityCoupon.builder()
 			.stock(100)
-			.name("coupon-test")
-			.description("coupon-description")
-			.durationAt(LocalDateTime.now().plusDays(1))
-			.validAt(LocalDateTime.now().plusDays(2))
+			.title("오픈기념선착순")
+			.startedAt(LocalDate.now().minusDays(1))
+			.endedAt(LocalDate.now().plusDays(1))
 			.couponType(CouponType.TEN_PERCENT)
 			.build();
+	}
+
+	public static GeneralCoupon createGeneralCoupon() {
+		return new GeneralCoupon("10%할인", CouponType.TEN_PERCENT, CouponEventType.MONTHLY_COUPON);
+	}
+
+	public static List<PriorityCoupon> createPriorityCouponList() {
+		return List.of(createPriorityCoupon());
+	}
+
+	public static List<GeneralCoupon> createGeneralCouponList() {
+		return List.of(createGeneralCoupon());
+	}
+
+	public static List<PriorityCouponWallet> createPriorityCouponWalletList() {
+		return List.of(PriorityCouponWallet.create(createPriorityCoupon(), MemberFixture.createMemberEntity()));
+	}
+
+	public static List<GeneralCouponWallet> createGeneralCouponWalletList() {
+		return List.of(GeneralCouponWallet.create(createGeneralCoupon(), MemberFixture.createMemberEntity()));
 	}
 
 	public static Stream<Arguments> provideValues_String() {
@@ -36,5 +62,17 @@ public class CouponFixture {
 		values.add("test10@naver.com");
 
 		return Stream.of(Arguments.of(values));
+	}
+
+	public static Stream<Arguments> provideGeneralCouponWallet_total5() {
+		return Stream.of(Arguments.of(
+			List.of(
+				GeneralCouponWallet.create(createGeneralCoupon(), createMemberEntity()),
+				GeneralCouponWallet.create(createGeneralCoupon(), createMemberEntity()),
+				GeneralCouponWallet.create(createGeneralCoupon(), createMemberEntity()),
+				GeneralCouponWallet.create(createGeneralCoupon(), createMemberEntity()),
+				GeneralCouponWallet.create(createGeneralCoupon(), createMemberEntity())
+			))
+		);
 	}
 }

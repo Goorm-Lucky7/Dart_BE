@@ -16,6 +16,7 @@ import com.dart.api.application.payment.PaymentService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
+import com.dart.api.dto.payment.response.OrderReadDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
 import com.dart.global.auth.annotation.Auth;
@@ -41,6 +42,15 @@ public class PaymentController {
 		@RequestParam(defaultValue = "10") int size
 	) {
 		return paymentService.readAll(authUser, page, size);
+	}
+
+	@GetMapping("/{gallery-id}")
+	public OrderReadDto readOrder(
+		@PathVariable("gallery-id") Long galleryId,
+		@RequestParam("order") String order,
+		@Auth AuthUser authUser
+	) {
+		return paymentService.readOrder(galleryId, order, authUser);
 	}
 
 	@GetMapping("/kakao/success/{id}/{order}")

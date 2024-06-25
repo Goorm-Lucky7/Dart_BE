@@ -1,6 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.coupon.response.MyCouponDetail;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,28 +18,41 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "tbl_coupon_wallet")
+@Table(name = "tbl_general_coupon_wallet")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CouponWallet {
+public class GeneralCouponWallet {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "coupon_id")
-	private Coupon coupon;
+	@JoinColumn(name = "general_coupon_id")
+	private GeneralCoupon generalCoupon;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	private CouponWallet(Coupon coupon, Member member) {
-		this.coupon = coupon;
+	@Column(name = "is_used")
+	private boolean isUsed;
+
+	private GeneralCouponWallet(GeneralCoupon generalCoupon, Member member) {
+		this.generalCoupon = generalCoupon;
 		this.member = member;
+		this.isUsed = false;
 	}
 
-	public static CouponWallet create(Coupon coupon, Member member) {
-		return new CouponWallet(coupon, member);
+	public static GeneralCouponWallet create(GeneralCoupon generalCoupon, Member member) {
+		return new GeneralCouponWallet(generalCoupon, member);
+	}
+
+	public MyCouponDetail toDetail() {
+		return MyCouponDetail.builder()
+			.couponId(this.id)
+			.title(this.generalCoupon.getTitle())
+			.couponType(this.generalCoupon.getCouponType().getValue())
+			.isPriority(false)
+			.build();
 	}
 }

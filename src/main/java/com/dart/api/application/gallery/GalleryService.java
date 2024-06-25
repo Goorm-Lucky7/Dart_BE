@@ -2,6 +2,7 @@ package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 import static com.dart.global.common.util.RedisConstant.*;
+import static com.dart.global.common.util.SSEConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,9 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.application.chat.ChatRoomService;
+import com.dart.api.application.notification.ExhibitionNotificationService;
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.chat.entity.ChatRoom;
+import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
+import com.dart.api.domain.gallery.entity.Template;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.gallery.repository.TrieRedisRepository;
 import com.dart.api.domain.member.entity.Member;
@@ -63,6 +68,8 @@ public class GalleryService {
 	private final S3Service s3Service;
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
+	private final ChatRoomRepository chatRoomRepository;
+	private final ExhibitionNotificationService exhibitionNotificationService;
 	private final TrieRedisRepository trieRedisRepository;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
@@ -75,8 +82,9 @@ public class GalleryService {
 		final Cost cost = determineCost(createGalleryDto);
 
 		validateEndDateForPay(cost, createGalleryDto);
+		validateTemplate(createGalleryDto.template());
 
-		String thumbnailUrl = s3Service.uploadFile(thumbnail);
+		String thumbnailUrl = s3Service.uploadThumbnail(thumbnail);
 
 		final Gallery gallery = Gallery.create(createGalleryDto, thumbnailUrl, cost, member);
 		galleryRepository.save(gallery);
@@ -131,9 +139,24 @@ public class GalleryService {
 
 		boolean hasComment = checkIfUserHasCommented(gallery, authUser);
 
+		boolean hasTicket = checkIfUserHasTicket(authUser, gallery);
+
 		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
 
-		return new GalleryResDto(gallery.getTitle(), hasComment, gallery.getMember().getNickname(), images);
+		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
+
+		return new GalleryResDto(
+			gallery.getTitle(),
+			gallery.getThumbnail(),
+			gallery.getContent(),
+			hasComment,
+			gallery.getMember().getNickname(),
+			gallery.getTemplate().toString(),
+			images,
+			chatRoom.getId(),
+			hasTicket);
+
 	}
 
 	@Transactional(readOnly = true)
@@ -176,6 +199,17 @@ public class GalleryService {
 		deleteGallery(gallery);
 	}
 
+	public void updateReExhibitionRequestCount(Long galleryId) {
+		final Gallery gallery = galleryRepository.findById(galleryId)
+				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
+		gallery.incrementReExhibitionRequestCount();
+
+		if (gallery.getReExhibitionRequestCount() >= REEXHIBITION_REQUEST_COUNT) {
+			exhibitionNotificationService.sendReExhibitionRequestNotification(galleryId);
+			gallery.resetReExhibitionRequestCount();
+		}
+	}
+
 	private Member findMemberByEmail(String email) {
 		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
@@ -191,6 +225,12 @@ public class GalleryService {
 			return Cost.FREE;
 		}
 		return Cost.PAY;
+	}
+
+	private void validateTemplate(String template) {
+		if (!Template.isValidTemplate(template)) {
+			throw new BadRequestException(ErrorCode.FAIL_TEMPLATE_NOT_FOUND);
+		}
 	}
 
 	private void validateImageCount(CreateGalleryDto createGalleryDto) {
@@ -254,6 +294,10 @@ public class GalleryService {
 	}
 
 	private boolean checkIfUserHasTicket(AuthUser authUser, Gallery gallery) {
+		if (isFreeGallery(gallery)) {
+			return true;
+		}
+
 		if (isAuthUserNull(authUser)) {
 			return false;
 		}
@@ -283,6 +327,10 @@ public class GalleryService {
 
 	private boolean isAuthUserNull(AuthUser authUser) {
 		return authUser == null;
+	}
+
+	private boolean isFreeGallery(Gallery gallery) {
+		return gallery.getCost() == Cost.FREE;
 	}
 
 	private boolean isGalleryOwner(Gallery gallery, Member member) {

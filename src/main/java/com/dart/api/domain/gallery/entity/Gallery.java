@@ -52,11 +52,21 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "cost", nullable = false)
 	private Cost cost;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "template", nullable = false)
+	private Template template;
+
 	@Column(name = "fee", nullable = false)
 	private int fee;
 
+	@Column(name = "generated_cost", nullable = false)
+	private int generatedCost;
+
 	@Column(name = "is_paid")
 	private boolean isPaid;
+
+	@Column(name = "re_exhibition_request_count", nullable = false)
+	private int reExhibitionRequestCount;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "meber_id")
@@ -64,14 +74,16 @@ public class Gallery extends BaseTimeEntity {
 
 	@Builder
 	public Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
-		Cost cost, int fee, Member member) {
+		Cost cost, Template template, int fee, int generatedCost, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
 		this.startDate = startDate;
 		this.cost = cost;
+		this.template = template;
 		this.endDate = endDate;
 		this.fee = fee;
+		this.generatedCost = generatedCost;
 		this.isPaid = !Cost.PAY.equals(cost);
 		this.member = member;
 	}
@@ -83,7 +95,9 @@ public class Gallery extends BaseTimeEntity {
 			.startDate(createGalleryDto.startDate())
 			.endDate(createGalleryDto.endDate())
 			.cost(cost)
+			.template(Template.fromValue(createGalleryDto.template()))
 			.fee(createGalleryDto.fee())
+			.generatedCost(createGalleryDto.generatedCost())
 			.thumbnail(thumbnailUrl)
 			.member(member)
 			.build();
@@ -99,5 +113,13 @@ public class Gallery extends BaseTimeEntity {
 
 	public GalleryReadIdDto toReadIdDto() {
 		return new GalleryReadIdDto(this.id);
+	}
+
+	public void incrementReExhibitionRequestCount() {
+		this.reExhibitionRequestCount++;
+	}
+
+	public void resetReExhibitionRequestCount() {
+		this.reExhibitionRequestCount = 0;
 	}
 }

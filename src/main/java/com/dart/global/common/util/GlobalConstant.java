@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GlobalConstant {
+	public static final String LOCAL_DOMAIN = "localhost";
 	public static final String COOKIE_DOMAIN = "dartgallery.site";
 	public static final String BLANK = "";
 	public static final int MAX_HASHTAG_SIZE = 5;
@@ -22,4 +23,6 @@ public class GlobalConstant {
 
 	public static final int THIRTY_MINUTES = 30 * 60;
 	public static final int THIRTY_DAYS = 30 * 24 * 60 * 60;
+
+	public static final int THUMBNAIL_RESIZING_SIZE = 800;
 }

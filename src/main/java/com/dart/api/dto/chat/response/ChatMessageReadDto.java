@@ -9,6 +9,7 @@ public record ChatMessageReadDto(
 	String sender,
 	String content,
 	LocalDateTime createdAt,
-	boolean isAuthor
+	boolean isAuthor,
+	String profileImageUrl
 ) {
 }

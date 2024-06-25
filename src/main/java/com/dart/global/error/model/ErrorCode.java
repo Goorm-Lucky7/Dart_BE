@@ -67,6 +67,8 @@ public enum ErrorCode {
 	FAIL_REGISTRATION_NOT_FOUND("[❎ ERROR] 요청하신 서비스 제공자를 찾을 수 없습니다."),
 	FAIL_CHAT_ROOM_NOT_FOUND("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다."),
 	FAIL_COUPON_NOT_FOUND("[❎ ERROR] 요청하신 쿠폰을 찾을 수 없습니다."),
+	FAIL_TEMPLATE_NOT_FOUND("[❎ ERROR] 요청하신 템플릿을 찾을 수 없습니다."),
+	FAIL_NOTIFICATION_NOT_FOUND("[❎ ERROR] 요청하신 알림을 찾을 수 없습니다."),
 
 	// 409 Conflict
 	FAIL_EMAIL_CONFLICT("[❎ ERROR] 이미 존재하는 이메일입니다."),

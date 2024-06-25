@@ -18,4 +18,5 @@ public class PaymentConstant {
 	public static final String CID = "TC0ONETIME";
 	public static final String QUANTITY = "1";
 	public static final long THIRTY_MINUTE = 300;
+	public static final int FREE = 0;
 }

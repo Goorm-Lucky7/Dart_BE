@@ -56,17 +56,18 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
 
 		httpSecurity.authorizeHttpRequests((auth) -> auth
+			.requestMatchers("/favicon.ico").permitAll()
+			.requestMatchers("/ws/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
 			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
-			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/{gallery-id}/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
-			.requestMatchers("/ws/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
 			.anyRequest().authenticated()
 		);
