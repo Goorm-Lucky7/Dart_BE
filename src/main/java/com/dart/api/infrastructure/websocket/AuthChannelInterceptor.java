@@ -2,7 +2,12 @@ package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
+import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.util.Objects;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -19,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
 	private final JwtProviderService jwtProviderService;
@@ -27,10 +33,11 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
-		if (stompHeaderAccessor.getCommand() == StompCommand.CONNECT) {
-			String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
-			log.info("[✅ LOGGER] AUTHORIZATION HEADER: {}", authorizationHeader);
-			if (!this.validateAccessToken(authorizationHeader, stompHeaderAccessor)) {
+		if (isSendCommand(stompHeaderAccessor)) {
+			final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
+			final String accessToken = extractToken(authorizationHeader);
+
+			if (!validateAuthenticateToken(accessToken, stompHeaderAccessor)) {
 				log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
 			}
 		}
@@ -38,18 +45,20 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 		return message;
 	}
 
-	private boolean validateAccessToken(String accessToken, StompHeaderAccessor stompHeaderAccessor) {
-		if (accessToken == null) {
-			return false;
+	private boolean isSendCommand(StompHeaderAccessor stompHeaderAccessor) {
+		return Objects.equals(StompCommand.CONNECT, stompHeaderAccessor.getCommand());
+	}
+
+	private String extractToken(String authorizationHeader) {
+		if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER)) {
+			return null;
 		}
+		return authorizationHeader.replaceFirst(BEARER, BLANK).trim();
+	}
 
-		String token = accessToken.trim();
-
-		if (!token.trim().isEmpty() && token.startsWith("Bearer ")) {
-			accessToken = token.substring(7);
-		}
-
-		if (!jwtProviderService.isUsable(accessToken)) {
+	private boolean validateAuthenticateToken(String accessToken, StompHeaderAccessor stompHeaderAccessor) {
+		if (accessToken == null || !jwtProviderService.isUsable(accessToken)) {
+			log.warn("[✅ LOGGER] INVALID OR MISSING JWT TOKEN");
 			return false;
 		}
 
