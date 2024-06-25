@@ -1,5 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
+import com.dart.api.dto.coupon.response.GeneralCouponDetail;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,5 +39,14 @@ public class GeneralCoupon {
 		this.title = title;
 		this.couponType = couponType;
 		this.couponEventType = couponEventType;
+	}
+
+	public GeneralCouponDetail toDetail(boolean hasCoupon) {
+		return GeneralCouponDetail.builder()
+			.generalCouponId(this.id)
+			.title(this.title)
+			.couponType(this.couponType.getValue())
+			.hasCoupon(hasCoupon)
+			.build();
 	}
 }
