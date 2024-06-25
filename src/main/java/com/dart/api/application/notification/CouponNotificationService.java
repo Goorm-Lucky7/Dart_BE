@@ -15,8 +15,6 @@ import com.dart.api.domain.notification.entity.Notification;
 import com.dart.api.domain.notification.entity.NotificationType;
 import com.dart.api.domain.notification.repository.NotificationRepository;
 import com.dart.api.domain.notification.repository.SSESessionRepository;
-import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +29,8 @@ public class CouponNotificationService {
 	private final SSESessionRepository sseSessionRepository;
 	private final PriorityCouponRepository priorityCouponRepository;
 
-	@Scheduled(cron = DAILY_AT_MIDNIGHT)
+	//@Scheduled(cron = DAILY_AT_MIDNIGHT)
+	@Scheduled(fixedRate = 10000)
 	@Transactional
 	public void sendCouponPublishNotification() {
 		List<PriorityCoupon> priorityCouponList = getTodayCoupons();
@@ -44,7 +43,7 @@ public class CouponNotificationService {
 		final String couponTitles = priorityCouponList.get(0).getTitle();
 		final String couponDetails = "COUPON '" + couponTitles + "' IS NOW AVAILABLE";
 
-		sendCouponStartWithNotification(couponDetails);
+		sendCouponEventToAllNotification(couponDetails);
 	}
 
 	private List<PriorityCoupon> getTodayCoupons() {
@@ -52,15 +51,18 @@ public class CouponNotificationService {
 		return priorityCouponRepository.findByStartedAt(startedAt);
 	}
 
-	private void sendCouponStartWithNotification(String couponDetails) {
-		sseSessionRepository.sendEventToAll(couponDetails, NotificationType.COUPON_START.name());
+	private void sendCouponEventToAllNotification(String couponDetails) {
+		sseSessionRepository.sendEventToAll(couponDetails, NotificationType.COUPON_START.getName());
 		log.info("[✅ LOGGER] COUPON START NOTIFICATION SENT: {}", couponDetails);
 
 		saveCommonNotification(couponDetails);
 	}
 
 	private void saveCommonNotification(String message) {
-		validateMessageAndNotificationTypeExists();
+		if (notificationRepository.existsByNotificationType(NotificationType.COUPON_START)) {
+			log.info("[✅ LOGGER] DUPLICATE COUPON START NOTIFICATION DETECTED: {}", message);
+			return;
+		}
 
 		final Notification notification = Notification.createNotification(
 			message,
@@ -68,11 +70,5 @@ public class CouponNotificationService {
 			PRIORITY_COUPON_EVENT_URL
 		);
 		notificationRepository.save(notification);
-	}
-
-	private void validateMessageAndNotificationTypeExists() {
-		if (!notificationRepository.existsByNotificationType(NotificationType.COUPON_START)) {
-			throw new NotFoundException(ErrorCode.FAIL_NOTIFICATION_NOT_FOUND);
-		}
 	}
 }
