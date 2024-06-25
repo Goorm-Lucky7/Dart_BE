@@ -4,7 +4,6 @@ import static com.dart.global.common.util.ChatConstant.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -72,8 +71,7 @@ public class ChatMessageService {
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
-		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
-			.get(CHAT_SESSION_USER);
+		return (AuthUser)simpMessageHeaderAccessor.getSessionAttributes().get(CHAT_SESSION_USER);
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
