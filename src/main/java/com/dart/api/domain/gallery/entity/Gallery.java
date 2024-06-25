@@ -65,6 +65,9 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "is_paid")
 	private boolean isPaid;
 
+	@Column(name = "re_exhibition_request_count", nullable = false)
+	private int reExhibitionRequestCount;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "meber_id")
 	private Member member;
@@ -110,5 +113,13 @@ public class Gallery extends BaseTimeEntity {
 
 	public GalleryReadIdDto toReadIdDto() {
 		return new GalleryReadIdDto(this.id);
+	}
+
+	public void incrementReExhibitionRequestCount() {
+		this.reExhibitionRequestCount++;
+	}
+
+	public void resetReExhibitionRequestCount() {
+		this.reExhibitionRequestCount = 0;
 	}
 }
