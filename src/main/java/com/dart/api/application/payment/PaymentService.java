@@ -28,12 +28,14 @@ import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
+import com.dart.api.dto.payment.response.OrderReadDto;
 import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
+import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -104,6 +106,26 @@ public class PaymentService {
 		return new PageResponse<>(payments.map(Payment::toReadDto).toList(), pageInfo);
 	}
 
+	@Transactional(readOnly = true)
+	public OrderReadDto readOrder(Long galleryId, String order, AuthUser authUser) {
+		validateLogin(authUser);
+		validateOrder(order);
+
+		final Gallery gallery = galleryRepository.findById(galleryId)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
+
+		validateNotPaymentGallery(order, gallery);
+		validateFree(gallery);
+
+		return OrderReadDto.builder()
+			.title(gallery.getTitle())
+			.thumbnail(gallery.getThumbnail())
+			.nickname(gallery.getMember().getNickname())
+			.profileImage(gallery.getMember().getProfileImageUrl())
+			.cost(calculateCost(order, gallery))
+			.build();
+	}
+
 	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
@@ -144,6 +166,32 @@ public class PaymentService {
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
 		return headers;
+	}
+
+	private static void validateNotPaymentGallery(String order, Gallery gallery) {
+		if (!gallery.isPaid() && Order.TICKET.getValue().equals(order)) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
+		}
+	}
+
+	private static void validateLogin(AuthUser authUser) {
+		if (authUser == null) {
+			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
+		}
+	}
+
+	private void validateFree(Gallery gallery) {
+		if (gallery.getGeneratedCost() == FREE && gallery.getFee() == FREE) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_ORDER);
+		}
+	}
+
+	private int calculateCost(String order, Gallery gallery) {
+		if (Order.TICKET.getValue().equals(order)) {
+			return gallery.getFee();
+		}
+
+		return gallery.getGeneratedCost();
 	}
 
 	private void validateAlreadyTicket(PaymentCreateDto dto, Member member) {

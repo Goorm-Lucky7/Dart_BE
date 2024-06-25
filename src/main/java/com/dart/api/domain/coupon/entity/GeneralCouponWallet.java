@@ -1,6 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.coupon.response.MyCouponDetail;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -44,5 +45,14 @@ public class GeneralCouponWallet {
 
 	public static GeneralCouponWallet create(GeneralCoupon generalCoupon, Member member) {
 		return new GeneralCouponWallet(generalCoupon, member);
+	}
+
+	public MyCouponDetail toDetail() {
+		return MyCouponDetail.builder()
+			.couponId(this.id)
+			.title(this.generalCoupon.getTitle())
+			.couponType(this.generalCoupon.getCouponType().getValue())
+			.isPriority(false)
+			.build();
 	}
 }
