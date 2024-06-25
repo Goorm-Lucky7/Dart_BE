@@ -15,6 +15,7 @@ import com.dart.api.domain.coupon.entity.CouponType;
 import com.dart.api.domain.coupon.entity.GeneralCoupon;
 import com.dart.api.domain.coupon.entity.GeneralCouponWallet;
 import com.dart.api.domain.coupon.entity.PriorityCoupon;
+import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 
 public class CouponFixture {
 	public static PriorityCoupon createPriorityCoupon() {
@@ -37,6 +38,14 @@ public class CouponFixture {
 
 	public static List<GeneralCoupon> createGeneralCouponList() {
 		return List.of(createGeneralCoupon());
+	}
+
+	public static List<PriorityCouponWallet> createPriorityCouponWalletList() {
+		return List.of(PriorityCouponWallet.create(createPriorityCoupon(), MemberFixture.createMemberEntity()));
+	}
+
+	public static List<GeneralCouponWallet> createGeneralCouponWalletList() {
+		return List.of(GeneralCouponWallet.create(createGeneralCoupon(), MemberFixture.createMemberEntity()));
 	}
 
 	public static Stream<Arguments> provideValues_String() {

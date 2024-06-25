@@ -1,6 +1,7 @@
 package com.dart.api.domain.coupon.entity;
 
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.coupon.response.MyCouponDetail;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -34,12 +35,25 @@ public class PriorityCouponWallet extends BaseTimeEntity {
 	@JoinColumn(name = "member_id")
 	private Member member;
 
+	@Column(name = "is_used")
+	private boolean isUsed;
+
 	public PriorityCouponWallet(PriorityCoupon priorityCoupon, Member member) {
 		this.priorityCoupon = priorityCoupon;
 		this.member = member;
+		this.isUsed = false;
 	}
 
 	public static PriorityCouponWallet create(PriorityCoupon priorityCoupon, Member member) {
 		return new PriorityCouponWallet(priorityCoupon, member);
+	}
+
+	public MyCouponDetail toDetail() {
+		return MyCouponDetail.builder()
+			.couponId(this.id)
+			.title(this.priorityCoupon.getTitle())
+			.couponType(this.priorityCoupon.getCouponType().getValue())
+			.isPriority(true)
+			.build();
 	}
 }

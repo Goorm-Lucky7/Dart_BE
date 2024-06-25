@@ -13,6 +13,7 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.coupon.request.GeneralCouponPublishDto;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.api.dto.coupon.response.CouponReadAllDto;
+import com.dart.api.dto.coupon.response.MyCouponReadAllDto;
 import com.dart.global.auth.annotation.Auth;
 
 import lombok.RequiredArgsConstructor;
@@ -38,5 +39,10 @@ public class CouponController {
 	@GetMapping
 	public CouponReadAllDto readAll(@Auth(required = false) AuthUser authUser) {
 		return couponService.readAll(authUser);
+	}
+
+	@GetMapping("/my-coupon")
+	public MyCouponReadAllDto readMyCoupon(@Auth AuthUser authUser) {
+		return couponService.readAllMyCoupon(authUser);
 	}
 }
