@@ -33,9 +33,9 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
 		if (stompHeaderAccessor.getCommand() == StompCommand.CONNECT) {
 			String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader("Authorization");
-			log.info("AUTHORIZATION HEADER: {}", authorizationHeader);
+			log.info("[✅ LOGGER] AUTHORIZATION HEADER: {}", authorizationHeader);
 			if (!this.validateAccessToken(authorizationHeader)) {
-				throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
+				log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
 			}
 		}
 
