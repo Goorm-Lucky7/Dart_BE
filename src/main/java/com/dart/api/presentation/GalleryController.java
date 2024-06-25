@@ -49,8 +49,8 @@ public class GalleryController {
 		return galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
 	}
 
-	@GetMapping("/progress/{galleryId}")
-	public SseEmitter getProgress(@PathVariable Long galleryId) {
+	@GetMapping("/progress/{gallery-id}")
+	public SseEmitter getProgress(@PathVariable("gallery-id") Long galleryId) {
 		SseEmitter emitter = new SseEmitter();
 		galleryProgressService.addEmitter(galleryId, emitter);
 		return emitter;
