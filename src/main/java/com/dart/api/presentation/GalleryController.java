@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.dart.api.application.gallery.GalleryProgressService;
 import com.dart.api.application.gallery.GalleryService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
@@ -36,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class GalleryController {
 
 	private final GalleryService galleryService;
+	private final GalleryProgressService galleryProgressService;
 
 	@PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	public GalleryReadIdDto createGallery(
@@ -44,6 +47,13 @@ public class GalleryController {
 		@RequestPart("images") List<MultipartFile> imageFiles,
 		@Auth AuthUser authUser) {
 		return galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
+	}
+
+	@GetMapping("/progress/{galleryId}")
+	public SseEmitter getProgress(@PathVariable Long galleryId) {
+		SseEmitter emitter = new SseEmitter();
+		galleryProgressService.addEmitter(galleryId, emitter);
+		return emitter;
 	}
 
 	@DeleteMapping
