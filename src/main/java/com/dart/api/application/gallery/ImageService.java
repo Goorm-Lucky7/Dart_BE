@@ -28,13 +28,12 @@ public class ImageService {
 	private final GalleryProgressService galleryProgressService;
 
 	public void saveImages(List<ImageInfoDto> imageInfoDtos, List<MultipartFile> imageFiles, Gallery gallery) {
-		int i = DEFAULT_VALUE;
-
-		for (ImageInfoDto imageInfoDto : imageInfoDtos) {
-			MultipartFile imageFile = imageFiles.get(i++);
+		int totalFiles = imageInfoDtos.size();
+		for (int i = 0; i < totalFiles; i++) {
+			ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
+			MultipartFile imageFile = imageFiles.get(i);
 			processImage(imageInfoDto, imageFile, gallery);
-
-			int progress = (int)(((i) / (double)imageInfoDtos.size()) * ONE_HUNDRED_PERCENT);
+			int progress = (int)(((i + INCREASE_VALUE) / (double)totalFiles) * ONE_HUNDRED_PERCENT);
 			galleryProgressService.updateProgress(gallery.getId(), progress);
 		}
 	}

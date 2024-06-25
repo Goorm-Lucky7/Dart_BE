@@ -28,5 +28,5 @@ public class GlobalConstant {
 
 	public static final int ONE_HUNDRED_PERCENT = 100;
 
-	public static final int DEFAULT_VALUE = 0;
+	public static final int INCREASE_VALUE = 1;
 }
