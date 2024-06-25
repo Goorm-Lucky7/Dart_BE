@@ -23,6 +23,8 @@ public interface PriorityCouponRepository extends JpaRepository<PriorityCoupon, 
 	@Query("SELECT pc FROM PriorityCoupon pc WHERE pc.startedAt <= :nowDate AND pc.endedAt > :nowDate")
 	Optional<PriorityCoupon> findCouponByDateRange(LocalDate nowDate);
 
+	List<PriorityCoupon> findByStartedAt(LocalDate startedAt);
+
 	@Query("SELECT p FROM PriorityCoupon p WHERE p.startedAt <= :nowDate")
 	List<PriorityCoupon> findAllWithStartedAtBeforeOrEqual(@Param("nowDate") LocalDate nowDate);
 }
