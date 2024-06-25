@@ -4,13 +4,13 @@ import static com.dart.global.common.util.ChatConstant.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +40,7 @@ public class ChatMessageService {
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
 	private final ChatMessageRepository chatMessageRepository;
+	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Transactional
 	public void saveChatMessage(
@@ -53,9 +54,10 @@ public class ChatMessageService {
 		final ChatMessage chatMessage = ChatMessage.createChatMessage(chatRoom, member, chatMessageCreateDto);
 
 		chatMessageRepository.save(chatMessage);
-
 		chatRedisRepository.saveChatMessage(chatRoom, chatMessage.getContent(), chatMessage.getSender(),
-			chatMessage.getCreatedAt(), CHAT_MESSAGE_EXPIRY_SECONDS);
+			chatMessage.getCreatedAt(), CHAT_MESSAGE_EXPIRY_SECONDS, member.getProfileImageUrl());
+
+		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@Transactional(readOnly = true)
@@ -72,8 +74,7 @@ public class ChatMessageService {
 	}
 
 	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
-		return (AuthUser)Objects.requireNonNull(simpMessageHeaderAccessor.getSessionAttributes())
-			.get(CHAT_SESSION_USER);
+		return (AuthUser)simpMessageHeaderAccessor.getSessionAttributes().get(CHAT_SESSION_USER);
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
@@ -104,7 +105,12 @@ public class ChatMessageService {
 	private void cachingChatMessages(ChatRoom chatRoom, List<ChatMessageReadDto> chatMessageReadDtoList) {
 		chatMessageReadDtoList.forEach(
 			chatMessages -> chatRedisRepository.saveChatMessage(
-				chatRoom, chatMessages.content(), chatMessages.sender(), chatMessages.createdAt(), 60 * 60
+				chatRoom,
+				chatMessages.content(),
+				chatMessages.sender(),
+				chatMessages.createdAt(),
+				CHAT_MESSAGE_EXPIRY_SECONDS,
+				chatMessages.profileImageUrl()
 			)
 		);
 	}
