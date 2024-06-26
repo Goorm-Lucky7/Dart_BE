@@ -16,10 +16,10 @@ public class MemberSessionRegistry {
 
 	private final Map<String, MemberSessionDto> memberSessionRegistry = new ConcurrentHashMap<>();
 
-	public void addSession(String nickname, String sessionId, String destination) {
+	public void addSession(String nickname, String sessionId, String destination, String profileImageUrl) {
 		removeSessionByNicknameAndDestination(nickname, destination);
 
-		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination);
+		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination, profileImageUrl);
 		memberSessionRegistry.put(sessionId, memberSessionDto);
 
 		log.info("[✅ LOGGER] SESSION ADDED: {}", memberSessionDto);
