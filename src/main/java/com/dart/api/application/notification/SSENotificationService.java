@@ -1,5 +1,7 @@
 package com.dart.api.application.notification;
 
+import static com.dart.global.common.util.SSEConstant.*;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ public class SSENotificationService {
 	public SseEmitter subscribe(AuthUser authUser) {
 		Long memberId = getMemberIdFromAuthUser(authUser);
 
-		SseEmitter sseEmitter = sseSessionRepository.saveSSEEmitter(memberId);
+		SseEmitter sseEmitter = sseSessionRepository.saveSSEEmitter(memberId, SSE_DEFAULT_TIMEOUT);
 		log.info("[✅ LOGGER] SUBSCRIBED CLIENT ID: {}", memberId);
 
 		sseSessionRepository.sendEvent(memberId, "DUMMY_EVENT", "CONNECT SSE");

@@ -44,11 +44,8 @@ public class ChatMessageService {
 	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Transactional
-	public void saveChatMessage(
-		Long chatRoomId,
-		ChatMessageCreateDto chatMessageCreateDto,
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor
-	) {
+	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto,
+		SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final AuthUser authUser = extractAuthUserEmail(simpMessageHeaderAccessor);
 		final Member member = getMemberByEmail(authUser.email());
@@ -64,8 +61,8 @@ public class ChatMessageService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<ChatMessageReadDto> getChatMessageList(Long chatRoomId, int page, int size) {
-		final PageResponse<ChatMessageReadDto> redisChatMessageReadDtoList = chatRedisRepository
-			.getChatMessageReadDto(chatRoomId, page, size);
+		final PageResponse<ChatMessageReadDto> redisChatMessageReadDtoList = chatRedisRepository.getChatMessageReadDto(
+			chatRoomId, page, size);
 
 		if (redisChatMessageReadDtoList != null && !redisChatMessageReadDtoList.pages().isEmpty()) {
 			return createPageResponse(new ArrayList<>(redisChatMessageReadDtoList.pages()), page, size);
@@ -97,7 +94,7 @@ public class ChatMessageService {
 	private List<ChatMessageReadDto> fetchChatMessagesFromDBAndCache(Long chatRoomId, int page, int size) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 
-		final Pageable pageable = PageRequest.of(page, size, Sort.by(SORT_FIELD_CREATED_AT).ascending());
+		final Pageable pageable = PageRequest.of(page, size, Sort.by(SORT_FIELD_CREATED_AT).descending());
 		final Page<ChatMessage> mySQLChatMessages = chatMessageRepository.findByChatRoom(chatRoom, pageable);
 
 		final List<ChatMessageReadDto> mySQLChatMessageReadDtoList = mySQLChatMessages.stream()
@@ -121,8 +118,7 @@ public class ChatMessageService {
 	}
 
 	private PageResponse<ChatMessageReadDto> createPageResponse(List<ChatMessageReadDto> chatMessageReadDtoList,
-		int page, int size
-	) {
+		int page, int size) {
 		final boolean isDone = chatMessageReadDtoList.size() < size;
 		final PageInfo pageInfo = new PageInfo(page, isDone);
 

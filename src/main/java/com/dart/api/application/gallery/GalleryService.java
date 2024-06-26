@@ -195,10 +195,10 @@ public class GalleryService {
 
 	public void updateReExhibitionRequestCount(Long galleryId) {
 		final Gallery gallery = galleryRepository.findById(galleryId)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 		gallery.incrementReExhibitionRequestCount();
 
-		if (gallery.getReExhibitionRequestCount() >= REEXHIBITION_REQUEST_COUNT) {
+		if (gallery.getReExhibitionRequestCount() > REEXHIBITION_REQUEST_COUNT) {
 			exhibitionNotificationService.sendReExhibitionRequestNotification(galleryId);
 			gallery.resetReExhibitionRequestCount();
 		}

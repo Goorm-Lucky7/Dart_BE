@@ -24,8 +24,8 @@ public class SSESessionRepository {
 		handleSSEEmitter(sseEmitter, clientId);
 	}
 
-	public SseEmitter saveSSEEmitter(Long clientId) {
-		SseEmitter sseEmitter = new SseEmitter(SSE_DEFAULT_TIMEOUT);
+	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
+		SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseSessionDB.put(clientId, sseEmitter);
 		log.info("[✅ LOGGER] SAVE SSE EMITTER FOR CLIENT ID: {}", clientId);
 

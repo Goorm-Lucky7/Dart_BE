@@ -63,11 +63,7 @@ public class CouponNotificationService {
 			return;
 		}
 
-		final Notification notification = Notification.createNotification(
-			message,
-			NotificationType.COUPON_START,
-			PRIORITY_COUPON_EVENT_URL
-		);
+		final Notification notification = Notification.createNotification(message, NotificationType.COUPON_START);
 		notificationRepository.save(notification);
 	}
 }

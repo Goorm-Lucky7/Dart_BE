@@ -41,26 +41,28 @@ public class ExhibitionNotificationService {
 	}
 
 	private void sendReExhibitionRequestEventNotification(Gallery gallery, String exhibitionDetail) {
+		sendEventNotification(gallery, exhibitionDetail);
+	}
+
+	private void sendEventNotification(Gallery gallery, String exhibitionDetail) {
 		sseSessionRepository.sendEvent(
 			gallery.getMember().getId(),
 			exhibitionDetail,
 			NotificationType.REEXHIBITION_REQUEST.getName()
 		);
-		log.info("[✅ LOGGER] REEXHIBITION REQUEST NOTIFICATION SENT TO AUTHOR ID: {}", gallery.getMember().getId());
+		log.info("[✅ LOGGER] EXHIBITION CREATION NOTIFICATION SENT TO AUTHOR ID: {}", gallery.getMember().getId());
 
-		saveCommonNotification(exhibitionDetail, gallery);
+		saveCommonNotification(exhibitionDetail);
 	}
 
-	private void saveCommonNotification(String message, Gallery gallery) {
+	private void saveCommonNotification(String message) {
 		if (notificationRepository.existsByNotificationType(NotificationType.REEXHIBITION_REQUEST)) {
-			log.info("[✅ LOGGER] DUPLICATE REEXHIBITION REQUEST NOTIFICATION DETECTED: {}", message);
+			log.info("[✅ LOGGER] DUPLICATE {} NOTIFICATION DETECTED: {}", NotificationType.REEXHIBITION_REQUEST, message);
 			return;
 		}
 
 		final Notification notification = Notification.createNotification(
-			message,
-			NotificationType.REEXHIBITION_REQUEST,
-			"https://dartgallery.site/api/galleries/" + gallery.getId()
+			message, NotificationType.REEXHIBITION_REQUEST
 		);
 		notificationRepository.save(notification);
 	}
