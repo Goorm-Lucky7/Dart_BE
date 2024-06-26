@@ -27,14 +27,15 @@ public class ImageService {
 	private final S3Service s3Service;
 	private final GalleryProgressService galleryProgressService;
 
-	public void saveImages(List<ImageInfoDto> imageInfoDtos, List<MultipartFile> imageFiles, Gallery gallery) {
+	public void saveImages(List<ImageInfoDto> imageInfoDtos, List<MultipartFile> imageFiles, Gallery gallery,
+		Long memberId) {
 		int totalFiles = imageInfoDtos.size();
 		for (int i = 0; i < totalFiles; i++) {
 			ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
 			MultipartFile imageFile = imageFiles.get(i);
 			processImage(imageInfoDto, imageFile, gallery);
-			int progress = (int)(((i + INCREMENT_BY_ONE) / (double)totalFiles) * ONE_HUNDRED_PERCENT);
-			galleryProgressService.updateProgress(gallery.getId(), progress);
+			int progress = (int)((i + INCREMENT_BY_ONE) / (double)totalFiles * ONE_HUNDRED_PERCENT);
+			galleryProgressService.sendProgress(memberId, progress);
 		}
 	}
 
