@@ -33,7 +33,7 @@ public class ImageService {
 			ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
 			MultipartFile imageFile = imageFiles.get(i);
 			processImage(imageInfoDto, imageFile, gallery);
-			int progress = (int)(((i + INCREASE_VALUE) / (double)totalFiles) * ONE_HUNDRED_PERCENT);
+			int progress = (int)(((i + INCREMENT_BY_ONE) / (double)totalFiles) * ONE_HUNDRED_PERCENT);
 			galleryProgressService.updateProgress(gallery.getId(), progress);
 		}
 	}
