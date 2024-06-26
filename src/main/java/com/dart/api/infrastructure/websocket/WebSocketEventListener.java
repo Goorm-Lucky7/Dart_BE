@@ -10,6 +10,8 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketEventListener {
 
 	private final MemberSessionRegistry memberSessionRegistry;
+	private final MemberRepository memberRepository;
 
 	@EventListener
 	public void handleSubscribeEvent(SessionSubscribeEvent sessionSubscribeEvent) {
@@ -33,11 +36,13 @@ public class WebSocketEventListener {
 		validateSessionIdPresent(sessionId);
 		validateDestinationPresent(destination);
 
-		AuthUser authUser = extractAuthUserFromAttributes(sessionSubscribeEvent);
+		final AuthUser authUser = extractAuthUserFromAttributes(sessionSubscribeEvent);
 		validateAuthUserPresent(authUser);
 		log.info("[✅ LOGGER] MEMBER {} IS JOIN CHATROOM", authUser.nickname());
 
-		memberSessionRegistry.addSession(authUser.nickname(), sessionId, destination);
+		final Member member = getMemberByEmail(authUser.email());
+
+		memberSessionRegistry.addSession(authUser.nickname(), sessionId, destination, member.getProfileImageUrl());
 	}
 
 	@EventListener
@@ -86,5 +91,10 @@ public class WebSocketEventListener {
 			log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
 			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
 		}
+	}
+
+	private Member getMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
 	}
 }
