@@ -10,7 +10,6 @@ import lombok.Builder;
 public record NotificationReadDto(
 	LocalDateTime createdAt,
 	String message,
-	NotificationType notificationType,
-	String url
+	NotificationType notificationType
 ) {
 }
