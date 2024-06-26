@@ -11,6 +11,7 @@ import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -83,6 +84,7 @@ public class WebSocketEventListener {
 	private void validateAuthUserPresent(AuthUser authUser) {
 		if (authUser == null) {
 			log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
+			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
 		}
 	}
 }
