@@ -1,10 +1,12 @@
 package com.dart.api.infrastructure.websocket;
 
+import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,8 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.MemberFixture;
@@ -29,6 +33,9 @@ class WebSocketEventListenerTest {
 
 	@Mock
 	private MemberSessionRegistry memberSessionRegistry;
+
+	@Mock
+	private MemberRepository memberRepository;
 
 	@Mock
 	private SessionSubscribeEvent sessionSubscribeEvent;
@@ -56,9 +63,10 @@ class WebSocketEventListenerTest {
 		String destination = "/sub/ws/" + chatRoomId;
 
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		Member member = MemberFixture.createMemberEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -70,12 +78,14 @@ class WebSocketEventListenerTest {
 			.build();
 
 		given(sessionSubscribeEvent.getMessage()).willReturn(message);
+		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.of(member));
 
 		// WHEN
 		webSocketEventListener.handleSubscribeEvent(sessionSubscribeEvent);
 
 		// THEN
-		verify(memberSessionRegistry, times(1)).addSession(authUser.nickname(), sessionId, destination);
+		verify(memberSessionRegistry, times(1))
+			.addSession(authUser.nickname(), sessionId, destination, member.getProfileImageUrl());
 	}
 
 	@Test
@@ -88,7 +98,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setDestination(destination);
@@ -115,7 +125,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -169,7 +179,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setSessionId(sessionId);
@@ -195,7 +205,7 @@ class WebSocketEventListenerTest {
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
-		sessionAttributes.put("authUser", authUser);
+		sessionAttributes.put(CHAT_SESSION_USER, authUser);
 
 		simpMessageHeaderAccessor.setSessionAttributes(sessionAttributes);
 		simpMessageHeaderAccessor.setLeaveMutable(true);

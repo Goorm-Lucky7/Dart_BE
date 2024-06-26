@@ -17,12 +17,12 @@ import org.mockito.Mock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.MemberSessionDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 import com.dart.support.ChatFixture;
 import com.dart.support.MemberFixture;
@@ -32,9 +32,6 @@ class ChatControllerTest {
 
 	@Mock
 	private ChatMessageService chatMessageService;
-
-	@Mock
-	private SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Mock
 	private SimpMessageHeaderAccessor simpMessageHeaderAccessor;
@@ -64,7 +61,6 @@ class ChatControllerTest {
 
 		// THEN
 		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
-		verify(simpMessageSendingOperations).convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@Test
@@ -73,16 +69,21 @@ class ChatControllerTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 		String destination = "/sub/ws/" + chatRoomId;
-		List<String> members = Arrays.asList("member1", "member2", "member3");
+		List<MemberSessionDto> members = Arrays.asList(
+			new MemberSessionDto("member1", "sessionId1", destination, "https://example.com/profile1.jpg"),
+			new MemberSessionDto("member2", "sessionId2", destination, "https://example.com/profile2.jpg"),
+			new MemberSessionDto("member3", "sessionId3", destination, "https://example.com/profile3.jpg")
+		);
 
 		given(memberSessionRegistry.getMembersInChatRoom(destination)).willReturn(members);
 
 		// WHEN
-		ResponseEntity<List<String>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
+		ResponseEntity<List<MemberSessionDto>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
 
 		// THEN
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(responseEntity.getBody()).containsExactly("member1", "member2", "member3");
+		assertThat(responseEntity.getBody()).hasSize(3);
+		assertThat(responseEntity.getBody()).containsExactlyInAnyOrderElementsOf(members);
 	}
 
 	@Test
@@ -95,7 +96,7 @@ class ChatControllerTest {
 		given(memberSessionRegistry.getMembersInChatRoom(destination)).willReturn(List.of());
 
 		// WHEN
-		ResponseEntity<List<String>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
+		ResponseEntity<List<MemberSessionDto>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
 
 		// THEN
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
