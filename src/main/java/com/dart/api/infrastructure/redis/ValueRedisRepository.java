@@ -14,6 +14,11 @@ public class ValueRedisRepository {
 
 	private final StringRedisTemplate redisTemplate;
 
+	public void saveValue(String key, String value) {
+		ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+		valueOperations.set(key, value);
+	}
+
 	public void saveValueWithExpiry(String key, String value, long duration) {
 		ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
 		Duration expireDuration = Duration.ofSeconds(duration);

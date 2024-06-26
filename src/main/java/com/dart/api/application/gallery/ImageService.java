@@ -1,5 +1,7 @@
 package com.dart.api.application.gallery;
 
+import static com.dart.global.common.util.GlobalConstant.*;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,14 +25,16 @@ public class ImageService {
 
 	private final ImageRepository imageRepository;
 	private final S3Service s3Service;
+	private final GalleryProgressService galleryProgressService;
 
 	public void saveImages(List<ImageInfoDto> imageInfoDtos, List<MultipartFile> imageFiles, Gallery gallery) {
-		if (imageInfoDtos != null && !imageInfoDtos.isEmpty()) {
-			for (int i = 0; i < imageInfoDtos.size(); i++) {
-				ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
-				MultipartFile imageFile = imageFiles.get(i);
-				processImage(imageInfoDto, imageFile, gallery);
-			}
+		int totalFiles = imageInfoDtos.size();
+		for (int i = 0; i < totalFiles; i++) {
+			ImageInfoDto imageInfoDto = imageInfoDtos.get(i);
+			MultipartFile imageFile = imageFiles.get(i);
+			processImage(imageInfoDto, imageFile, gallery);
+			int progress = (int)(((i + INCREMENT_BY_ONE) / (double)totalFiles) * ONE_HUNDRED_PERCENT);
+			galleryProgressService.updateProgress(gallery.getId(), progress);
 		}
 	}
 
