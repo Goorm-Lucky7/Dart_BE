@@ -17,6 +17,13 @@ public class SSESessionRepository {
 
 	private final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
+	public void addSSEEmitter(Long clientId, SseEmitter sseEmitter) {
+		sseSessionDB.put(clientId, sseEmitter);
+		log.info("[✅ LOGGER] SAVE SSE EMITTER FOR CLIENT ID: {}", clientId);
+
+		handleSSEEmitter(sseEmitter, clientId);
+	}
+
 	public SseEmitter saveSSEEmitter(Long clientId) {
 		SseEmitter sseEmitter = new SseEmitter(SSE_DEFAULT_TIMEOUT);
 		sseSessionDB.put(clientId, sseEmitter);
