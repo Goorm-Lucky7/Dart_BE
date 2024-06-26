@@ -46,10 +46,9 @@ public class ReviewController {
 
 	@GetMapping("/info")
 	public ResponseEntity<ReviewGalleryInfoDto> getReviewGalleryInfo(
-		@RequestParam("gallery-id") Long galleryId,
-		@Auth(required = false) AuthUser authUser
+		@RequestParam("gallery-id") Long galleryId
 	) {
-		return ResponseEntity.ok(galleryService.getReviewGalleryInfo(galleryId, authUser));
+		return ResponseEntity.ok(galleryService.getReviewGalleryInfo(galleryId));
 	}
 
 }
