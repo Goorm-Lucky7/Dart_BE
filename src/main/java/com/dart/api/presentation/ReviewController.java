@@ -39,15 +39,13 @@ public class ReviewController {
 	public PageResponse<ReviewReadDto> readAll(
 		@PathVariable(name = "gallery-id") Long galleryId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
-	) {
+		@RequestParam(defaultValue = "10") int size) {
 		return reviewService.readAll(galleryId, page, size);
 	}
 
 	@GetMapping("/info")
 	public ResponseEntity<ReviewGalleryInfoDto> getReviewGalleryInfo(
-		@RequestParam("gallery-id") Long galleryId
-	) {
+		@RequestParam("gallery-id") Long galleryId) {
 		return ResponseEntity.ok(galleryService.getReviewGalleryInfo(galleryId));
 	}
 
