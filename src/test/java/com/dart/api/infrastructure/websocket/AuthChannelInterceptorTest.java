@@ -1,9 +1,11 @@
 package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.AuthConstant.*;
-import static com.dart.global.common.util.ChatConstant.*;
-import static org.assertj.core.api.Assertions.*;
+import static com.dart.global.common.util.GlobalConstant.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,6 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.MemberFixture;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,57 +36,67 @@ class AuthChannelInterceptorTest {
 	private AuthChannelInterceptor authChannelInterceptor;
 
 	@Test
-	@DisplayName("PRE SEND(⭕️ SUCCESS): 유효한 JWT 토큰이 제공되어 성공적으로 AuthUser를 설정했습니다.")
+	@DisplayName("PRE SEND(⭕️ SUCCESS): 유효한 JWT 토큰이 제공되어 성공적으로 메시지를 전송했습니다.")
 	void preSend_void_success() {
 		// GIVEN
-		String expectedValidToken = "Bearer expectedValidToken";
-		String expectedAccessToken = expectedValidToken.substring(7);
-
-		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.SEND);
-		stompHeaderAccessor.addNativeHeader(ACCESS_TOKEN_HEADER, expectedValidToken);
-		stompHeaderAccessor.setHeader(STOMP_COMMAND_HEADER, StompCommand.SEND);
-		stompHeaderAccessor.setLeaveMutable(true);
-
-		Message<byte[]> expectedMessage = MessageBuilder.createMessage(
-			new byte[0],
-			stompHeaderAccessor.getMessageHeaders());
-
+		String accessToken = "testValidAccessToken";
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
-		when(jwtProviderService.isUsable(expectedAccessToken)).thenReturn(true);
-		when(jwtProviderService.extractAuthUserByAccessToken(expectedAccessToken)).thenReturn(authUser);
+		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+		stompHeaderAccessor.setNativeHeader(ACCESS_TOKEN_HEADER, BEARER + BLANK + accessToken);
+		stompHeaderAccessor.setSessionAttributes(new HashMap<>());
+
+		Message<?> message = MessageBuilder.withPayload(new byte[0]).setHeaders(stompHeaderAccessor).build();
+
+		when(jwtProviderService.isUsable(anyString())).thenReturn(true);
+		when(jwtProviderService.extractAuthUserByAccessToken(anyString())).thenReturn(authUser);
 
 		// WHEN
-		authChannelInterceptor.preSend(expectedMessage, messageChannel);
+		Message<?> actualMessage = authChannelInterceptor.preSend(message, messageChannel);
 
 		// THEN
-		verify(jwtProviderService).isUsable(expectedAccessToken);
-		verify(jwtProviderService).extractAuthUserByAccessToken(expectedAccessToken);
+		assertEquals(message, actualMessage);
+		verify(jwtProviderService, times(1)).isUsable(anyString());
+		verify(jwtProviderService, times(1)).extractAuthUserByAccessToken(anyString());
 	}
 
 	@Test
-	@DisplayName("PRE SEND(❌ FAILURE): JWT 토큰이 유효하지 않거나 누락되었습니다.")
-	void preSend_UnauthorizedException_fail() {
+	@DisplayName("PRE SEND(❌ FAILURE): JWT 토큰이 유효하지 않아서 메시지 전송에 실패했습니다.")
+	void preSend_InvalidAccessTokenException_fail() {
 		// GIVEN
-		String expectedValidToken = "Bearer expectedValidToken";
-		String expectedAccessToken = expectedValidToken.substring(7);
+		String accessToken = "testValidAccessToken";
 
-		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.SEND);
-		stompHeaderAccessor.addNativeHeader(ACCESS_TOKEN_HEADER, expectedValidToken);
-		stompHeaderAccessor.setHeader(STOMP_COMMAND_HEADER, StompCommand.SEND);
-		stompHeaderAccessor.setLeaveMutable(true);
+		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+		stompHeaderAccessor.setNativeHeader(ACCESS_TOKEN_HEADER, BEARER + BLANK + accessToken);
+		stompHeaderAccessor.setSessionAttributes(new HashMap<>());
 
-		Message<byte[]> invalidMessage = MessageBuilder.createMessage(
-			new byte[0],
-			stompHeaderAccessor.getMessageHeaders());
+		Message<?> message = MessageBuilder.withPayload(new byte[0]).setHeaders(stompHeaderAccessor).build();
 
-		when(jwtProviderService.isUsable(expectedAccessToken)).thenReturn(false);
+		when(jwtProviderService.isUsable(anyString())).thenReturn(false);
 
-		// WHEN & THEN
-		assertThatThrownBy(() -> authChannelInterceptor.preSend(invalidMessage, messageChannel))
-			.isInstanceOf(UnauthorizedException.class)
-			.hasMessage("[❎ ERROR] 인증 토큰이 유효하지 않습니다. 다시 로그인해 주세요.");
+		// WHEN
+		Message<?> actualMessage = authChannelInterceptor.preSend(message, messageChannel);
 
-		verify(jwtProviderService).isUsable(expectedAccessToken);
+		// THEN
+		assertEquals(message, actualMessage);
+		verify(jwtProviderService, times(1)).isUsable(anyString());
+		verify(jwtProviderService, never()).extractAuthUserByAccessToken(anyString());
+	}
+
+	@Test
+	@DisplayName("PRE SEND(❌ FAILURE): JWT 토큰이 유효하지 않아서 메시지 전송에 실패했습니다.")
+	void preSend_AuthorizationHeaderEmptyOrNotBearerException_fail() {
+		// GIVEN
+		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+
+		Message<?> message = MessageBuilder.withPayload(new byte[0]).setHeaders(stompHeaderAccessor).build();
+
+		// WHEN
+		Message<?> actualMessage = authChannelInterceptor.preSend(message, messageChannel);
+
+		// THEN
+		assertEquals(message, actualMessage);
+		verify(jwtProviderService, never()).isUsable(anyString());
+		verify(jwtProviderService, never()).extractAuthUserByAccessToken(anyString());
 	}
 }
