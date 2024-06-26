@@ -31,10 +31,9 @@ public class MemberSessionRegistry {
 		log.info("[✅ LOGGER] SESSION REMOVED: sessionId={}", sessionId);
 	}
 
-	public List<String> getMembersInChatRoom(String destination) {
-		List<String> members = memberSessionRegistry.values().stream()
+	public List<MemberSessionDto> getMembersInChatRoom(String destination) {
+		List<MemberSessionDto> members = memberSessionRegistry.values().stream()
 			.filter(session -> session.destination().equals(destination))
-			.map(MemberSessionDto::nickname)
 			.toList();
 
 		log.info("[✅ LOGGER] MEMBERS IN {}: {}", destination, members);
