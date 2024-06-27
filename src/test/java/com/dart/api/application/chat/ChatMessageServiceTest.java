@@ -181,7 +181,7 @@ class ChatMessageServiceTest {
 			.thenReturn(null);
 		when(chatRoomRepository.findById(anyLong()))
 			.thenReturn(Optional.of(chatRoom));
-		when(chatMessageRepository.findByChatRoom(any(ChatRoom.class), any(Pageable.class)))
+		when(chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(any(ChatRoom.class), any(Pageable.class)))
 			.thenReturn(chatMessagePage);
 		when(memberRepository.findByNickname(anyString()))
 			.thenReturn(Optional.of(member));
