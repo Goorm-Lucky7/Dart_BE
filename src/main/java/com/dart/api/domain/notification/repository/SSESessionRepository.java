@@ -59,4 +59,11 @@ public class SSESessionRepository {
 		sseEmitter.onTimeout(() -> deleteSSEEmitterByClientId(clientId));
 		sseEmitter.onError(error -> deleteSSEEmitterByClientId(clientId));
 	}
+
+	public void completeSSEEmitter(Long clientId) {
+		SseEmitter sseEmitter = sseSessionDB.get(clientId);
+		if (sseEmitter != null) {
+			sseEmitter.complete();
+		}
+	}
 }
