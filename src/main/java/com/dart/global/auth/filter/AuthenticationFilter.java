@@ -51,6 +51,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		String requestURI = request.getRequestURI();
 
 		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
+			log.info("[✅ LOGGER] WEBSOCKET REQUEST DETECTED, SKIPPING AUTHENTICATION FILTER");
 			filterChain.doFilter(request, response);
 			return;
 		}
