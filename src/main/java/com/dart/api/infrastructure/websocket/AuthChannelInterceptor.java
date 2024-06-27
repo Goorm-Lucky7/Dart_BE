@@ -7,6 +7,8 @@ import static com.dart.global.common.util.GlobalConstant.*;
 import java.util.HashMap;
 import java.util.Objects;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
 	private final JwtProviderService jwtProviderService;
@@ -33,25 +36,23 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
-		if (!isSendCommand(stompHeaderAccessor)) {
-			return message;
-		}
+		if (isConnectCommand(stompHeaderAccessor)) {
+			final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
+			final String accessToken = extractToken(authorizationHeader);
+			validateAuthenticateToken(accessToken);
 
-		final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
-		final String accessToken = extractToken(authorizationHeader);
-		validateAuthenticateToken(accessToken);
-
-		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-		if (stompHeaderAccessor.getSessionAttributes() == null) {
-			stompHeaderAccessor.setSessionAttributes(new HashMap<>());
+			final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
+			if (stompHeaderAccessor.getSessionAttributes() == null) {
+				stompHeaderAccessor.setSessionAttributes(new HashMap<>());
+			}
+			stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
 		}
-		stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
 
 		return message;
 	}
 
-	private boolean isSendCommand(StompHeaderAccessor stompHeaderAccessor) {
-		return Objects.equals(StompCommand.SEND, stompHeaderAccessor.getCommand());
+	private boolean isConnectCommand(StompHeaderAccessor stompHeaderAccessor) {
+		return Objects.equals(StompCommand.CONNECT, stompHeaderAccessor.getCommand());
 	}
 
 	private String extractToken(String authorizationHeader) {
@@ -63,6 +64,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
 	private void validateAuthenticateToken(String accessToken) {
 		if (accessToken == null || !jwtProviderService.isUsable(accessToken)) {
+			log.warn("[✅ LOGGER] INVALID OR MISSING JWT TOKEN");
 			throw new NotFoundException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 	}
