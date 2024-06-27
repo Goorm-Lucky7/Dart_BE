@@ -19,5 +19,5 @@ public interface GeneralCouponWalletRepository extends JpaRepository<GeneralCoup
 
 	List<GeneralCouponWallet> findByMemberAndIsUsedFalse(Member member);
 
-	Optional<GeneralCouponWallet> findByIdAndMemberIdAndIsUsedFalse(Long id, Long memberId);
+	Optional<GeneralCouponWallet> findByMemberIdAndGeneralCouponIdAndIsUsedFalse(Long memberId, Long generalCouponId);
 }
