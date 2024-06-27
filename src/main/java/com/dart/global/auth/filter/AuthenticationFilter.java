@@ -47,12 +47,15 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		@NotNull HttpServletRequest request,
 		@NotNull HttpServletResponse response,
 		@NotNull FilterChain filterChain
-	) throws ServletException, IOException {
+	) {
 		String requestURI = request.getRequestURI();
 
 		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
-			log.info("[✅ LOGGER] WEBSOCKET REQUEST DETECTED, SKIPPING AUTHENTICATION FILTER");
-			filterChain.doFilter(request, response);
+			try {
+				filterChain.doFilter(request, response);
+			} catch (IOException | ServletException e) {
+				throw new RuntimeException(e);
+			}
 			return;
 		}
 
