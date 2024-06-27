@@ -54,7 +54,7 @@ public class WebSocketEventListener {
 
 		validateSessionIdPresent(sessionId);
 
-		AuthUser authUser = extractAuthUserFromAttributes(sessionUnsubscribeEvent);
+		final AuthUser authUser = extractAuthUserFromAttributes(sessionUnsubscribeEvent);
 		validateAuthUserPresent(authUser);
 		log.info("[✅ LOGGER] MEMBER {} IS LEFT CHATROOM", authUser.nickname());
 
