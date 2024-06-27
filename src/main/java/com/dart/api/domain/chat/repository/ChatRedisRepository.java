@@ -34,8 +34,8 @@ public class ChatRedisRepository {
 	}
 
 	public PageResponse<ChatMessageReadDto> getChatMessageReadDto(Long chatRoomId, int page, int size) {
-		final long start = (long)page * size;
-		final long end = start + size - 1;
+		final long end = -1 - ((long)page * size);
+		final long start = end - size + 1;
 
 		final List<Object> messageValues = listRedisRepository
 			.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, start, end);
