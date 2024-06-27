@@ -48,11 +48,9 @@ public class GalleryController {
 		return galleryService.createGallery(createGalleryDto, thumbnail, imageFiles, authUser);
 	}
 
-	@GetMapping("/progress/{gallery-id}")
-	public SseEmitter getProgress(@PathVariable("gallery-id") Long galleryId) {
-		SseEmitter emitter = new SseEmitter();
-		galleryProgressService.addEmitter(galleryId, emitter);
-		return emitter;
+	@GetMapping(value = "/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public ResponseEntity<SseEmitter> getProgress(@Auth AuthUser authUser) {
+		return ResponseEntity.ok(galleryProgressService.createEmitter(authUser));
 	}
 
 	@DeleteMapping
@@ -70,10 +68,9 @@ public class GalleryController {
 		@RequestParam(required = false) String keyword,
 		@RequestParam(required = false) String sort,
 		@RequestParam(required = false) String cost,
-		@RequestParam(required = false) String display,
-		@Auth(required = false) AuthUser authUser
+		@RequestParam(required = false) String display
 	) {
-		return galleryService.getAllGalleries(page, size, category, keyword, sort, cost, display, authUser);
+		return galleryService.getAllGalleries(page, size, category, keyword, sort, cost, display);
 	}
 
 	@GetMapping("/{gallery-id}")

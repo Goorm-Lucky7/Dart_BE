@@ -84,7 +84,7 @@ public class GalleryService {
 
 		hashtagService.saveHashtags(createGalleryDto.hashtags(), gallery);
 
-		imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery);
+		imageService.saveImages(createGalleryDto.informations(), imageFiles, gallery, member.getId());
 
 		chatRoomService.createChatRoom(gallery);
 
@@ -95,13 +95,13 @@ public class GalleryService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<GalleryAllResDto> getAllGalleries(int page, int size, String category, String keyword,
-		String sort, String cost, String display, AuthUser authUser) {
+		String sort, String cost, String display) {
 		final PageRequest pageRequest = PageRequest.of(page, size);
 
 		final Page<Gallery> galleryPage = galleryRepository.findGalleriesByCriteria(pageRequest, category, keyword,
 			sort, cost, display);
 
-		final List<GalleryAllResDto> galleries = mapGalleriesToDto(galleryPage.getContent(), authUser);
+		final List<GalleryAllResDto> galleries = mapGalleriesToDto(galleryPage.getContent());
 
 		final PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
 
@@ -168,7 +168,7 @@ public class GalleryService {
 	}
 
 	@Transactional(readOnly = true)
-	public ReviewGalleryInfoDto getReviewGalleryInfo(Long galleryId, AuthUser authUser) {
+	public ReviewGalleryInfoDto getReviewGalleryInfo(Long galleryId) {
 		final Gallery gallery = findGalleryById(galleryId);
 		final Float reviewAverage = calculateReviewAverage(gallery.getId());
 		return new ReviewGalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
@@ -231,11 +231,11 @@ public class GalleryService {
 		}
 	}
 
-	private List<GalleryAllResDto> mapGalleriesToDto(List<Gallery> galleryList, AuthUser authUser) {
-		return galleryList.stream().map(gallery -> mapGalleryToDto(gallery, authUser)).toList();
+	private List<GalleryAllResDto> mapGalleriesToDto(List<Gallery> galleryList) {
+		return galleryList.stream().map(this::mapGalleryToDto).toList();
 	}
 
-	private GalleryAllResDto mapGalleryToDto(Gallery gallery, AuthUser authUser) {
+	private GalleryAllResDto mapGalleryToDto(Gallery gallery) {
 		return createGalleryAllResDto(gallery);
 	}
 
