@@ -58,13 +58,15 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
 	private boolean validateAuthenticateToken(String accessToken, StompHeaderAccessor stompHeaderAccessor) {
 		if (accessToken == null || !jwtProviderService.isUsable(accessToken)) {
-			log.warn("[✅ LOGGER] INVALID OR MISSING JWT TOKEN");
 			return false;
 		}
 
-		AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-		stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
-
+		addAuthUserInSession(accessToken, stompHeaderAccessor);
 		return true;
+	}
+
+	private void addAuthUserInSession(String accessToken, StompHeaderAccessor stompHeaderAccessor) {
+		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
+		stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
 	}
 }
