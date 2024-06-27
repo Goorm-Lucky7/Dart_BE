@@ -20,23 +20,29 @@ public class PriorityCouponRedisRepository {
 	private final ZSetRedisRepository zSetRedisRepository;
 	private final ValueRedisRepository valueRedisRepository;
 
-	public void addIfAbsentQueue(Long couponId, String email, double registerTime, long expiredTime) {
+	public void addIfAbsentQueue(Long couponId, Long memberId, double registerTime, long expiredTime) {
 		zSetRedisRepository.addElementWithExpiry(
 			REDIS_COUPON_PREFIX + couponId.toString(),
-			email,
+			memberId,
 			registerTime,
 			expiredTime
 		);
 	}
 
-	public boolean hasValue(Long couponId, String email) {
+	public boolean hasValue(Long couponId, Long memberId) {
 		return Objects.nonNull(
-			zSetRedisRepository.score(REDIS_COUPON_PREFIX + couponId.toString(), email));
+			zSetRedisRepository.score(REDIS_COUPON_PREFIX + couponId.toString(), memberId));
 	}
 
 	public int sizeQueue(Long couponId) {
 		return zSetRedisRepository
 			.size(REDIS_COUPON_PREFIX + couponId.toString())
+			.intValue();
+	}
+
+	public int rankQueue(Long couponId, Long memberId) {
+		return zSetRedisRepository
+			.rank(REDIS_COUPON_PREFIX + couponId.toString(), requireNonNull(memberId))
 			.intValue();
 	}
 
@@ -51,11 +57,11 @@ public class PriorityCouponRedisRepository {
 		return Integer.parseInt(count);
 	}
 
-	public Set<String> rangeQueue(Long couponId, long start, long end) {
+	public Set<Long> rangeQueue(Long couponId, long start, long end) {
 		return zSetRedisRepository
 			.getRange(REDIS_COUPON_PREFIX + couponId.toString(), start, end)
 			.stream()
-			.map(String.class::cast)
+			.map(memberId -> Long.parseLong(String.valueOf(memberId)))
 			.collect(Collectors.toSet());
 	}
 

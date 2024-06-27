@@ -1,6 +1,5 @@
 package com.dart.api.application.auth;
 
-
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
@@ -8,13 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.auth.response.TokenResDto;
@@ -25,6 +19,11 @@ import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -43,7 +42,8 @@ public class AuthenticationService {
 		final Member member = findByMemberEmail(loginReqDto.email());
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
 
-		final String accessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
+			member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
@@ -64,7 +64,12 @@ public class AuthenticationService {
 
 		Member member = getMemberByEmail(authUser.email());
 
-		String newAccessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		String newAccessToken = jwtProviderService.generateAccessToken(
+			member.getId(),
+			member.getEmail(),
+			member.getNickname(),
+			member.getProfileImageUrl()
+		);
 		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
 
 		tokenRedisRepository.deleteToken(authUser.email());
@@ -117,7 +122,7 @@ public class AuthenticationService {
 		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
 	}
 
-	private void setRefreshToken(HttpServletResponse response, String refreshToken){
+	private void setRefreshToken(HttpServletResponse response, String refreshToken) {
 		cookieUtil.setRefreshCookie(response, refreshToken);
 	}
 }

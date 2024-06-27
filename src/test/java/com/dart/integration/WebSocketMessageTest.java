@@ -1,7 +1,6 @@
 package com.dart.integration;
 
 import static com.dart.global.common.util.AuthConstant.*;
-import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
@@ -11,8 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -33,7 +30,6 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.support.ChatFixture;
 import com.dart.support.GalleryFixture;
 import com.dart.support.MemberFixture;
@@ -66,6 +62,7 @@ public class WebSocketMessageTest {
 	@BeforeEach
 	void setUp() throws ExecutionException, InterruptedException, TimeoutException {
 		String accessToken = jwtProviderService.generateAccessToken(
+			1L,
 			"test1@example.com",
 			"test1",
 			"testProfileImage"
