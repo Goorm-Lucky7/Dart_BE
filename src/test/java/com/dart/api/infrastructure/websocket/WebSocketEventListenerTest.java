@@ -17,8 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.error.exception.BadRequestException;
@@ -34,7 +34,7 @@ class WebSocketEventListenerTest {
 	private SessionSubscribeEvent sessionSubscribeEvent;
 
 	@Mock
-	private SessionUnsubscribeEvent sessionUnsubscribeEvent;
+	private SessionDisconnectEvent sessionDisconnectEvent;
 
 	@Mock
 	private SimpMessageHeaderAccessor simpMessageHeaderAccessor;
@@ -134,8 +134,8 @@ class WebSocketEventListenerTest {
 	}
 
 	@Test
-	@DisplayName("HANDLE UNSUBSCRIBE EVENT(⭕️ SUCCESS): 사용자가 성공적으로 채팅방에서 탈퇴했습니다.")
-	void handleUnsubscribeEvent_void_success() {
+	@DisplayName("HANDLE DISCONNECT EVENT(⭕️ SUCCESS): 사용자가 성공적으로 채팅방에서 탈퇴했습니다.")
+	void handleDisconnectEvent_void_success() {
 		// GIVEN
 		String sessionId = "testSessionId";
 
@@ -152,18 +152,18 @@ class WebSocketEventListenerTest {
 			.copyHeaders(simpMessageHeaderAccessor.toMap())
 			.build();
 
-		given(sessionUnsubscribeEvent.getMessage()).willReturn(message);
+		given(sessionDisconnectEvent.getMessage()).willReturn(message);
 
 		// WHEN
-		webSocketEventListener.handleUnsubscribeEvent(sessionUnsubscribeEvent);
+		webSocketEventListener.handleDisconnectEvent(sessionDisconnectEvent);
 
 		// THEN
 		verify(memberSessionRegistry, times(1)).removeSession(sessionId);
 	}
 
 	@Test
-	@DisplayName("HANDLE UNSUBSCRIBE EVENT(❌ FAILURE): 요청하신 채팅방에 세션 ID가 존재하지 않습니다.")
-	void handleUnsubscribeEvent_sessionId_BadRequestException_fail() {
+	@DisplayName("HANDLE DISCONNECT EVENT(❌ FAILURE): 요청하신 채팅방에 세션 ID가 존재하지 않습니다.")
+	void handleDisconnectEvent_sessionId_BadRequestException_fail() {
 		// GIVEN
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
@@ -177,10 +177,10 @@ class WebSocketEventListenerTest {
 			.copyHeaders(simpMessageHeaderAccessor.toMap())
 			.build();
 
-		given(sessionUnsubscribeEvent.getMessage()).willReturn(message);
+		given(sessionDisconnectEvent.getMessage()).willReturn(message);
 
 		// WHEN & THEN
-		assertThatThrownBy(() -> webSocketEventListener.handleUnsubscribeEvent(sessionUnsubscribeEvent))
+		assertThatThrownBy(() -> webSocketEventListener.handleDisconnectEvent(sessionDisconnectEvent))
 			.isInstanceOf(BadRequestException.class)
 			.hasMessage("[❎ ERROR] 요청하신 채팅방에 유효한 세션 ID가 필요합니다.");
 	}

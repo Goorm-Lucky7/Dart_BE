@@ -6,8 +6,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.AbstractSubProtocolEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.error.exception.BadRequestException;
@@ -41,13 +41,13 @@ public class WebSocketEventListener {
 	}
 
 	@EventListener
-	public void handleUnsubscribeEvent(SessionUnsubscribeEvent sessionUnsubscribeEvent) {
-		log.info("[✅ LOGGER] HANDLE UNSUBSCRIBE EVENT CALLED");
-		final String sessionId = extractSessionIdFromHeaderAccessor(sessionUnsubscribeEvent);
+	public void handleDisconnectEvent(SessionDisconnectEvent sessionDisconnectEvent) {
+		log.info("[✅ LOGGER] HANDLE DISCONNECT EVENT CALLED");
+		final String sessionId = extractSessionIdFromHeaderAccessor(sessionDisconnectEvent);
 
 		validateSessionIdPresent(sessionId);
 
-		final AuthUser authUser = extractAuthUserFromAttributes(sessionUnsubscribeEvent);
+		final AuthUser authUser = extractAuthUserFromAttributes(sessionDisconnectEvent);
 		validateAuthUserPresent(authUser);
 		log.info("[✅ LOGGER] MEMBER {} IS LEFT CHATROOM", authUser.nickname());
 
