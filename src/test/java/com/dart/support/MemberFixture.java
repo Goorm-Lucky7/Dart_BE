@@ -44,6 +44,7 @@ public class MemberFixture {
 
 	public static AuthUser createAuthUserEntity() {
 		return AuthUser.create(
+			1L,
 			"test1@example.com",
 			"test1"
 		);
@@ -51,6 +52,7 @@ public class MemberFixture {
 
 	public static AuthUser createAuthUserEntityForAuthor() {
 		return AuthUser.create(
+			1L,
 			"author@example.com",
 			"author"
 		);

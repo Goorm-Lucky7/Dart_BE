@@ -50,16 +50,16 @@ public class CouponFixture {
 
 	public static Stream<Arguments> provideValues_String() {
 		Set<Object> values = new HashSet<>();
-		values.add("test1@naver.com");
-		values.add("test2@naver.com");
-		values.add("test3@naver.com");
-		values.add("test4@naver.com");
-		values.add("test5@naver.com");
-		values.add("test6@naver.com");
-		values.add("test7@naver.com");
-		values.add("test8@naver.com");
-		values.add("test9@naver.com");
-		values.add("test10@naver.com");
+		values.add(1L);
+		values.add(2L);
+		values.add(3L);
+		values.add(4L);
+		values.add(5L);
+		values.add(6L);
+		values.add(7L);
+		values.add(8L);
+		values.add(9L);
+		values.add(10L);
 
 		return Stream.of(Arguments.of(values));
 	}
