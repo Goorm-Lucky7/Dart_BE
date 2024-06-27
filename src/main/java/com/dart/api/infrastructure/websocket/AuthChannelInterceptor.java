@@ -2,7 +2,6 @@ package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
-import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.util.HashMap;
 
@@ -36,15 +35,18 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
 		if (isConnectCommand(stompHeaderAccessor)) {
-			final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
-
-			final String accessToken = extractToken(authorizationHeader);
-			validateAuthenticateToken(accessToken);
-
-			final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-			if (stompHeaderAccessor.getSessionAttributes() == null) {
-				stompHeaderAccessor.setSessionAttributes(new HashMap<>());
+			String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
+			if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER + " ")) {
+				log.warn("[✅ LOGGER] INVALID OR MISSING AUTHORIZATION HEADER");
+				throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
 			}
+
+			String accessToken = extractToken(authorizationHeader);
+			validateAccessToken(accessToken);
+
+			AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
+
+			stompHeaderAccessor.getSessionAttributes().computeIfAbsent(CHAT_SESSION_USER, key -> new HashMap<>());
 			stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
 		}
 
@@ -52,19 +54,21 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	}
 
 	private boolean isConnectCommand(StompHeaderAccessor stompHeaderAccessor) {
-		return stompHeaderAccessor.getCommand().equals(StompCommand.CONNECT);
+		return StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand());
 	}
 
 	private String extractToken(String authorizationHeader) {
-		if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER)) {
-			return null;
-		}
-		return authorizationHeader.replaceFirst(BEARER, BLANK).trim();
+		return authorizationHeader.substring((BEARER + " ").length()).trim();
 	}
 
-	private void validateAuthenticateToken(String accessToken) {
-		if (accessToken == null || !jwtProviderService.isUsable(accessToken)) {
-			log.warn("[✅ LOGGER] INVALID OR MISSING JWT TOKEN");
+	private void validateAccessToken(String accessToken) {
+		if (accessToken.isEmpty()) {
+			log.warn("[✅ LOGGER] TOKEN IS EMPTY");
+			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
+		}
+
+		if (!jwtProviderService.isUsable(accessToken)) {
+			log.warn("[✅ LOGGER] JWT TOKEN IS NOT USABLE");
 			throw new NotFoundException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 	}
