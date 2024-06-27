@@ -26,17 +26,14 @@ class MemberSessionRegistryTest {
 		String sessionId = "testSessionId";
 		String chatRoomId = "1";
 		String destination = "/sub/ws/" + chatRoomId;
-		String profileImageUrl = "https://example.com/profile.jpg";
 
 		// WHEN
-		memberSessionRegistry.addSession(memberNickname, sessionId, destination, profileImageUrl);
+		memberSessionRegistry.addSession(memberNickname, sessionId, destination);
 
 		// THEN
-		List<MemberSessionDto> members = memberSessionRegistry.getMembersInChatRoom(destination);
+		List<String> members = memberSessionRegistry.getMembersInChatRoom(destination);
 		assertThat(members).hasSize(1);
-		MemberSessionDto memberSessionDto = members.get(0);
-		assertThat(memberSessionDto.nickname()).isEqualTo(memberNickname);
-		assertThat(memberSessionDto.profileImageUrl()).isEqualTo(profileImageUrl);
+		assertThat(members.get(0)).isEqualTo(memberNickname);
 	}
 
 	@Test
@@ -47,15 +44,14 @@ class MemberSessionRegistryTest {
 		String sessionId = "testSessionId";
 		String chatRoomId = "1";
 		String destination = "/sub/ws/" + chatRoomId;
-		String profileImageUrl = "https://example.com/profile.jpg";
 
-		memberSessionRegistry.addSession(memberNickname, sessionId, destination, profileImageUrl);
+		memberSessionRegistry.addSession(memberNickname, sessionId, destination);
 
 		// WHEN
 		memberSessionRegistry.removeSession(sessionId);
 
 		// THEN
-		List<MemberSessionDto> members = memberSessionRegistry.getMembersInChatRoom(destination);
+		List<String> members = memberSessionRegistry.getMembersInChatRoom(destination);
 		assertThat(members).isEmpty();
 	}
 
@@ -65,27 +61,20 @@ class MemberSessionRegistryTest {
 		// GIVEN
 		String destination1 = "/sub/ws/1";
 		String destination2 = "/sub/ws/2";
-		String profileImageURL1 = "https://example.com/profile1.jpg";
-		String profileImageURL2 = "https://example.com/profile2.jpg";
-		String profileImageURL3 = "https://example.com/profile3.jpg";
 
-		memberSessionRegistry.addSession("member1", "sessionId1", destination1, profileImageURL1);
-		memberSessionRegistry.addSession("member2", "sessionId2", destination1, profileImageURL2);
-		memberSessionRegistry.addSession("member3", "sessionId3", destination2, profileImageURL3);
+		memberSessionRegistry.addSession("member1", "sessionId1", destination1);
+		memberSessionRegistry.addSession("member2", "sessionId2", destination1);
+		memberSessionRegistry.addSession("member3", "sessionId3", destination2);
 
 		// WHEN
-		List<MemberSessionDto> membersInDestination1 = memberSessionRegistry.getMembersInChatRoom(destination1);
-		List<MemberSessionDto> membersInDestination2 = memberSessionRegistry.getMembersInChatRoom(destination2);
+		List<String> membersInDestination1 = memberSessionRegistry.getMembersInChatRoom(destination1);
+		List<String> membersInDestination2 = memberSessionRegistry.getMembersInChatRoom(destination2);
 
 		// THEN
 		assertThat(membersInDestination1).hasSize(2);
-		assertThat(membersInDestination1).extracting("nickname")
-			.containsExactlyInAnyOrder("member1", "member2");
-		assertThat(membersInDestination1).extracting("profileImageUrl")
-			.containsExactlyInAnyOrder(profileImageURL1, profileImageURL2);
+		assertThat(membersInDestination1).containsExactlyInAnyOrder("member1", "member2");
 
 		assertThat(membersInDestination2).hasSize(1);
-		assertThat(membersInDestination2.get(0).nickname()).isEqualTo("member3");
-		assertThat(membersInDestination2.get(0).profileImageUrl()).isEqualTo(profileImageURL3);
+		assertThat(membersInDestination2.get(0)).isEqualTo("member3");
 	}
 }
