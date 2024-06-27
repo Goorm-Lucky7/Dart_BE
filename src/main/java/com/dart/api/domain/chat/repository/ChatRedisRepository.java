@@ -2,7 +2,6 @@ package com.dart.api.domain.chat.repository;
 
 import static com.dart.global.common.util.RedisConstant.*;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -44,8 +43,6 @@ public class ChatRedisRepository {
 		final List<ChatMessageReadDto> chatMessageReadDtoList = messageValues.stream()
 			.map(this::parseMessageValues)
 			.toList();
-
-		Collections.reverse(chatMessageReadDtoList);
 
 		final boolean isDone = messageValues.size() < size;
 		final PageInfo pageInfo = new PageInfo(page, isDone);
