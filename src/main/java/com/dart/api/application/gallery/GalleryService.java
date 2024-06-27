@@ -1,7 +1,6 @@
 package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
-import static com.dart.global.common.util.SSEConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.application.chat.ChatRoomService;
-import com.dart.api.application.notification.ExhibitionNotificationService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
@@ -66,7 +64,6 @@ public class GalleryService {
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
 	private final ChatRoomRepository chatRoomRepository;
-	private final ExhibitionNotificationService exhibitionNotificationService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -191,17 +188,6 @@ public class GalleryService {
 		imageService.deleteThumbnail(gallery);
 		hashtagService.deleteHashtagsByGallery(gallery);
 		deleteGallery(gallery);
-	}
-
-	public void updateReExhibitionRequestCount(Long galleryId) {
-		final Gallery gallery = galleryRepository.findById(galleryId)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
-		gallery.incrementReExhibitionRequestCount();
-
-		if (gallery.getReExhibitionRequestCount() > REEXHIBITION_REQUEST_COUNT) {
-			exhibitionNotificationService.sendReExhibitionRequestNotification(galleryId);
-			gallery.resetReExhibitionRequestCount();
-		}
 	}
 
 	private Member findMemberByEmail(String email) {
