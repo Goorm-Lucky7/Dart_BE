@@ -43,25 +43,14 @@ public class S3Service {
 	private String cloudFrontDomain;
 
 	public String uploadFile(MultipartFile multipartFile) {
-		String originalFilename = multipartFile.getOriginalFilename();
-		String fileName = generateUniqueFilename(originalFilename);
+		String fileName = generateUniqueFilename(multipartFile.getOriginalFilename());
 
 		if (!isValidImageFile(fileName)) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_IMAGE_EXTENSION);
 		}
 
-		ObjectMetadata metadata = new ObjectMetadata();
-		metadata.setContentLength(multipartFile.getSize());
-
-		String contentType;
-		if (fileName.contains(".")) {
-			contentType = getContentTypeFromExtension(fileName);
-			if (contentType != null) {
-				metadata.setContentType(contentType);
-			}
-		}
-
 		try {
+			ObjectMetadata metadata = createMetadata(multipartFile.getSize(), getContentTypeFromExtension(fileName));
 			amazonS3.putObject(new PutObjectRequest(bucket, fileName, multipartFile.getInputStream(), metadata));
 		} catch (IOException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
@@ -71,23 +60,17 @@ public class S3Service {
 	}
 
 	public String uploadThumbnail(MultipartFile imageFile) {
-		String originalFilename = imageFile.getOriginalFilename();
-		String fileName = generateUniqueFilename(originalFilename);
+		String fileName = generateUniqueFilename(imageFile.getOriginalFilename());
 
 		try {
 			BufferedImage image = ImageIO.read(imageFile.getInputStream());
-			BufferedImage thumbnail = Thumbnails.of(image)
-				.size(THUMBNAIL_RESIZING_SIZE, THUMBNAIL_RESIZING_SIZE)
-				.asBufferedImage();
+			BufferedImage thumbnail = resizeImageIfNeeded(image);
 
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
 			ImageIO.write(thumbnail, getFileExtension(fileName), os);
 			InputStream is = new ByteArrayInputStream(os.toByteArray());
 
-			ObjectMetadata metadata = new ObjectMetadata();
-			metadata.setContentLength(os.size());
-			metadata.setContentType(getContentTypeFromExtension(fileName));
-
+			ObjectMetadata metadata = createMetadata(os.size(), getContentTypeFromExtension(fileName));
 			amazonS3.putObject(new PutObjectRequest(bucket, fileName, is, metadata));
 
 			return convertToCloudFrontUrl(fileName);
@@ -110,8 +93,7 @@ public class S3Service {
 		try {
 			URL url = new URL(fileUrl);
 			String path = url.getPath();
-			String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
-			return decodedPath.substring(1);
+			return URLDecoder.decode(path, StandardCharsets.UTF_8).substring(1);
 		} catch (MalformedURLException e) {
 			throw new BadRequestException(ErrorCode.FAIL_INTERNAL_SERVER_ERROR);
 		}
@@ -119,17 +101,40 @@ public class S3Service {
 
 	private String generateUniqueFilename(String originalFilename) {
 		String uuid = UUID.randomUUID().toString();
-		if (originalFilename.contains(".")) {
-			String extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-			return uuid + extension;
-		} else {
+		String extension = getFileExtension(originalFilename);
+		if (extension.isEmpty()) {
 			return uuid;
+		} else {
+			return uuid + "." + extension;
 		}
 	}
 
+	private ObjectMetadata createMetadata(long contentLength, String contentType) {
+		ObjectMetadata metadata = new ObjectMetadata();
+		metadata.setContentLength(contentLength);
+		if (contentType != null) {
+			metadata.setContentType(contentType);
+		}
+		return metadata;
+	}
+
+	private BufferedImage resizeImageIfNeeded(BufferedImage image) throws IOException {
+		if (isNeedsResizing(image)) {
+			return Thumbnails.of(image)
+				.size(THUMBNAIL_RESIZING_SIZE, THUMBNAIL_RESIZING_SIZE)
+				.asBufferedImage();
+		} else {
+			return image;
+		}
+	}
+
+	private boolean isNeedsResizing(BufferedImage image) {
+		return image.getWidth() > THUMBNAIL_RESIZING_SIZE || image.getHeight() > THUMBNAIL_RESIZING_SIZE;
+	}
+
 	private String getContentTypeFromExtension(String filename) {
-		String ext = getFileExtension(filename);
-		return switch (ext.toLowerCase()) {
+		String ext = getFileExtension(filename).toLowerCase();
+		return switch (ext) {
 			case "jpg", "jpeg" -> "image/jpeg";
 			case "png" -> "image/png";
 			default -> null;
@@ -138,10 +143,7 @@ public class S3Service {
 
 	private String getFileExtension(String filename) {
 		int lastIndex = filename.lastIndexOf('.');
-		if (lastIndex == -1) {
-			return "";
-		}
-		return filename.substring(lastIndex + 1);
+		return (lastIndex == -1) ? "" : filename.substring(lastIndex + 1);
 	}
 
 	private String convertToCloudFrontUrl(String fileName) {
