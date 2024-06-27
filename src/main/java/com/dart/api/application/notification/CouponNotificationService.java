@@ -35,12 +35,12 @@ public class CouponNotificationService {
 		List<PriorityCoupon> priorityCouponList = getTodayCoupons();
 
 		if (priorityCouponList.isEmpty()) {
-			log.info("[✅ LOGGER] NO COUPONS STARTING TODAY");
+			log.info("[✅ LOGGER] NO LIVE COUPONS STARTING TODAY");
 			return;
 		}
 
 		final String couponTitles = priorityCouponList.get(0).getTitle();
-		final String couponDetails = "COUPON '" + couponTitles + "' IS NOW AVAILABLE";
+		final String couponDetails = "LIVE COUPON '" + couponTitles + "' IS NOW AVAILABLE";
 
 		sendCouponEventToAllNotification(couponDetails);
 	}
@@ -51,19 +51,19 @@ public class CouponNotificationService {
 	}
 
 	private void sendCouponEventToAllNotification(String couponDetails) {
-		sseSessionRepository.sendEventToAll(couponDetails, NotificationType.COUPON_START.getName());
-		log.info("[✅ LOGGER] COUPON START NOTIFICATION SENT: {}", couponDetails);
+		sseSessionRepository.sendEventToAll(couponDetails, NotificationType.LIVE.getName());
+		log.info("[✅ LOGGER] LIVE COUPON START NOTIFICATION SENT: {}", couponDetails);
 
 		saveCommonNotification(couponDetails);
 	}
 
 	private void saveCommonNotification(String message) {
-		if (notificationRepository.existsByNotificationType(NotificationType.COUPON_START)) {
-			log.info("[✅ LOGGER] DUPLICATE COUPON START NOTIFICATION DETECTED: {}", message);
+		if (notificationRepository.existsByNotificationType(NotificationType.LIVE)) {
+			log.info("[✅ LOGGER] DUPLICATE LIVE COUPON START NOTIFICATION DETECTED: {}", message);
 			return;
 		}
 
-		final Notification notification = Notification.createNotification(message, NotificationType.COUPON_START);
+		final Notification notification = Notification.createNotification(message, NotificationType.LIVE);
 		notificationRepository.save(notification);
 	}
 }

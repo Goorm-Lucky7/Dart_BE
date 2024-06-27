@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public enum NotificationType {
 
-	COUPON_START("쿠폰 발행"),
-	REEXHIBITION_REQUEST("재전시 요청");
+	LIVE("실시간 쿠폰 이벤트"),
+	COUPON("쿠폰 발행");
 
 	private final String name;
 }

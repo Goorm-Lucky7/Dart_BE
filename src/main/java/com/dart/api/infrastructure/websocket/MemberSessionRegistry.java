@@ -16,10 +16,8 @@ public class MemberSessionRegistry {
 
 	private final Map<String, MemberSessionDto> memberSessionRegistry = new ConcurrentHashMap<>();
 
-	public void addSession(String nickname, String sessionId, String destination, String profileImageUrl) {
-		removeSessionByNicknameAndDestination(nickname, destination);
-
-		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination, profileImageUrl);
+	public void addSession(String nickname, String sessionId, String destination, String profileImageURL) {
+		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination, profileImageURL);
 		memberSessionRegistry.put(sessionId, memberSessionDto);
 
 		log.info("[✅ LOGGER] SESSION ADDED: {}", memberSessionDto);
@@ -41,10 +39,9 @@ public class MemberSessionRegistry {
 		return members;
 	}
 
-	private void removeSessionByNicknameAndDestination(String nickname, String destination) {
+	public void removeSessionByNickname(String nickname) {
 		memberSessionRegistry.entrySet().removeIf(memberSessionEntry ->
-			memberSessionEntry.getValue().nickname().equals(nickname) &&
-			memberSessionEntry.getValue().destination().equals(destination)
+			memberSessionEntry.getValue().nickname().equals(nickname)
 		);
 	}
 }
