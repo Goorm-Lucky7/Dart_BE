@@ -20,13 +20,14 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.global.common.util.ClockHolder;
-import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -48,33 +49,35 @@ public class PriorityCouponManageService {
 
 		final PriorityCoupon priorityCoupon = optionalCoupon.get();
 		final int maxCount = priorityCoupon.getStock();
+		final Long couponId = priorityCoupon.getId();
 		final int currentCount = priorityCouponRedisRepository.getCount(priorityCoupon.getId());
 
-		if (maxCount <= currentCount) {
-			return;
-		}
-
-		final Set<String> emails = priorityCouponRedisRepository
+		final Set<Long> membersId = priorityCouponRedisRepository
 			.rangeQueue(priorityCoupon.getId(), currentCount, currentCount + TEN_PERSON);
 
-		if (emails.isEmpty()) {
+		if (membersId.isEmpty()) {
 			return;
 		}
 
-		success(emails, priorityCoupon);
-		priorityCouponRedisRepository.increase(priorityCoupon.getId(), emails.size());
-	}
+		for (Long memberId : membersId) {
+			int rank = priorityCouponRedisRepository.rankQueue(couponId, memberId);
 
-	private void success(Set<String> emails, PriorityCoupon priorityCoupon) {
-		for (String email : emails) {
-			final Member member = memberRepository.findByEmail(email)
+			if (maxCount <= rank) {
+				log.info("재고 부족");
+				priorityCouponRedisRepository.increase(priorityCoupon.getId(), 1);
+				continue;
+			}
+
+			final Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
 			priorityCouponWalletRepository.save(PriorityCouponWallet.create(priorityCoupon, member));
+			priorityCouponRedisRepository.increase(priorityCoupon.getId(), 1);
+			log.info("이벤트 성공");
 		}
 	}
 
-	public void registerQueue(PriorityCouponPublishDto dto, String email) {
+	public void registerQueue(PriorityCouponPublishDto dto, Long memberId) {
 		final LocalDate nowDate = LocalDate.now();
 		final LocalDateTime nowDateTime = LocalDateTime.now();
 		final PriorityCoupon priorityCoupon = priorityCouponCacheService.getByIdAndStartAt(dto.priorityCouponId(),
@@ -83,20 +86,14 @@ public class PriorityCouponManageService {
 		final double registerTime = System.currentTimeMillis();
 		final long expiredTime = Duration.between(nowDateTime, endDateTime).getSeconds();
 
-		validateRegisterQueue(priorityCoupon, email);
-		priorityCouponRedisRepository.addIfAbsentQueue(dto.priorityCouponId(), email, registerTime, expiredTime);
+		validateRegisterQueue(priorityCoupon, memberId);
+		priorityCouponRedisRepository.addIfAbsentQueue(dto.priorityCouponId(), memberId, registerTime, expiredTime);
 	}
 
-	private void validateRegisterQueue(PriorityCoupon priorityCoupon, String email) {
-		if (priorityCouponRedisRepository.hasValue(priorityCoupon.getId(), email)) {
+	private void validateRegisterQueue(PriorityCoupon priorityCoupon, Long memberId) {
+		if (priorityCouponRedisRepository.hasValue(priorityCoupon.getId(), memberId)) {
+			log.info("이미 발급 요청");
 			throw new ConflictException(ErrorCode.FAIL_COUPON_CONFLICT);
-		}
-
-		final int maxCount = priorityCoupon.getStock();
-		final int sizeQueue = priorityCouponRedisRepository.sizeQueue(priorityCoupon.getId());
-
-		if (maxCount <= sizeQueue) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_STOCK_END);
 		}
 	}
 }
