@@ -16,12 +16,9 @@ import com.dart.api.domain.coupon.entity.PriorityCoupon;
 import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.ConflictException;
-import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @RequiredArgsConstructor
 public class PriorityCouponManageService {
-	private final MemberRepository memberRepository;
 	private final PriorityCouponWalletRepository priorityCouponWalletRepository;
 	private final PriorityCouponRedisRepository priorityCouponRedisRepository;
 	private final PriorityCouponCacheService priorityCouponCacheService;
@@ -59,20 +55,21 @@ public class PriorityCouponManageService {
 			return;
 		}
 
+		decideEvent(membersId, couponId, maxCount, priorityCoupon);
+	}
+
+	private void decideEvent(Set<Long> membersId, Long couponId, int maxCount, PriorityCoupon priorityCoupon) {
 		for (Long memberId : membersId) {
-			int rank = priorityCouponRedisRepository.rankQueue(couponId, memberId);
+			final int rank = priorityCouponRedisRepository.rankQueue(couponId, memberId);
 
 			if (maxCount <= rank) {
 				log.info("재고 부족");
-				priorityCouponRedisRepository.increase(priorityCoupon.getId(), 1);
+				priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
 				continue;
 			}
 
-			final Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
-
-			priorityCouponWalletRepository.save(PriorityCouponWallet.create(priorityCoupon, member));
-			priorityCouponRedisRepository.increase(priorityCoupon.getId(), 1);
+			priorityCouponWalletRepository.save(PriorityCouponWallet.create(priorityCoupon, memberId));
+			priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
 			log.info("이벤트 성공");
 		}
 	}
