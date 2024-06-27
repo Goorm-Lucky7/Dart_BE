@@ -13,5 +13,6 @@ import com.dart.api.domain.member.entity.Member;
 public interface PriorityCouponWalletRepository extends JpaRepository<PriorityCouponWallet, Long> {
 	List<PriorityCouponWallet> findByMemberAndIsUsedFalse(Member member);
 
-	Optional<PriorityCouponWallet> findByIdAndMemberIdAndIsUsedFalse(Long id, Long memberId);
+	Optional<PriorityCouponWallet> findByMemberIdAndPriorityCouponIdAndIsUsedFalse(Long memberId,
+		Long priorityCouponId);
 }

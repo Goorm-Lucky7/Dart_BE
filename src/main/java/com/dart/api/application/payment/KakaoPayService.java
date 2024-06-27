@@ -156,13 +156,13 @@ public class KakaoPayService {
 		}
 
 		if (dto.isPriority()) {
-			final PriorityCouponWallet priorityCouponWallet = findPriorityCouponWallet(dto.couponId(), memberId);
+			final PriorityCouponWallet priorityCouponWallet = findPriorityCouponWallet(memberId, dto.couponId());
 
 			return calculateWithCoupon(dto.order(), gallery,
 				priorityCouponWallet.getPriorityCoupon().getCouponType().getValue());
 		}
 
-		final GeneralCouponWallet generalCouponWallet = findGeneralCouponWallet(dto.couponId(), memberId);
+		final GeneralCouponWallet generalCouponWallet = findGeneralCouponWallet(memberId, dto.couponId());
 
 		return calculateWithCoupon(dto.order(), gallery,
 			generalCouponWallet.getGeneralCoupon().getCouponType().getValue());
@@ -218,15 +218,15 @@ public class KakaoPayService {
 		return String.valueOf((int)((double)(100 - couponValue) / 100 * gallery.getGeneratedCost()));
 	}
 
-	private PriorityCouponWallet findPriorityCouponWallet(Long couponId, Long memberId) {
+	private PriorityCouponWallet findPriorityCouponWallet(Long memberId, Long couponId) {
 		return priorityCouponWalletRepository
-			.findByIdAndMemberIdAndIsUsedFalse(couponId, memberId)
+			.findByMemberIdAndPriorityCouponIdAndIsUsedFalse(memberId, couponId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
 	}
 
-	private GeneralCouponWallet findGeneralCouponWallet(Long couponId, Long memberId) {
+	private GeneralCouponWallet findGeneralCouponWallet(Long memberId, Long couponId) {
 		return generalCouponWalletRepository
-			.findByIdAndMemberIdAndIsUsedFalse(couponId, memberId)
+			.findByMemberIdAndGeneralCouponIdAndIsUsedFalse(memberId, couponId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
 	}
 }
