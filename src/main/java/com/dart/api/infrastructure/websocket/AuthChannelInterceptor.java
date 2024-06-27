@@ -36,6 +36,8 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
+		log.info("[✅ LOGGER] STOMP Command: {}", stompHeaderAccessor.getCommand());
+
 		if (isConnectCommand(stompHeaderAccessor)) {
 			final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
 			final String accessToken = extractToken(authorizationHeader);
@@ -46,6 +48,10 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 				stompHeaderAccessor.setSessionAttributes(new HashMap<>());
 			}
 			stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
+
+			stompHeaderAccessor.getSessionAttributes().forEach((key, value) -> {
+				log.info("[✅ LOGGER] Session Attribute - Key: {}, Value: {}", key, value);
+			});
 		}
 
 		return message;
