@@ -5,7 +5,6 @@ import static com.dart.global.common.util.ChatConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.util.HashMap;
-import java.util.Objects;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -36,10 +35,9 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
 
-		log.info("[✅ LOGGER] STOMP Command: {}", stompHeaderAccessor.getCommand());
-
 		if (isConnectCommand(stompHeaderAccessor)) {
 			final String authorizationHeader = stompHeaderAccessor.getFirstNativeHeader(ACCESS_TOKEN_HEADER);
+
 			final String accessToken = extractToken(authorizationHeader);
 			validateAuthenticateToken(accessToken);
 
@@ -48,17 +46,13 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 				stompHeaderAccessor.setSessionAttributes(new HashMap<>());
 			}
 			stompHeaderAccessor.getSessionAttributes().put(CHAT_SESSION_USER, authUser);
-
-			stompHeaderAccessor.getSessionAttributes().forEach((key, value) -> {
-				log.info("[✅ LOGGER] Session Attribute - Key: {}, Value: {}", key, value);
-			});
 		}
 
 		return message;
 	}
 
 	private boolean isConnectCommand(StompHeaderAccessor stompHeaderAccessor) {
-		return Objects.equals(StompCommand.CONNECT, stompHeaderAccessor.getCommand());
+		return stompHeaderAccessor.getCommand().equals(StompCommand.CONNECT);
 	}
 
 	private String extractToken(String authorizationHeader) {
