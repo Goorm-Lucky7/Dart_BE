@@ -23,14 +23,11 @@ import com.dart.api.domain.coupon.entity.PriorityCoupon;
 import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.support.CouponFixture;
-import com.dart.support.MemberFixture;
 
 @ExtendWith({MockitoExtension.class})
 class PriorityCouponManageServiceTest {
@@ -42,9 +39,6 @@ class PriorityCouponManageServiceTest {
 
 	@Mock
 	private PriorityCouponWalletRepository priorityCouponWalletRepository;
-
-	@Mock
-	private MemberRepository memberRepository;
 
 	@Mock
 	private ClockHolder clockHolder;
@@ -64,17 +58,11 @@ class PriorityCouponManageServiceTest {
 		given(priorityCouponRedisRepository.rangeQueue(eq(priorityCoupon.getId()), any(long.class), any(long.class)))
 			.willReturn(values);
 
-		values.forEach(id -> {
-			Member mockMember = MemberFixture.createMemberEntity();
-			given(memberRepository.findById(id)).willReturn(Optional.of(mockMember));
-		});
-
 		// When
 		priorityCouponManageService.publish();
 
 		// Then
 		verify(priorityCouponWalletRepository, times(10)).save(any(PriorityCouponWallet.class));
-		verify(memberRepository, times(10)).findById(any(Long.class));
 	}
 
 	@DisplayName("현재 발행 가능한 쿠폰이 없다.")
