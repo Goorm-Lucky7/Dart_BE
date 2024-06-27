@@ -44,7 +44,7 @@ class AuthChannelInterceptorTest {
 		String accessToken = "testValidAccessToken";
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 
-		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.SEND);
+		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
 		stompHeaderAccessor.setNativeHeader(ACCESS_TOKEN_HEADER, BEARER + BLANK + accessToken);
 		stompHeaderAccessor.setSessionAttributes(new HashMap<>());
 
@@ -68,7 +68,7 @@ class AuthChannelInterceptorTest {
 		// GIVEN
 		String accessToken = "testValidAccessToken";
 
-		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.SEND);
+		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
 		stompHeaderAccessor.setNativeHeader(ACCESS_TOKEN_HEADER, BEARER + BLANK + accessToken);
 		stompHeaderAccessor.setSessionAttributes(new HashMap<>());
 
