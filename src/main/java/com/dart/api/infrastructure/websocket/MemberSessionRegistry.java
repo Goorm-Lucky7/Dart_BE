@@ -16,8 +16,8 @@ public class MemberSessionRegistry {
 
 	private final Map<String, MemberSessionDto> memberSessionRegistry = new ConcurrentHashMap<>();
 
-	public void addSession(String nickname, String sessionId, String destination, String profileImageURL) {
-		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination, profileImageURL);
+	public void addSession(String nickname, String sessionId, String destination) {
+		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination);
 		memberSessionRegistry.put(sessionId, memberSessionDto);
 
 		log.info("[✅ LOGGER] SESSION ADDED: {}", memberSessionDto);
@@ -29,9 +29,10 @@ public class MemberSessionRegistry {
 		log.info("[✅ LOGGER] SESSION REMOVED: sessionId={}", sessionId);
 	}
 
-	public List<MemberSessionDto> getMembersInChatRoom(String destination) {
-		List<MemberSessionDto> members = memberSessionRegistry.values().stream()
+	public List<String> getMembersInChatRoom(String destination) {
+		List<String> members = memberSessionRegistry.values().stream()
 			.filter(session -> session.destination().equals(destination))
+			.map(MemberSessionDto::nickname)
 			.toList();
 
 		log.info("[✅ LOGGER] MEMBERS IN {}: {}", destination, members);
