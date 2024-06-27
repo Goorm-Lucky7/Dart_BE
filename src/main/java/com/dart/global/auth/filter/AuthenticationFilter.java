@@ -3,6 +3,8 @@ package com.dart.global.auth.filter;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String PATH_API_TOKEN_REISSUE = "/api/reissue";
+	private static final String WEBSOCKET_PATH_PREFIX = "/ws/";
 
 	private final JwtProviderService jwtProviderService;
 	private final HandlerExceptionResolver handlerExceptionResolver;
@@ -43,8 +47,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		@NotNull HttpServletRequest request,
 		@NotNull HttpServletResponse response,
 		@NotNull FilterChain filterChain
-	) {
+	) throws ServletException, IOException {
 		String requestURI = request.getRequestURI();
+
+		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
+
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
 
 		try {
