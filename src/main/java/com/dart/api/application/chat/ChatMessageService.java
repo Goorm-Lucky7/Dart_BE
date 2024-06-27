@@ -8,7 +8,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
@@ -92,15 +91,15 @@ public class ChatMessageService {
 	}
 
 	private List<ChatMessageReadDto> fetchChatMessagesFromDBAndCache(Long chatRoomId, int page, int size) {
-		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
-
-		final Pageable pageable = PageRequest.of(page, size, Sort.by(SORT_FIELD_CREATED_AT).descending());
-		final Page<ChatMessage> mySQLChatMessages = chatMessageRepository.findByChatRoom(chatRoom, pageable);
+		final Pageable pageable = PageRequest.of(page, size);
+		final Page<ChatMessage> mySQLChatMessages =
+			chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable);
 
 		final List<ChatMessageReadDto> mySQLChatMessageReadDtoList = mySQLChatMessages.stream()
 			.map(ChatMessage::toChatMessageReadDto)
 			.toList();
 
+		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		cachingChatMessages(chatRoom, mySQLChatMessageReadDtoList);
 
 		return mySQLChatMessageReadDtoList;
