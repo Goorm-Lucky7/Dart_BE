@@ -50,7 +50,7 @@ public class PriorityCouponWallet extends BaseTimeEntity {
 
 	public MyCouponDetail toDetail() {
 		return MyCouponDetail.builder()
-			.couponId(this.id)
+			.couponId(this.priorityCoupon.getId())
 			.title(this.priorityCoupon.getTitle())
 			.couponType(this.priorityCoupon.getCouponType().getValue())
 			.isPriority(true)
