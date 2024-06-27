@@ -16,6 +16,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 
+import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -67,6 +68,26 @@ class WebSocketErrorHandlerTest {
 		assertEquals(StompCommand.ERROR, accessor.getCommand());
 		assertEquals(
 			"[❎ ERROR] 로그인이 필요한 기능입니다.",
+			new String(errorMessage.getPayload(), StandardCharsets.UTF_8));
+	}
+
+	@Test
+	@DisplayName("HANDLE CLIENT MESSAGE PROCESSING ERROR(⭕️ SUCCESS): NotFound 예외를 처리하여 클라이언트 메시지 처리 오류를 성공적으로 핸들링했습니다.")
+	void handleClientMessageProcessingError_NotFoundException_success() {
+		// GIVEN
+		NotFoundException notFoundException = new NotFoundException(ErrorCode.FAIL_INVALID_TOKEN);
+		Throwable throwable = new Throwable(notFoundException);
+
+		// WHEN
+		Message<byte[]> errorMessage = webSocketErrorHandler.handleClientMessageProcessingError(
+			clientMessage,
+			throwable);
+
+		// THEN
+		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(errorMessage);
+		assertEquals(StompCommand.ERROR, accessor.getCommand());
+		assertEquals(
+			"[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요.",
 			new String(errorMessage.getPayload(), StandardCharsets.UTF_8));
 	}
 
