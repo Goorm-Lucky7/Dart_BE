@@ -44,7 +44,8 @@ public class ChatMessageService {
 
 	@Transactional
 	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto,
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
+		SimpMessageHeaderAccessor simpMessageHeaderAccessor
+	) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final AuthUser authUser = extractAuthUserEmail(simpMessageHeaderAccessor);
 		final Member member = getMemberByEmail(authUser.email());
@@ -91,15 +92,15 @@ public class ChatMessageService {
 	}
 
 	private List<ChatMessageReadDto> fetchChatMessagesFromDBAndCache(Long chatRoomId, int page, int size) {
+		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final Pageable pageable = PageRequest.of(page, size);
 		final Page<ChatMessage> mySQLChatMessages =
-			chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable);
+			chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(chatRoom, pageable);
 
 		final List<ChatMessageReadDto> mySQLChatMessageReadDtoList = mySQLChatMessages.stream()
 			.map(ChatMessage::toChatMessageReadDto)
 			.toList();
 
-		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		cachingChatMessages(chatRoom, mySQLChatMessageReadDtoList);
 
 		return mySQLChatMessageReadDtoList;

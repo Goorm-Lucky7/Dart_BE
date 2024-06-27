@@ -13,8 +13,6 @@ import com.dart.api.domain.chat.entity.ChatRoom;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-	Page<ChatMessage> findByChatRoom(ChatRoom chatRoom, Pageable pageable);
-
-	@Query("SELECT cm FROM ChatMessage cm WHERE cm.chatRoom.id = :chatRoomId ORDER BY cm.createdAt DESC")
-	Page<ChatMessage> findByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+	@Query("SELECT cm FROM ChatMessage cm WHERE cm.chatRoom = :chatRoom ORDER BY cm.createdAt DESC")
+	Page<ChatMessage> findByChatRoomOrderByCreatedAtDesc(@Param("chatRoom") ChatRoom chatRoom, Pageable pageable);
 }
