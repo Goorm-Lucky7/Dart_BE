@@ -27,9 +27,9 @@ public class GalleryProgressService {
 	}
 
 	public void sendProgress(Long clientId, int progress) {
-		sseSessionRepository.sendEvent(clientId, progress, "Progress Update");
+		sseSessionRepository.sendEvent(clientId, progress, GALLERY_CREATE_UPDATE_PROGRESS);
 		if (progress == ONE_HUNDRED_PERCENT) {
-			sseSessionRepository.deleteSSEEmitterByClientId(clientId);
+			sseSessionRepository.completeSSEEmitter(clientId);
 		}
 	}
 
