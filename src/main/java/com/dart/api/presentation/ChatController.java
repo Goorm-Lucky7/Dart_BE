@@ -47,7 +47,7 @@ public class ChatController {
 	}
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
-	public ResponseEntity<List<MemberSessionDto>> getLoggedInVisitors(@PathVariable("chat-room-id") Long chatRoomId) {
+	public ResponseEntity<List<String>> getLoggedInVisitors(@PathVariable("chat-room-id") Long chatRoomId) {
 		return ResponseEntity.ok(memberSessionRegistry.getMembersInChatRoom("/sub/ws/" + chatRoomId));
 	}
 }

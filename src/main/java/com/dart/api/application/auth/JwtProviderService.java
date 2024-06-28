@@ -12,6 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.global.error.exception.NotFoundException;
+import com.dart.global.error.exception.UnauthorizedException;
+import com.dart.global.error.model.ErrorCode;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -22,18 +28,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.exception.UnauthorizedException;
-import com.dart.global.error.model.ErrorCode;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtProviderService {
 
+	private static final String ID = "id";
 	private static final String EMAIL = "email";
 	private static final String NICKNAME = "nickname";
 	private static final String PROFILE_IMAGE = "profileImage";
@@ -56,8 +57,9 @@ public class JwtProviderService {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateAccessToken(String email, String nickname, String profileImage) {
+	public String generateAccessToken(Long id, String email, String nickname, String profileImage) {
 		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
+			.claim(ID, id)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
@@ -77,7 +79,8 @@ public class JwtProviderService {
 		final Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
-		return generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		return generateAccessToken(member.getId(), member.getEmail(), member.getNickname(),
+			member.getProfileImageUrl());
 	}
 
 	public String extractToken(String header, HttpServletRequest request) {
@@ -93,7 +96,8 @@ public class JwtProviderService {
 
 	public AuthUser extractAuthUserByAccessToken(String token) {
 		final Claims claims = getClaimsByToken(token);
-		return AuthUser.create(claims.get(EMAIL, String.class), claims.get(NICKNAME, String.class));
+		return AuthUser.create(claims.get(ID, Long.class), claims.get(EMAIL, String.class),
+			claims.get(NICKNAME, String.class));
 	}
 
 	public boolean isUsable(String token) {
@@ -120,9 +124,7 @@ public class JwtProviderService {
 		return Jwts.builder()
 			.issuedAt(issuedDate)
 			.expiration(expiredDate)
-			.signWith(secretKey, Jwts.SIG.HS256)
-			.setHeaderParam("alg", "HS256")
-			.setHeaderParam("typ", "JWT");
+			.signWith(secretKey, Jwts.SIG.HS256);
 	}
 
 	private Claims getClaimsByToken(String token) {

@@ -32,7 +32,7 @@ public class ReviewService {
 	private final MemberRepository memberRepository;
 
 	public void create(ReviewCreateDto dto, AuthUser authUser) {
-		final Member member = memberRepository.findByEmail(authUser.email())
+		final Member member = memberRepository.findById(authUser.id())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
