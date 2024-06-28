@@ -1,5 +1,6 @@
 package com.dart.api.application.member;
 
+import static com.dart.global.common.util.RedisConstant.*;
 import static java.lang.Boolean.*;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.gallery.repository.TrieRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.MemberUpdateDto;
@@ -35,6 +37,7 @@ public class MemberService {
 	private final EmailRedisRepository emailRedisRepository;
 	private final NicknameRedisRepository nicknameRedisRepository;
 	private final SessionRedisRepository sessionRedisRepository;
+	private final TrieRedisRepository trieRedisRepository;
 
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
@@ -66,18 +69,21 @@ public class MemberService {
 	}
 
 	@Transactional
-	public void updateMemberProfile(
+	public void updateProfile(
 		AuthUser authUser,
 		MemberUpdateDto memberUpdateDto,
 		MultipartFile profileImage,
 		String sessionId) {
 
 		Member member = findMemberByEmail(authUser.email());
-		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+		String newNickname = memberUpdateDto.nickname();
+		String currentNickname = member.getNickname();
+
+		validateNickname(newNickname, currentNickname, sessionId);
 		String newProfileImageUrl = handleProfileImageUpdate(profileImage, member.getProfileImageUrl());
+		handleNicknameUpdate(newNickname, currentNickname, sessionId);
 
 		member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
-		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
 	}
 
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
@@ -108,6 +114,8 @@ public class MemberService {
 		if (newNickname != null && !newNickname.equals(currentNickname)) {
 			sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
 			nicknameRedisRepository.deleteNickname(newNickname);
+			trieRedisRepository.remove(AUTHOR, currentNickname);
+			trieRedisRepository.insert(AUTHOR, newNickname);
 		}
 	}
 

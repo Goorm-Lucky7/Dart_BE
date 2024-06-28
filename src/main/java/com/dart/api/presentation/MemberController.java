@@ -75,7 +75,7 @@ public class MemberController {
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
-		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId);
+		memberService.updateProfile(authUser, memberUpdateDto, profileImage, sessionId);
 		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
