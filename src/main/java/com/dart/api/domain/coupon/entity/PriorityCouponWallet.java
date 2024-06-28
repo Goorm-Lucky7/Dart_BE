@@ -1,6 +1,5 @@
 package com.dart.api.domain.coupon.entity;
 
-import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.coupon.response.MyCouponDetail;
 import com.dart.global.common.entity.BaseTimeEntity;
 
@@ -27,25 +26,24 @@ public class PriorityCouponWallet extends BaseTimeEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "priority_coupon_id")
-	private PriorityCoupon priorityCoupon;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
-	private Member member;
+	@Column(name = "member_id", updatable = false, nullable = false)
+	private Long memberId;
 
 	@Column(name = "is_used")
 	private boolean isUsed;
 
-	public PriorityCouponWallet(PriorityCoupon priorityCoupon, Member member) {
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "priority_coupon_id")
+	private PriorityCoupon priorityCoupon;
+
+	public PriorityCouponWallet(PriorityCoupon priorityCoupon, Long memberId) {
 		this.priorityCoupon = priorityCoupon;
-		this.member = member;
+		this.memberId = memberId;
 		this.isUsed = false;
 	}
 
-	public static PriorityCouponWallet create(PriorityCoupon priorityCoupon, Member member) {
-		return new PriorityCouponWallet(priorityCoupon, member);
+	public static PriorityCouponWallet create(PriorityCoupon priorityCoupon, Long memberId) {
+		return new PriorityCouponWallet(priorityCoupon, memberId);
 	}
 
 	public MyCouponDetail toDetail() {

@@ -93,7 +93,7 @@ class CouponServiceTest {
 		Member member = MemberFixture.createMemberEntity();
 
 		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.ofNullable(member));
-		given(priorityCouponWalletRepository.findByMemberAndIsUsedFalse(any(Member.class))).willReturn(
+		given(priorityCouponWalletRepository.findByMemberIdAndIsUsedFalse(member.getId())).willReturn(
 			priorityCouponWallets);
 		given(generalCouponWalletRepository.findByMemberAndIsUsedFalse(any(Member.class))).willReturn(
 			generalCouponWallets);

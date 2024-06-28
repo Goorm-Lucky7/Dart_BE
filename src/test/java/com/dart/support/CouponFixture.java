@@ -41,7 +41,7 @@ public class CouponFixture {
 	}
 
 	public static List<PriorityCouponWallet> createPriorityCouponWalletList() {
-		return List.of(PriorityCouponWallet.create(createPriorityCoupon(), MemberFixture.createMemberEntity()));
+		return List.of(PriorityCouponWallet.create(createPriorityCoupon(), 1L));
 	}
 
 	public static List<GeneralCouponWallet> createGeneralCouponWalletList() {
