@@ -97,7 +97,7 @@ public class GalleryService {
 
 		waitPayment(gallery);
 
-		addKeywordsToTrie(createGalleryDto, authUser);
+		addKeywordsToRedis(createGalleryDto, authUser.nickname());
 
 		return gallery.toReadIdDto();
 	}
@@ -196,6 +196,7 @@ public class GalleryService {
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
 		hashtagService.deleteHashtagsByGallery(gallery);
+		removeKeywordsFromRedis(gallery);
 		deleteGallery(gallery);
 	}
 
@@ -371,16 +372,21 @@ public class GalleryService {
 		}
 	}
 
-	private void addKeywordsToTrie(CreateGalleryDto createGalleryDto, AuthUser authUser) {
-		List<String> titles = createGalleryDto.informations().stream()
-			.map(ImageInfoDto::imageTitle)
-			.collect(Collectors.toList());
-
+	private void addKeywordsToRedis(CreateGalleryDto createGalleryDto, String nickname) {
+		String title = createGalleryDto.title();
 		List<String> hashtags = createGalleryDto.hashtags();
-		String author = authUser.nickname();
 
-		titles.forEach(title -> trieRedisRepository.insert(TITLE, title));
-		trieRedisRepository.insert(AUTHOR, author);
+		trieRedisRepository.insert(TITLE, title);
+		trieRedisRepository.insert(AUTHOR, nickname);
 		hashtags.forEach(hashtag -> trieRedisRepository.insert(HASHTAG, hashtag));
+	}
+
+	private void removeKeywordsFromRedis(Gallery gallery) {
+		String title = gallery.getTitle();
+		List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
+
+		trieRedisRepository.remove(TITLE, title);
+		trieRedisRepository.remove(AUTHOR, gallery.getMember().getNickname());
+		hashtags.forEach(hashtag -> trieRedisRepository.remove(HASHTAG, hashtag));
 	}
 }
