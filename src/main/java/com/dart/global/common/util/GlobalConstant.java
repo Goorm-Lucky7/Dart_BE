@@ -29,4 +29,8 @@ public class GlobalConstant {
 	public static final int ONE_HUNDRED_PERCENT = 100;
 
 	public static final int INCREMENT_BY_ONE = 1;
+
+	public static final int FIRST_SORT = 0;
+
+	public static final int SECOND_SORT = 1;
 }
