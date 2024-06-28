@@ -20,6 +20,7 @@ import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.api.domain.auth.repository.EmailRedisRepository;
 import com.dart.api.domain.auth.repository.NicknameRedisRepository;
 import com.dart.api.domain.auth.repository.SessionRedisRepository;
+import com.dart.api.dto.member.response.MemberSimpleProfileResDto;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -66,7 +67,7 @@ public class MemberService {
 	}
 
 	@Transactional
-	public void updateMemberProfile(
+	public MemberSimpleProfileResDto updateMemberProfile(
 		AuthUser authUser,
 		MemberUpdateDto memberUpdateDto,
 		MultipartFile profileImage,
@@ -78,6 +79,8 @@ public class MemberService {
 
 		member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
 		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+
+		return new MemberSimpleProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
@@ -163,8 +166,8 @@ public class MemberService {
 	}
 
 	private void validateMemberExistsByNickname(String nickname) {
-		if (memberRepository.existsByEmail(nickname)) {
-			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
+		if (memberRepository.existsByNickname(nickname)) {
+			throw new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND);
 		}
 	}
 }
