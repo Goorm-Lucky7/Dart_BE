@@ -64,11 +64,8 @@ public class AuthenticationService {
 		try {
 			jwtProviderService.validateRefreshToken(refreshToken);
 			String email = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
-			Member member = memberRepository.findByEmail(email)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
-			String newAccessToken = jwtProviderService.generateAccessToken(
-				member.getId(), member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
 			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
 
 			cookieUtil.setRefreshCookie(response, newRefreshToken);
@@ -103,11 +100,6 @@ public class AuthenticationService {
 		if (!savedRefreshToken.equals(refreshToken)) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		}
-	}
-
-	private Member getMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
