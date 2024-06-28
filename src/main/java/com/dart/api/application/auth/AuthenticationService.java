@@ -67,8 +67,10 @@ public class AuthenticationService {
 			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
 			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
 
-			cookieUtil.setRefreshCookie(response, newRefreshToken);
-			response.setHeader(ACCESS_TOKEN_HEADER, BEARER + newAccessToken);
+			tokenRedisRepository.deleteToken(email);
+			tokenRedisRepository.setToken(email, newRefreshToken);
+
+			setTokensInResponse(response, BEARER + newAccessToken, refreshToken);
 
 			return new TokenResDto(newAccessToken);
 
