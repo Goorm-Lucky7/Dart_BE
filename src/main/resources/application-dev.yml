@@ -13,6 +13,11 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE}
+      connection-timeout: ${DATASOURCE_HIKARI_CONNECTION_TIMEOUT}
+      idle-timeout: ${DATASOURCE_HIKARI_IDLE_TIMEOUT}
+      max-lifetime: ${DATASOURCE_HIKARI_MAX_LIFETIME}
 
   security:
     oauth2:
@@ -38,6 +43,7 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
+    open-in-view: ${JPA_OPEN_IN_VIEW}
 
   mail:
     host: ${SPRING_MAIL_HOST}
