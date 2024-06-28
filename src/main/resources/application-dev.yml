@@ -39,11 +39,11 @@ spring:
             user-name-attribute: id
 
   jpa:
-    open-in-view: false
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
     hibernate:
       ddl-auto: update
+    open-in-view: false
 
   mail:
     host: ${SPRING_MAIL_HOST}
