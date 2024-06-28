@@ -34,7 +34,6 @@ import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.domain.review.repository.ReviewRepository;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.request.DeleteGalleryDto;
-import com.dart.api.dto.gallery.request.ImageInfoDto;
 import com.dart.api.dto.gallery.response.GalleryAllResDto;
 import com.dart.api.dto.gallery.response.GalleryInfoDto;
 import com.dart.api.dto.gallery.response.GalleryMypageResDto;
