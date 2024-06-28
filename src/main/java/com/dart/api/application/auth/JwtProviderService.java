@@ -170,8 +170,6 @@ public class JwtProviderService {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
 		} catch (IllegalArgumentException e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
-		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
 		}
 	}
 }
