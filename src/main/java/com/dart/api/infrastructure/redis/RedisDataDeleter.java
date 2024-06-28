@@ -35,7 +35,6 @@ public class RedisDataDeleter {
 
 				if (!keys.isEmpty()) {
 					jedis.del(keys.toArray(new String[0]));
-				} else {
 				}
 			}
 		}
