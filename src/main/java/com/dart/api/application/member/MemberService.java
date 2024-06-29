@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.gallery.repository.TrieRedisRepository;
+import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.MemberUpdateDto;
@@ -37,7 +37,7 @@ public class MemberService {
 	private final EmailRedisRepository emailRedisRepository;
 	private final NicknameRedisRepository nicknameRedisRepository;
 	private final SessionRedisRepository sessionRedisRepository;
-	private final TrieRedisRepository trieRedisRepository;
+	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
@@ -114,8 +114,8 @@ public class MemberService {
 		if (newNickname != null && !newNickname.equals(currentNickname)) {
 			sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
 			nicknameRedisRepository.deleteNickname(newNickname);
-			trieRedisRepository.remove(AUTHOR, currentNickname);
-			trieRedisRepository.insert(AUTHOR, newNickname);
+			autocompleteRedisRepository.remove(AUTHOR, currentNickname);
+			autocompleteRedisRepository.insert(AUTHOR, newNickname);
 		}
 	}
 

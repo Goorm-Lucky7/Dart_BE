@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.dart.api.domain.gallery.repository.TrieRedisRepository;
+import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -13,11 +13,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AutocompleteService {
 
-	private final TrieRedisRepository trieRedisRepository;
+	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	@Cacheable(value = "autocompleteCache", key = "#category + '_' + #keyword")
 	public List<String> autocomplete(String category, String keyword) {
-		List<String> results = trieRedisRepository.search(category, keyword);
+		List<String> results = autocompleteRedisRepository.search(category, keyword);
 		return results;
 	}
 }

@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class TrieRedisRepository {
+public class AutocompleteRedisRepository {
 
 	private static final int MAX_SEARCH_RESULTS = 10;
 	private static final int INITIAL_SCORE = 1;

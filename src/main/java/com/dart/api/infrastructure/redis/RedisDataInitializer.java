@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.gallery.repository.HashtagRepository;
-import com.dart.api.domain.gallery.repository.TrieRedisRepository;
+import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class RedisDataInitializer {
 
 	private final GalleryRepository galleryRepository;
 	private final HashtagRepository hashtagRepository;
-	private final TrieRedisRepository trieRedisRepository;
+	private final AutocompleteRedisRepository autocompleteRedisRepository;
 	private final RedisKeyPatternDeleter redisKeyPatternDeleter;
 
 	@EventListener(ApplicationReadyEvent.class)
@@ -47,14 +47,14 @@ public class RedisDataInitializer {
 	}
 
 	private void insertGalleryData(Gallery gallery) {
-		trieRedisRepository.insert(AUTHOR, gallery.getMember().getNickname());
-		trieRedisRepository.insert(TITLE, gallery.getTitle());
+		autocompleteRedisRepository.insert(AUTHOR, gallery.getMember().getNickname());
+		autocompleteRedisRepository.insert(TITLE, gallery.getTitle());
 		insertHashtags(gallery);
 	}
 
 	private void insertHashtags(Gallery gallery) {
 		hashtagRepository.findByGallery(gallery).forEach(hashtag ->
-			trieRedisRepository.insert(HASHTAG, hashtag.getTag())
+			autocompleteRedisRepository.insert(HASHTAG, hashtag.getTag())
 		);
 	}
 }
