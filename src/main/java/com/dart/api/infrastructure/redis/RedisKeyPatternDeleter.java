@@ -5,12 +5,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.RedisConfiguration;
 import org.springframework.stereotype.Component;
 
-import com.dart.global.config.RedisConfig;
 
-import lombok.RequiredArgsConstructor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.ScanParams;
 import redis.clients.jedis.resps.ScanResult;

@@ -2,7 +2,6 @@ package com.dart.api.infrastructure.redis;
 
 import static com.dart.global.common.util.RedisConstant.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
