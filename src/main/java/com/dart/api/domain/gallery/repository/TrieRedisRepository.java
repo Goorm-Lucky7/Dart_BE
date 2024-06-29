@@ -27,12 +27,12 @@ public class TrieRedisRepository {
 	private final ValueRedisRepository valueRedisRepository;
 	private final ZSetRedisRepository zSetRedisRepository;
 
-	public void insert(String type, String keyword) {
+	public void insert(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
 
 		for (int i = 1; i <= keyword.length(); i++) {
 			String prefix = keyword.substring(0, i);
-			String key = generateTypePrefixKey(type, prefix);
+			String key = generateCategoryPrefixKey(category, prefix);
 			Double score = CharacterProcessor.getUnicodeScore(keyword);
 
 			zSetRedisRepository.addElement(key, keyword, score);
@@ -40,10 +40,10 @@ public class TrieRedisRepository {
 		}
 	}
 
-	public List<String> search(String type, String keyword) {
+	public List<String> search(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
-		String key = generateTypePrefixKey(type, keyword);
-		String keyRemovedSpace = generateTypePrefixKey(type, keyword).trim();
+		String key = generateCategoryPrefixKey(category, keyword);
+		String keyRemovedSpace = generateCategoryPrefixKey(category, keyword).trim();
 
 		SortedSet<String> combinedSet = getCombinedSearchResults(key, keyRemovedSpace);
 
@@ -53,12 +53,12 @@ public class TrieRedisRepository {
 			.collect(Collectors.toList());
 	}
 
-	public void remove(String type, String keyword) {
+	public void remove(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
 
 		for (int i = 1; i <= keyword.length(); i++) {
 			String prefix = keyword.substring(0, i);
-			String key = generateTypePrefixKey(type, prefix);
+			String key = generateCategoryPrefixKey(category, prefix);
 
 			valueRedisRepository.increment(REDIS_COUNT_PREFIX + key, -1);
 
@@ -69,8 +69,8 @@ public class TrieRedisRepository {
 		}
 	}
 
-	private String generateTypePrefixKey(String type, String prefix) {
-		switch (type) {
+	private String generateCategoryPrefixKey(String category, String prefix) {
+		switch (category) {
 			case TITLE:
 				return REDIS_TITLE_PREFIX + prefix;
 			case AUTHOR:
@@ -78,12 +78,12 @@ public class TrieRedisRepository {
 			case HASHTAG:
 				return REDIS_HASHTAG_PREFIX + prefix;
 			default:
-				throw new NotFoundException(ErrorCode.FAIL_TYPE_NOT_FOUND);
+				throw new NotFoundException(ErrorCode.FAIL_CATEGORY_NOT_FOUND);
 		}
 	}
 
-	public boolean exists(String type, String keyword) {
-		String key = generateTypePrefixKey(type, keyword);
+	public boolean exists(String category, String keyword) {
+		String key = generateCategoryPrefixKey(category, keyword);
 		Double score = zSetRedisRepository.score(key, keyword);
 		return score != null && score > 0;
 	}
