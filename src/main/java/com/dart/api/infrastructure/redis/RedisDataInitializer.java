@@ -21,28 +21,41 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class RedisDataInitializer {
+	private static final List<String> REDIS_PATTERNS = Arrays.asList(
+		REDIS_TITLE_PREFIX, REDIS_AUTHOR_PREFIX, REDIS_HASHTAG_PREFIX);
 
 	private final GalleryRepository galleryRepository;
 	private final HashtagRepository hashtagRepository;
 	private final TrieRedisRepository trieRedisRepository;
-	private final RedisDataDeleter redisDataDeleter;
+	private final RedisKeyPatternDeleter redisKeyPatternDeleter;
 
 	@EventListener(ApplicationReadyEvent.class)
 	@Transactional
-	public void loadDataIntoRedis() {
-		clearRedisData();
-		List<Gallery> galleries = galleryRepository.findAll();
+	public void initializeRedisData() {
+		clearExistingRedisData();
+		loadGalleryDataIntoRedis();
+	}
 
+	private void clearExistingRedisData() {
+		redisKeyPatternDeleter.deleteKeysByPatterns(REDIS_PATTERNS);
+	}
+
+	private void loadGalleryDataIntoRedis() {
+		List<Gallery> galleries = galleryRepository.findAll();
 		for (Gallery gallery : galleries) {
-			trieRedisRepository.insert(AUTHOR, gallery.getMember().getNickname());
-			trieRedisRepository.insert(TITLE, gallery.getTitle());
-			hashtagRepository.findByGallery(gallery).forEach(hashtag -> {
-				trieRedisRepository.insert(HASHTAG, hashtag.getTag());
-			});
+			insertGalleryData(gallery);
 		}
 	}
-	private void clearRedisData() {
-		List<String> patterns = Arrays.asList(TITLE, AUTHOR, HASHTAG, REDIS_TOKEN_PREFIX);
-		redisDataDeleter.deleteKeysByPattern(patterns);
+
+	private void insertGalleryData(Gallery gallery) {
+		trieRedisRepository.insert(AUTHOR, gallery.getMember().getNickname());
+		trieRedisRepository.insert(TITLE, gallery.getTitle());
+		insertHashtags(gallery);
+	}
+
+	private void insertHashtags(Gallery gallery) {
+		hashtagRepository.findByGallery(gallery).forEach(hashtag ->
+			trieRedisRepository.insert(HASHTAG, hashtag.getTag())
+		);
 	}
 }

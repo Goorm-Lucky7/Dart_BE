@@ -21,11 +21,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TrieRedisRepository {
 
+	private static final int MAX_SEARCH_RESULTS = 10;
+	private static final int INITIAL_SCORE = 1;
+
 	private final ValueRedisRepository valueRedisRepository;
 	private final ZSetRedisRepository zSetRedisRepository;
 
 	public void insert(String type, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
+
 		for (int i = 1; i <= keyword.length(); i++) {
 			String prefix = keyword.substring(0, i);
 			String key = generateTypePrefixKey(type, prefix);
@@ -41,10 +45,7 @@ public class TrieRedisRepository {
 		String key = generateTypePrefixKey(type, keyword);
 		String keyRemovedSpace = generateTypePrefixKey(type, keyword).trim();
 
-		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRange(key, 0, 9));
-		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRange(keyRemovedSpace, 0, 9));
-		SortedSet<String> combinedSet = new TreeSet<>(resultSet1);
-		combinedSet.addAll(resultSet2);
+		SortedSet<String> combinedSet = getCombinedSearchResults(key, keyRemovedSpace);
 
 		return combinedSet.stream()
 			.map(CharacterProcessor::mergeString)
@@ -68,18 +69,6 @@ public class TrieRedisRepository {
 		}
 	}
 
-	private Long getKeywordCount(String key) {
-		String count = valueRedisRepository.getValue(REDIS_COUNT_PREFIX + key);
-		if (count == null) { return 0L; }
-		else { return Long.valueOf(count); }
-	}
-
-	public boolean exists(String type, String keyword) {
-		String key = generateTypePrefixKey(type, keyword);
-		Double score = zSetRedisRepository.score(key, keyword);
-		return score != null && score > 0;
-	}
-
 	private String generateTypePrefixKey(String type, String prefix) {
 		switch (type) {
 			case TITLE:
@@ -91,5 +80,25 @@ public class TrieRedisRepository {
 			default:
 				throw new NotFoundException(ErrorCode.FAIL_TYPE_NOT_FOUND);
 		}
+	}
+
+	public boolean exists(String type, String keyword) {
+		String key = generateTypePrefixKey(type, keyword);
+		Double score = zSetRedisRepository.score(key, keyword);
+		return score != null && score > 0;
+	}
+
+	private SortedSet<String> getCombinedSearchResults(String key, String keyRemovedSpace) {
+		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRange(key, 0, MAX_SEARCH_RESULTS - 1));
+		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRange(keyRemovedSpace, 0, MAX_SEARCH_RESULTS - 1));
+		SortedSet<String> combinedSet = new TreeSet<>(resultSet1);
+		combinedSet.addAll(resultSet2);
+		return combinedSet;
+	}
+
+	private Long getKeywordCount(String key) {
+		String count = valueRedisRepository.getValue(REDIS_COUNT_PREFIX + key);
+		if (count == null) { return 0L; }
+		else { return Long.valueOf(count); }
 	}
 }
