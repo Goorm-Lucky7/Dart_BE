@@ -18,7 +18,6 @@ public class AutocompleteService {
 	@Cacheable(value = "autocompleteCache", key = "#type + '_' + #prefix")
 	public List<String> autocomplete(String type, String prefix) {
 		List<String> results = trieRedisRepository.search(type, prefix);
-		System.out.println("Autocomplete results: " + results);
 		return results;
 	}
 }
