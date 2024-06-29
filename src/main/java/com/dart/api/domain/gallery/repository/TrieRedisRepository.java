@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.dart.api.infrastructure.redis.ValueRedisRepository;
 import com.dart.api.infrastructure.redis.ZSetRedisRepository;
-import com.dart.global.common.util.CharacterSplitter;
+import com.dart.global.common.util.CharacterProcessor;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -25,39 +25,35 @@ public class TrieRedisRepository {
 	private final ZSetRedisRepository zSetRedisRepository;
 
 	public void insert(String type, String keyword) {
-		keyword = CharacterSplitter.splitString(keyword);
+		keyword = CharacterProcessor.splitString(keyword);
 		for (int i = 1; i <= keyword.length(); i++) {
 			String prefix = keyword.substring(0, i);
 			String key = generateTypePrefixKey(type, prefix);
-			System.out.println("insert key :" + i +" : "+key);
-			Double score = CharacterSplitter.getUnicodeScore(keyword);
+			Double score = CharacterProcessor.getUnicodeScore(keyword);
 
 			zSetRedisRepository.addElement(key, keyword, score);
 			valueRedisRepository.increment(REDIS_COUNT_PREFIX + key, 1);
 		}
 	}
 
-	public List<String> search(String type, String prefix) {
-		String splitPrefix = CharacterSplitter.splitString(prefix);
-		String splitConvertedPrefix = CharacterSplitter.splitAndConvertString(prefix);
+	public List<String> search(String type, String keyword) {
+		keyword = CharacterProcessor.splitString(keyword);
+		String key = generateTypePrefixKey(type, keyword);
+		String keyRemovedSpace = generateTypePrefixKey(type, keyword).trim();
 
-		String key1 = generateTypePrefixKey(type, splitPrefix);
-		String key2 = generateTypePrefixKey(type, splitConvertedPrefix);
-
-		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRange(key1, 0, 9));
-		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRange(key2, 0, 9));
-
+		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRange(key, 0, 9));
+		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRange(keyRemovedSpace, 0, 9));
 		SortedSet<String> combinedSet = new TreeSet<>(resultSet1);
 		combinedSet.addAll(resultSet2);
 
 		return combinedSet.stream()
-			.map(CharacterSplitter::mergeKoreanString)
+			.map(CharacterProcessor::mergeString)
 			.limit(10)
 			.collect(Collectors.toList());
 	}
 
 	public void remove(String type, String keyword) {
-		keyword = CharacterSplitter.splitString(keyword);
+		keyword = CharacterProcessor.splitString(keyword);
 
 		for (int i = 1; i <= keyword.length(); i++) {
 			String prefix = keyword.substring(0, i);
@@ -85,7 +81,6 @@ public class TrieRedisRepository {
 	}
 
 	private String generateTypePrefixKey(String type, String prefix) {
-		type = type.trim();
 		switch (type) {
 			case TITLE:
 				return REDIS_TITLE_PREFIX + prefix;
