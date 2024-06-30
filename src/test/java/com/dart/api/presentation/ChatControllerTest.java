@@ -69,12 +69,16 @@ class ChatControllerTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 		String destination = "/sub/ws/" + chatRoomId;
-		List<String> members = Arrays.asList("member1", "member2", "member3");
+		List<MemberSessionDto> members = Arrays.asList(
+			new MemberSessionDto("member1", "sessionId1", destination, "https://example.com/profile1.jpg"),
+			new MemberSessionDto("member2", "sessionId2", destination, "https://example.com/profile2.jpg"),
+			new MemberSessionDto("member3", "sessionId3", destination, "https://example.com/profile3.jpg")
+		);
 
 		given(memberSessionRegistry.getMembersInChatRoom(destination)).willReturn(members);
 
 		// WHEN
-		ResponseEntity<List<String>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
+		ResponseEntity<List<MemberSessionDto>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
 
 		// THEN
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -92,7 +96,7 @@ class ChatControllerTest {
 		given(memberSessionRegistry.getMembersInChatRoom(destination)).willReturn(List.of());
 
 		// WHEN
-		ResponseEntity<List<String>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
+		ResponseEntity<List<MemberSessionDto>> responseEntity = chatController.getLoggedInVisitors(chatRoomId);
 
 		// THEN
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
