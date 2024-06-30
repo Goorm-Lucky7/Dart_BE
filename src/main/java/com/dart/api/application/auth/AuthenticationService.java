@@ -38,15 +38,11 @@ public class AuthenticationService {
 
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
-		final Member member = findByMemberEmail(loginReqDto.email());
-		validatePasswordMatch(loginReqDto.password(), member.getPassword());
-
-		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
-			member.getNickname(), member.getProfileImageUrl());
+		final Member member = authenticateMember(loginReqDto);
+		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
-
 		setTokensInResponse(response, accessToken, refreshToken);
 
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
@@ -77,6 +73,16 @@ public class AuthenticationService {
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		}
+	}
+
+	private Member authenticateMember(LoginReqDto loginReqDto) {
+		Member member = findByMemberEmail(loginReqDto.email());
+		validatePasswordMatch(loginReqDto.password(), member.getPassword());
+		return member;
+	}
+
+	private LoginResDto createLoginResponse(String accessToken, Member member) {
+		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	private Member findByMemberEmail(String email) {

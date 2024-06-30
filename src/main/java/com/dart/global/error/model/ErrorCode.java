@@ -70,6 +70,7 @@ public enum ErrorCode {
 	FAIL_COUPON_NOT_FOUND("[❎ ERROR] 요청하신 쿠폰을 찾을 수 없습니다."),
 	FAIL_TEMPLATE_NOT_FOUND("[❎ ERROR] 요청하신 템플릿을 찾을 수 없습니다."),
 	FAIL_NOTIFICATION_NOT_FOUND("[❎ ERROR] 요청하신 알림을 찾을 수 없습니다."),
+	FAIL_CATEGORY_NOT_FOUND("[❎ ERROR] 요청하신 검색어 카테고리를 찾을 수 없습니다."),
 
 	// 409 Conflict
 	FAIL_EMAIL_CONFLICT("[❎ ERROR] 이미 존재하는 이메일입니다."),

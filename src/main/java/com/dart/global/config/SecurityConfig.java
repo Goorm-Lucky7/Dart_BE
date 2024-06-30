@@ -20,7 +20,6 @@ import com.dart.global.auth.filter.AuthenticationFilter;
 import com.dart.global.auth.filter.CustomFilter;
 import com.dart.global.auth.handler.CustomAuthenticationEntryPoint;
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -72,7 +71,7 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/email/**").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
 			.anyRequest().authenticated()
 		);
 

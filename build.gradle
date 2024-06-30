@@ -58,6 +58,7 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'redis.clients:jedis:4.2.3'
 
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
