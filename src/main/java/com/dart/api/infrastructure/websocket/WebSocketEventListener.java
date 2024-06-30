@@ -10,7 +10,10 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import com.dart.api.domain.auth.entity.AuthUser;
+import com.dart.api.domain.member.entity.Member;
+import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -22,10 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketEventListener {
 
 	private final MemberSessionRegistry memberSessionRegistry;
+	private final MemberRepository memberRepository;
 
 	@EventListener
 	public void handleSubscribeEvent(SessionSubscribeEvent sessionSubscribeEvent) {
-		log.info("[✅ LOGGER] HANDLE SUBSCRIBE EVENT CALLED");
 		final String sessionId = extractSessionIdFromHeaderAccessor(sessionSubscribeEvent);
 		final String destination = extractDestinationFromHeaderAccessor(sessionSubscribeEvent);
 
@@ -36,13 +39,13 @@ public class WebSocketEventListener {
 		validateAuthUserPresent(authUser);
 		log.info("[✅ LOGGER] MEMBER {} IS JOIN CHATROOM", authUser.nickname());
 
-		memberSessionRegistry.removeSessionByNickname(authUser.nickname());
-		memberSessionRegistry.addSession(authUser.nickname(), sessionId, destination);
+		final Member member = getMemberByEmail(authUser.email());
+		memberSessionRegistry.removeSessionByNickname(member.getNickname());
+		memberSessionRegistry.addSession(member.getNickname(), sessionId, destination, member.getProfileImageUrl());
 	}
 
 	@EventListener
 	public void handleDisconnectEvent(SessionDisconnectEvent sessionDisconnectEvent) {
-		log.info("[✅ LOGGER] HANDLE DISCONNECT EVENT CALLED");
 		final String sessionId = extractSessionIdFromHeaderAccessor(sessionDisconnectEvent);
 
 		validateSessionIdPresent(sessionId);
@@ -85,5 +88,10 @@ public class WebSocketEventListener {
 		if (authUser == null) {
 			log.error("[✅ LOGGER] ACCESS TOKEN IS EMPTIED OR EXPIRED");
 		}
+	}
+
+	private Member getMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
 	}
 }
