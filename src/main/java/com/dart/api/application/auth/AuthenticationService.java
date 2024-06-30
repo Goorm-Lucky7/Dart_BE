@@ -39,7 +39,7 @@ public class AuthenticationService {
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
 		final Member member = authenticateMember(loginReqDto);
-		final String accessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);

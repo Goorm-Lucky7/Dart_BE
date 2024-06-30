@@ -88,10 +88,12 @@ public class AutocompleteRedisRepository {
 	}
 
 	private SortedSet<String> getCombinedSearchResults(String key, String keyRemovedSpace) {
-		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRange(key, 0, MAX_SEARCH_RESULTS - 1));
-		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRange(keyRemovedSpace, 0, MAX_SEARCH_RESULTS - 1));
+		SortedSet<String> resultSet1 = new TreeSet<>(zSetRedisRepository.getRangeAsStringSet(key, 0, MAX_SEARCH_RESULTS - 1));
+		SortedSet<String> resultSet2 = new TreeSet<>(zSetRedisRepository.getRangeAsStringSet(keyRemovedSpace, 0, MAX_SEARCH_RESULTS - 1));
+
 		SortedSet<String> combinedSet = new TreeSet<>(resultSet1);
 		combinedSet.addAll(resultSet2);
+
 		return combinedSet;
 	}
 

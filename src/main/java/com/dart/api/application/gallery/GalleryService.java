@@ -67,7 +67,6 @@ public class GalleryService {
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
 	private final ChatRoomRepository chatRoomRepository;
-	private final ExhibitionNotificationService exhibitionNotificationService;
 	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
