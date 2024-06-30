@@ -65,13 +65,13 @@ public class Payment {
 		this.order = order;
 	}
 
-	public static Payment create(Member member, Gallery gallery, LocalDateTime approvedAt, String order) {
+	public static Payment create(Member member, Gallery gallery, int total, LocalDateTime approvedAt, String order) {
 		return Payment.builder()
 			.member(member)
 			.gallery(gallery)
 			.approvedAt(approvedAt)
 			.order(Order.fromValue(order))
-			.amount(gallery.getFee())
+			.amount(total)
 			.build();
 	}
 

@@ -15,6 +15,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.auth.AuthorizationThreadLocal;
+import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -56,41 +57,37 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			} catch (IOException | ServletException e) {
 				throw new RuntimeException(e);
 			}
-
 			return;
 		}
 
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
 
 		try {
-			if (!jwtProviderService.isUsable(accessToken) || PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-				if (PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-					filterChain.doFilter(request, response);
-
-					return;
+			if (PATH_API_TOKEN_REISSUE.equals(requestURI)) {
+				if (accessToken == null) {
+					throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 				}
-
-				if (jwtProviderService.isUsable(accessToken)) {
-					String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-					setAuthentication(newAccessToken);
-				} else {
-					log.info("Access Token not usable");
-					AuthorizationThreadLocal.setAuthUser(null);
-					filterChain.doFilter(request, response);
-
-					return;
-				}
-			} else {
-				setAuthentication(accessToken);
 				filterChain.doFilter(request, response);
+			}
 
+			if (accessToken == null) {
+				SecurityContextHolder.getContext().setAuthentication(null);
+				AuthorizationThreadLocal.setAuthUser(null);
+				filterChain.doFilter(request, response);
 				return;
 			}
 
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+			if (!jwtProviderService.isUsable(accessToken)) {
+				throw new UnauthorizedException(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
+			}
+
+			setAuthentication(accessToken);
+			filterChain.doFilter(request, response);
+
 		} catch (Exception e) {
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			handlerExceptionResolver.resolveException(request, response, null, e);
+			if (!response.isCommitted()) {
+				handlerExceptionResolver.resolveException(request, response, null, e);
+			}
 		} finally {
 			AuthorizationThreadLocal.remove();
 		}

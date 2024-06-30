@@ -33,25 +33,16 @@ public class Notification extends BaseTimeEntity {
 	@Enumerated(EnumType.STRING)
 	private NotificationType notificationType;
 
-	@Column(name = "url")
-	private String url;
-
 	@Builder
-	private Notification(
-		String message,
-		NotificationType notificationType,
-		String url
-	) {
+	private Notification(String message, NotificationType notificationType) {
 		this.message = message;
 		this.notificationType = notificationType;
-		this.url = url;
 	}
 
-	public static Notification createNotification(String message, NotificationType notificationType, String url) {
+	public static Notification createNotification(String message, NotificationType notificationType) {
 		return Notification.builder()
 			.message(message)
 			.notificationType(notificationType)
-			.url(url)
 			.build();
 	}
 
@@ -60,7 +51,6 @@ public class Notification extends BaseTimeEntity {
 			.createdAt(getCreatedAt())
 			.message(this.message)
 			.notificationType(this.notificationType)
-			.url(this.url)
 			.build();
 	}
 }

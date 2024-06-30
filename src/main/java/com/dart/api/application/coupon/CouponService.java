@@ -59,8 +59,8 @@ public class CouponService {
 	public MyCouponReadAllDto readAllMyCoupon(AuthUser authUser) {
 		final Member member = memberRepository.findByEmail(authUser.email())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
-		final List<PriorityCouponWallet> priorityCouponWallets = priorityCouponWalletRepository.findByMemberAndIsUsedFalse(
-			member);
+		final List<PriorityCouponWallet> priorityCouponWallets = priorityCouponWalletRepository
+			.findByMemberIdAndIsUsedFalse(member.getId());
 		final List<GeneralCouponWallet> generalCouponWallets = generalCouponWalletRepository.findByMemberAndIsUsedFalse(
 			member);
 		final List<MyCouponDetail> myCouponDetails = new ArrayList<>();

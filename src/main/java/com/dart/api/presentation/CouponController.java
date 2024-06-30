@@ -28,7 +28,7 @@ public class CouponController {
 
 	@PostMapping("/priority-coupon")
 	public void registerQueue(@RequestBody PriorityCouponPublishDto dto, @Auth AuthUser authUser) {
-		priorityCouponManageService.registerQueue(dto, authUser.email());
+		priorityCouponManageService.registerQueue(dto, authUser.id());
 	}
 
 	@PostMapping("/general-coupon")

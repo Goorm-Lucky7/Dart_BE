@@ -9,6 +9,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.StompSubProtocolErrorHandler;
 
+import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -28,17 +29,21 @@ public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
 		Throwable exceptionCause = throwable.getCause();
 
 		if (exceptionCause instanceof JwtException) {
-			log.warn("[✅LOGGER] HANDLING EXPIRED JWT EXCEPTION: {}", throwable.getMessage());
-			return handleJwtException(clientMessage, throwable);
+			log.warn("[✅ LOGGER] HANDLING EXPIRED JWT EXCEPTION: {}", throwable.getMessage());
+			return handleJwtException(clientMessage, exceptionCause);
 		}
 
 		if (exceptionCause instanceof UnauthorizedException) {
-			log.warn("[✅LOGGER] HANDLING MESSAGE DELIVERY EXCEPTION: {}", throwable.getMessage());
-			log.warn("[✅LOGGER] MESSAGE DELIVERY EXCEPTION DESCRIPTION: {}", throwable.getCause().getMessage());
-			return handleUnauthorizedException(clientMessage, throwable);
+			log.warn("[✅ LOGGER] HANDLING UNAUTHORIZED EXCEPTION: {}", throwable.getMessage());
+			return handleUnauthorizedException(clientMessage, exceptionCause);
 		}
 
-		log.error("[✅LOGGER] UNHANDLED EXCEPTION: {}", throwable.getMessage(), throwable);
+		if (exceptionCause instanceof NotFoundException) {
+			log.warn("[✅ LOGGER] HANDLING NOT FOUND EXCEPTION: {}", throwable.getMessage());
+			return handleNotFoundException(clientMessage, exceptionCause);
+		}
+
+		log.error("[✅ LOGGER] UNHANDLED EXCEPTION: {}", throwable.getMessage(), throwable);
 		return super.handleClientMessageProcessingError(clientMessage, throwable);
 	}
 
@@ -47,7 +52,11 @@ public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
 	}
 
 	private Message<byte[]> handleJwtException(Message<byte[]> clientMessage, Throwable throwable) {
-		return prepareErrorMessage(ErrorCode.FAIL_TOKEN_EXPIRED);
+		return prepareErrorMessage(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
+	}
+
+	private Message<byte[]> handleNotFoundException(Message<byte[]> clientMessage, Throwable throwable) {
+		return prepareErrorMessage(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 	}
 
 	private Message<byte[]> prepareErrorMessage(ErrorCode errorCode) {

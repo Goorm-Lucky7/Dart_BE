@@ -47,7 +47,7 @@ public class ZSetRedisRepository {
 		redisTemplate.delete(requireNonNull(key));
 	}
 
-	public Double score(String key, String value) {
+	public Double score(String key, Object value) {
 		return redisTemplate
 			.opsForZSet()
 			.score(key, value);
@@ -57,5 +57,11 @@ public class ZSetRedisRepository {
 		return redisTemplate
 			.opsForZSet()
 			.zCard(key);
+	}
+
+	public Long rank(String key, Object value) {
+		return redisTemplate
+			.opsForZSet()
+			.rank(key, value);
 	}
 }

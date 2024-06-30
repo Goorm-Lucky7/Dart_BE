@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 
 import jakarta.persistence.Column;
@@ -35,9 +36,6 @@ public class ChatMessage {
 	@Column(name = "content", nullable = false)
 	private String content;
 
-	@Column(name = "sender", nullable = false)
-	private String sender;
-
 	@CreatedDate
 	@Column(name = "created_at", updatable = false, nullable = false)
 	private LocalDateTime createdAt;
@@ -49,44 +47,63 @@ public class ChatMessage {
 	@JoinColumn(name = "chat_room_id")
 	private ChatRoom chatRoom;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "member_id")
+	private Member member;
+
 	@Builder
-	private ChatMessage(String content, String sender, boolean isAuthor, ChatRoom chatRoom) {
+	private ChatMessage(String content, boolean isAuthor, ChatRoom chatRoom, Member member) {
 		this.content = content;
-		this.sender = sender;
 		this.createdAt = LocalDateTime.now();
 		this.isAuthor = isAuthor;
 		this.chatRoom = chatRoom;
+		this.member = member;
 	}
 
-	public static ChatMessage createChatMessage(ChatRoom chatRoom, Member member,
+	public static ChatMessage chatMessageFromCreateDto(
+		ChatRoom chatRoom,
+		Member member,
 		ChatMessageCreateDto chatMessageCreateDto
 	) {
 		return ChatMessage.builder()
 			.chatRoom(chatRoom)
-			.sender(member.getNickname())
 			.content(chatMessageCreateDto.content())
 			.isAuthor(chatRoom.getGallery().getMember().equals(member))
+			.member(member)
 			.build();
 	}
 
-	public static ChatMessage createChatMessageFromChatMessageReadDto(
-		ChatMessageReadDto chatMessageReadDto,
-		ChatRoom chatRoom
+	public static ChatMessage chatMessageFromReadDto(
+		ChatRoom chatRoom,
+		Member member,
+		ChatMessageReadDto chatMessageReadDto
 	) {
 		return ChatMessage.builder()
-			.content(chatMessageReadDto.content())
-			.sender(chatMessageReadDto.sender())
-			.isAuthor(chatMessageReadDto.isAuthor())
 			.chatRoom(chatRoom)
+			.content(chatMessageReadDto.content())
+			.isAuthor(chatMessageReadDto.isAuthor())
+			.member(member)
 			.build();
 	}
 
-	public ChatMessageReadDto getChatMessageReadDto() {
+	public ChatMessageReadDto toChatMessageReadDto() {
 		return ChatMessageReadDto.builder()
-			.sender(this.sender)
+			.sender(this.member.getNickname())
 			.content(this.content)
 			.createdAt(this.createdAt)
 			.isAuthor(this.isAuthor)
+			.profileImageUrl(this.member.getProfileImageUrl())
+			.build();
+	}
+
+	public ChatMessageSendDto toChatMessageSendDto(long expirySeconds) {
+		return ChatMessageSendDto.builder()
+			.memberId(this.member.getId())
+			.chatRoomId(this.chatRoom.getId())
+			.content(this.content)
+			.createdAt(this.createdAt)
+			.isAuthor(this.isAuthor)
+			.expirySeconds(expirySeconds)
 			.build();
 	}
 }

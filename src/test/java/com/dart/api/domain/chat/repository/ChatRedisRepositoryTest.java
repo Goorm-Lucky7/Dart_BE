@@ -1,6 +1,5 @@
 package com.dart.api.domain.chat.repository;
 
-import static com.dart.global.common.util.ChatConstant.*;
 import static com.dart.global.common.util.RedisConstant.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -11,19 +10,20 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.dart.api.domain.chat.entity.ChatRoom;
-import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.api.infrastructure.redis.ListRedisRepository;
 import com.dart.support.ChatFixture;
-import com.dart.support.GalleryFixture;
 import com.dart.support.MemberFixture;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ChatRedisRepositoryTest {
@@ -31,70 +31,68 @@ class ChatRedisRepositoryTest {
 	@Mock
 	private ListRedisRepository listRedisRepository;
 
+	@Mock
+	private ObjectMapper objectMapper;
+
 	@InjectMocks
 	private ChatRedisRepository chatRedisRepository;
 
 	@Test
-	@DisplayName("SAVE CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 채팅 메시지를 저장했습니다.")
-	void saveChatMessage_void_success() {
+	@DisplayName("SAVE CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 REDIS에 채팅 메시지를 저장했습니다.")
+	void saveChatMessage_void_success() throws JsonProcessingException {
 		// GIVEN
-		String sender = "testSender";
-		String content = "Hello 👋🏻";
-		LocalDateTime createdAt = LocalDateTime.now();
-		boolean isAuthor = false;
-
-		String messageValue = ChatFixture.createMessageValue(sender, content, createdAt, isAuthor);
-
+		ChatMessageSendDto chatMessageSendDto = ChatFixture.createChatMessageSendDto(
+			1L, 1L, "Hello 👋🏻", LocalDateTime.now(), true
+		);
 		Member member = MemberFixture.createMemberEntity();
-		Gallery gallery = GalleryFixture.createGalleryEntity(member);
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity(gallery);
+
+		when(objectMapper.writeValueAsString(any(ChatMessageReadDto.class))).thenReturn("JSONValue");
 
 		// WHEN
-		chatRedisRepository.saveChatMessage(chatRoom, content, sender, createdAt, CHAT_MESSAGE_EXPIRY_SECONDS);
+		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
 
 		// THEN
-		verify(listRedisRepository, times(1)).addElementWithExpiry(
-			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoom.getId()),
-			eq(messageValue),
-			eq(CHAT_MESSAGE_EXPIRY_SECONDS)
+		ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Long> expiryCaptor = ArgumentCaptor.forClass(Long.class);
+
+		verify(listRedisRepository).addElementWithExpiry(
+			keyCaptor.capture(), valueCaptor.capture(), expiryCaptor.capture()
 		);
+
+		assertEquals(REDIS_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId(), keyCaptor.getValue());
+		assertEquals("JSONValue", valueCaptor.getValue());
+		assertEquals(chatMessageSendDto.expirySeconds(), expiryCaptor.getValue());
 	}
 
 	@Test
-	@DisplayName("GET CHAT MESSAGE READ DTO(⭕️ SUCCESS): 성공적으로 Redis에서 채팅 메시지를 조회했습니다.")
-	void getChatMessageReadDto_void_success() {
+	@DisplayName("GET CHAT MESSAGE READ DTO(⭕️ SUCCESS): 성공적으로 REDIS에 존재하는 채팅 메시지를 조회했습니다.")
+	void getChatMessageReadDto_void_success() throws JsonProcessingException {
 		// GIVEN
 		Long chatRoomId = 1L;
 		int page = 0;
 		int size = 10;
 
-		long start = (long)page * size;
-		long end = start + size - 1;
+		List<Object> messageValues = List.of("JSONValue1", "JSONValue2");
 
-		List<Object> messageValues = List.of(
-			ChatFixture.createMessageValue("testSender1", "Hello 👋🏻", LocalDateTime.now(), false),
-			ChatFixture.createMessageValue("testSender2", "Bye 👋🏻", LocalDateTime.now(), false)
-		);
-
-		when(listRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, start, end))
-			.thenReturn(messageValues);
+		when(listRedisRepository.getRange(anyString(), anyLong(), anyLong())).thenReturn(messageValues);
+		when(objectMapper.readValue(anyString(), eq(ChatMessageReadDto.class)))
+			.thenReturn(new ChatMessageReadDto("sender1", "content1", LocalDateTime.now(), true, "profileImageURL1"))
+			.thenReturn(new ChatMessageReadDto("sender2", "content2", LocalDateTime.now(), false, "profileImageURL2"));
 
 		// WHEN
-		PageResponse<ChatMessageReadDto> actualChatMessagePageReadDtoList =
-			chatRedisRepository.getChatMessageReadDto(chatRoomId, page, size);
+		PageResponse<ChatMessageReadDto> pageResponse = chatRedisRepository.getChatMessageReadDto(chatRoomId, page,
+			size);
 
 		// THEN
-		assertEquals(2, actualChatMessagePageReadDtoList.pages().size());
-
-		assertEquals("testSender1", actualChatMessagePageReadDtoList.pages().get(0).sender());
-		assertEquals("Hello 👋🏻", actualChatMessagePageReadDtoList.pages().get(0).content());
-
-		assertEquals("testSender2", actualChatMessagePageReadDtoList.pages().get(1).sender());
-		assertEquals("Bye 👋🏻", actualChatMessagePageReadDtoList.pages().get(1).content());
+		assertEquals(2, pageResponse.pages().size());
+		assertEquals("sender1", pageResponse.pages().get(0).sender());
+		assertEquals("sender2", pageResponse.pages().get(1).sender());
+		assertTrue(pageResponse.pageInfo().isDone());
 	}
 
 	@Test
-	@DisplayName("DELETE CHAT MESSAGES(⭕️ SUCCESS): 성공적으로 Redis에서 모든 채팅 메시지를 삭제했습니다.")
+	@DisplayName("DELETE CHAT MESSAGES(⭕️ SUCCESS): 성공적으로 REDIS에 존재하는 모든 채팅 메시지를 삭제했습니다.")
 	void deleteChatMessages_void_success() {
 		// GIVEN
 		Long chatRoomId = 1L;

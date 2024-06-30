@@ -1,6 +1,5 @@
 package com.dart.api.application.auth;
 
-
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
@@ -8,13 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
-import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.auth.response.TokenResDto;
@@ -25,6 +18,11 @@ import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -54,22 +52,27 @@ public class AuthenticationService {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
-		validateRefreshToken(refreshToken);
+		if (accessToken == null || refreshToken == null) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+		}
 
-		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-		validateSavedRefreshToken(authUser.email(), refreshToken);
+		try {
+			jwtProviderService.validateRefreshToken(refreshToken);
+			String email = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
 
-		Member member = getMemberByEmail(authUser.email());
+			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
+			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
 
-		String newAccessToken = jwtProviderService.generateAccessToken(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
-		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
+			tokenRedisRepository.deleteToken(email);
+			tokenRedisRepository.setToken(email, newRefreshToken);
 
-		tokenRedisRepository.deleteToken(authUser.email());
-		tokenRedisRepository.setToken(authUser.email(), newRefreshToken);
+			setTokensInResponse(response, BEARER + newAccessToken, refreshToken);
 
-		setTokensInResponse(response, newAccessToken, newRefreshToken);
+			return new TokenResDto(newAccessToken);
 
-		return new TokenResDto(accessToken);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+		}
 	}
 
 	private Member authenticateMember(LoginReqDto loginReqDto) {
@@ -95,20 +98,15 @@ public class AuthenticationService {
 
 	private void validateRefreshToken(String refreshToken) {
 		if (!jwtProviderService.isUsable(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		}
 	}
 
 	private void validateSavedRefreshToken(String email, String refreshToken) {
 		String savedRefreshToken = tokenRedisRepository.getToken(email);
 		if (!savedRefreshToken.equals(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		}
-	}
-
-	private Member getMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
@@ -124,7 +122,7 @@ public class AuthenticationService {
 		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
 	}
 
-	private void setRefreshToken(HttpServletResponse response, String refreshToken){
+	private void setRefreshToken(HttpServletResponse response, String refreshToken) {
 		cookieUtil.setRefreshCookie(response, refreshToken);
 	}
 }

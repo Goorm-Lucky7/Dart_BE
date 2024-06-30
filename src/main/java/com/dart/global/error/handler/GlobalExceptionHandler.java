@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -69,5 +71,12 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Object> handleMailSendException(MailSendException e) {
 		ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
 		return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler(NoHandlerFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ResponseEntity<ErrorResponse> handleNoHandlerFound(NoHandlerFoundException ex) {
+		ErrorResponse errorResponse = new ErrorResponse("Resource not found");
+		return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
 	}
 }

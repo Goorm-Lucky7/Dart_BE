@@ -16,10 +16,8 @@ public class MemberSessionRegistry {
 
 	private final Map<String, MemberSessionDto> memberSessionRegistry = new ConcurrentHashMap<>();
 
-	public void addSession(String nickname, String sessionId, String destination) {
-		removeSessionByNicknameAndDestination(nickname, destination);
-
-		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination);
+	public void addSession(String nickname, String sessionId, String destination, String profileImageUrl) {
+		MemberSessionDto memberSessionDto = new MemberSessionDto(nickname, sessionId, destination, profileImageUrl);
 		memberSessionRegistry.put(sessionId, memberSessionDto);
 
 		log.info("[✅ LOGGER] SESSION ADDED: {}", memberSessionDto);
@@ -31,10 +29,9 @@ public class MemberSessionRegistry {
 		log.info("[✅ LOGGER] SESSION REMOVED: sessionId={}", sessionId);
 	}
 
-	public List<String> getMembersInChatRoom(String destination) {
-		List<String> members = memberSessionRegistry.values().stream()
+	public List<MemberSessionDto> getMembersInChatRoom(String destination) {
+		List<MemberSessionDto> members = memberSessionRegistry.values().stream()
 			.filter(session -> session.destination().equals(destination))
-			.map(MemberSessionDto::nickname)
 			.toList();
 
 		log.info("[✅ LOGGER] MEMBERS IN {}: {}", destination, members);
@@ -42,10 +39,9 @@ public class MemberSessionRegistry {
 		return members;
 	}
 
-	private void removeSessionByNicknameAndDestination(String nickname, String destination) {
+	public void removeSessionByNickname(String nickname) {
 		memberSessionRegistry.entrySet().removeIf(memberSessionEntry ->
-			memberSessionEntry.getValue().nickname().equals(nickname) &&
-			memberSessionEntry.getValue().destination().equals(destination)
+			memberSessionEntry.getValue().nickname().equals(nickname)
 		);
 	}
 }

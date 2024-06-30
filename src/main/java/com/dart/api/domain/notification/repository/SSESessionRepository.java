@@ -17,8 +17,8 @@ public class SSESessionRepository {
 
 	private final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
-	public SseEmitter saveSSEEmitter(Long clientId) {
-		SseEmitter sseEmitter = new SseEmitter(SSE_DEFAULT_TIMEOUT);
+	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
+		SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseSessionDB.put(clientId, sseEmitter);
 		log.info("[✅ LOGGER] SAVE SSE EMITTER FOR CLIENT ID: {}", clientId);
 
@@ -58,5 +58,12 @@ public class SSESessionRepository {
 		sseEmitter.onCompletion(() -> deleteSSEEmitterByClientId(clientId));
 		sseEmitter.onTimeout(() -> deleteSSEEmitterByClientId(clientId));
 		sseEmitter.onError(error -> deleteSSEEmitterByClientId(clientId));
+	}
+
+	public void completeSSEEmitter(Long clientId) {
+		SseEmitter sseEmitter = sseSessionDB.get(clientId);
+		if (sseEmitter != null) {
+			sseEmitter.complete();
+		}
 	}
 }

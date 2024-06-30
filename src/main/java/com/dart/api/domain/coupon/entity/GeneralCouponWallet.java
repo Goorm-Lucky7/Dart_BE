@@ -49,10 +49,14 @@ public class GeneralCouponWallet {
 
 	public MyCouponDetail toDetail() {
 		return MyCouponDetail.builder()
-			.couponId(this.id)
+			.couponId(this.generalCoupon.getId())
 			.title(this.generalCoupon.getTitle())
 			.couponType(this.generalCoupon.getCouponType().getValue())
 			.isPriority(false)
 			.build();
+	}
+
+	public void use() {
+		this.isUsed = true;
 	}
 }
