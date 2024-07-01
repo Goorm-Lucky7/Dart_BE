@@ -47,7 +47,7 @@ public class MemberController {
 	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
 		memberService.signUp(signUpDto, sessionId);
-		return ResponseEntity.ok("Signup successfully");
+		return ResponseEntity.ok("Signup Successfully");
 	}
 
 	@PostMapping("/login")
