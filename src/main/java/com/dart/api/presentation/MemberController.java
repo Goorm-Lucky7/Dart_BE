@@ -27,7 +27,6 @@ import com.dart.api.dto.member.request.NicknameDuplicationCheckDto;
 import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.api.dto.member.response.LoginResDto;
 import com.dart.api.dto.member.response.MemberProfileResDto;
-import com.dart.api.dto.member.response.MemberSimpleProfileResDto;
 import com.dart.global.auth.annotation.Auth;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,7 +46,7 @@ public class MemberController {
 	public ResponseEntity<String> signUp(@RequestBody @Validated SignUpDto signUpDto,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
 		memberService.signUp(signUpDto, sessionId);
-		return ResponseEntity.ok("Signup Successfully");
+		return ResponseEntity.ok("Signup successfully");
 	}
 
 	@PostMapping("/login")
@@ -57,7 +56,7 @@ public class MemberController {
 		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
 	}
 
-	@GetMapping("/reissue")
+	@PostMapping("/reissue")
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<TokenResDto> reissue(HttpServletRequest request, HttpServletResponse response) {
 		return ResponseEntity.ok(authenticationService.reissue(request, response));
@@ -72,11 +71,12 @@ public class MemberController {
 
 	@PostMapping(path = "/members", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<MemberSimpleProfileResDto> updateMemberProfile(@Auth AuthUser authUser,
+	public ResponseEntity<String> updateMemberProfile(@Auth AuthUser authUser,
 		@RequestPart @Validated MemberUpdateDto memberUpdateDto,
 		@RequestPart(name = "profileImage", required = false) MultipartFile profileImage,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId) {
-		return ResponseEntity.ok(memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId));
+		memberService.updateMemberProfile(authUser, memberUpdateDto, profileImage, sessionId);
+		return ResponseEntity.ok("Updated member profile successfully");
 	}
 
 	@PostMapping("/nickname/check")
