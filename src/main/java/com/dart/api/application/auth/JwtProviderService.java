@@ -5,6 +5,7 @@ import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -60,15 +61,17 @@ public class JwtProviderService {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateAccessToken(Long id, String email, String nickname, String profileImage) {
-		Date now = new Date();
-
+	public String generateAccessToken(Long id, String email, String nickname, String profileImage, String uniqueIdentifier) {
 		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
 			.claim(ID, id)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
-			.claim("iat", now.getTime())
+			.claim("iat", new Date().getTime())
+			.claim("jti", uniqueIdentifier)
+			.issuedAt(new Date())
+			.expiration(new Date(System.currentTimeMillis() + accessTokenExpire))
+			.signWith(secretKey, Jwts.SIG.HS256)
 			.compact();
 	}
 
@@ -85,8 +88,10 @@ public class JwtProviderService {
 		final Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 
+		String uniqueIdentifier = UUID.randomUUID().toString();
+
 		return generateAccessToken(member.getId(), member.getEmail(), member.getNickname(),
-			member.getProfileImageUrl());
+			member.getProfileImageUrl(), uniqueIdentifier);
 	}
 
 	public String extractToken(String header, HttpServletRequest request) {
@@ -146,6 +151,14 @@ public class JwtProviderService {
 		}
 
 		return false;
+	}
+
+	public void validateAccessToken(String accessToken, String userEmail) {
+		Claims claims = getClaimsByToken(accessToken);
+		String tokenEmail = claims.get(EMAIL, String.class);
+		if(!tokenEmail.equals(userEmail)){
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
+		};
 	}
 
 	public void validateRefreshToken(String refreshToken) {
