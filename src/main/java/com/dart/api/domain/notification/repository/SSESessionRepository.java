@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 public class SSESessionRepository {
 
-	private final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
+	public final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
 	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
