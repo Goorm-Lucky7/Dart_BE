@@ -153,20 +153,12 @@ public class JwtProviderService {
 		return false;
 	}
 
-	public void validateAccessToken(String accessToken, String userEmail) {
-		Claims claims = getClaimsByToken(accessToken);
-		String tokenEmail = claims.get(EMAIL, String.class);
-		if(!tokenEmail.equals(userEmail)){
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
-		};
-	}
-
-	public void validateRefreshToken(String refreshToken) {
+	public void validateTokenExists(String token) {
 		try {
 			Jwts.parser()
 				.setSigningKey(secretKey)
 				.build()
-				.parseClaimsJws(refreshToken);
+				.parseClaimsJws(token);
 		} catch (ExpiredJwtException e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
