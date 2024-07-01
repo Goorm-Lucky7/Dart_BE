@@ -1,5 +1,7 @@
 package com.dart.api.presentation;
 
+import static com.dart.global.common.util.ChatConstant.*;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -7,6 +9,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatController {
 
+	private final SimpMessageSendingOperations simpMessageSendingOperations;
 	private final ChatMessageService chatMessageService;
 	private final MemberSessionRegistry memberSessionRegistry;
 
@@ -35,6 +39,7 @@ public class ChatController {
 		SimpMessageHeaderAccessor simpMessageHeaderAccessor
 	) {
 		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		simpMessageSendingOperations.convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@GetMapping("/api/{chat-room-id}/chat-messages")
@@ -48,6 +53,6 @@ public class ChatController {
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
 	public ResponseEntity<List<MemberSessionDto>> getLoggedInVisitors(@PathVariable("chat-room-id") Long chatRoomId) {
-		return ResponseEntity.ok(memberSessionRegistry.getMembersInChatRoom("/sub/ws/" + chatRoomId));
+		return ResponseEntity.ok(memberSessionRegistry.getMembersInChatRoom(TOPIC_PREFIX + chatRoomId));
 	}
 }
