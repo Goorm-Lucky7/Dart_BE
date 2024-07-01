@@ -52,9 +52,12 @@ public class SSESessionRepository {
 
 		if (sseEmitter != null) {
 			try {
-				sseEmitter.send(SseEmitter.event()
+				SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
 					.name(SSE_EMITTER_EVENT_NAME)
-					.data(notificationReadDto, MediaType.APPLICATION_JSON));
+					.data(notificationReadDto, MediaType.APPLICATION_JSON);
+
+				sseEmitter.send(sseEventBuilder);
+				sseEmitter.send("\n\n");
 			} catch (Exception e) {
 				deleteSSEEmitterByClientId(clientId);
 			}
