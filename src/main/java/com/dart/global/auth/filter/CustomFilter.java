@@ -16,6 +16,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 
 @Component
 @Order(1)
@@ -58,8 +59,16 @@ public class CustomFilter extends OncePerRequestFilter {
 	);
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	protected void doFilterInternal(
+		@NotNull HttpServletRequest request,
+		@NotNull HttpServletResponse response,
+		@NotNull FilterChain filterChain)
 		throws ServletException, IOException {
+		if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
+		}
+
 		if (!isApiValid(request)) {
 			response.setContentType("application/json;charset=UTF-8");
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
