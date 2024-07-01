@@ -11,9 +11,8 @@ public class ChatConstant {
 	public static final String APPLICATION_DESTINATION_PREFIX = "/pub";
 	public static final String ALLOWED_ORIGIN_PATTERN = "*";
 	public static final String CHAT_SESSION_USER = "authUser";
-	public final static String SORT_FIELD_CREATED_AT = "createdAt";
+	public static final String TOPIC_PREFIX = "/sub/ws/";
 	public final static long CHAT_MESSAGE_EXPIRY_SECONDS = 60 * 60;
-	public static final String STOMP_COMMAND_HEADER = "stompCommand";
 
 	public static final int MESSAGE_SIZE_LIMIT = 160 * 64 * 1024;
 	public static final int SEND_TIME_LIMIT = 100 * 10000;
