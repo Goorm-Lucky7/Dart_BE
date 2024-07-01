@@ -20,6 +20,7 @@ import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.api.domain.auth.repository.EmailRedisRepository;
 import com.dart.api.domain.auth.repository.NicknameRedisRepository;
 import com.dart.api.domain.auth.repository.SessionRedisRepository;
+import com.dart.api.dto.member.response.MemberSimpleProfileResDto;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -66,7 +67,7 @@ public class MemberService {
 	}
 
 	@Transactional
-	public void updateMemberProfile(
+	public MemberSimpleProfileResDto updateMemberProfile(
 		AuthUser authUser,
 		MemberUpdateDto memberUpdateDto,
 		MultipartFile profileImage,
@@ -76,8 +77,10 @@ public class MemberService {
 		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
 		String newProfileImageUrl = handleProfileImageUpdate(profileImage, member.getProfileImageUrl());
 
-		member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
+		member.updateProfile(memberUpdateDto, newProfileImageUrl);
 		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+
+		return new MemberSimpleProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
