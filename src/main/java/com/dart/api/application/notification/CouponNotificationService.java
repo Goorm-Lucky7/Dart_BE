@@ -48,7 +48,7 @@ public class CouponNotificationService {
 
 	private void notifyAllClientsAboutNewCoupons() {
 		NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
-			"실시간 쿠폰이 발행되었습니다!", NotificationType.LIVE
+			"실시간 쿠폰이 발행되었습니다!", NotificationType.LIVE.getName()
 		);
 
 		sseSessionRepository.sendEventToAll(notificationReadDto);

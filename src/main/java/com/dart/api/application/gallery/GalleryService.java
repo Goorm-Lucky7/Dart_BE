@@ -288,7 +288,7 @@ public class GalleryService {
 			return true;
 		}
 
-		return paymentRepository.existsByMemberAndGalleryAndOrder(member, gallery, Order.TICKET);
+		return paymentRepository.existsByMemberAndGalleryIdAndOrder(member, gallery.getId(), Order.TICKET);
 	}
 
 	private boolean checkIfUserHasCommented(Gallery gallery, AuthUser authUser) {
