@@ -32,6 +32,12 @@ public class Payment {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "gallery_id", updatable = false, nullable = false)
+	private Long galleryId;
+
+	@Column(name = "gallery_name")
+	private String galleryName;
+
 	@Column(name = "amount")
 	private int amount;
 
@@ -46,10 +52,6 @@ public class Payment {
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "gallery_id")
-	private Gallery gallery;
-
 	@Builder
 	private Payment(
 		int amount,
@@ -61,11 +63,18 @@ public class Payment {
 		this.amount = amount;
 		this.approvedAt = approvedAt;
 		this.member = member;
-		this.gallery = gallery;
+		this.galleryId = gallery.getId();
+		this.galleryName = gallery.getTitle();
 		this.order = order;
 	}
 
-	public static Payment create(Member member, Gallery gallery, int total, LocalDateTime approvedAt, String order) {
+	public static Payment create(
+		Member member,
+		Gallery gallery,
+		int total,
+		LocalDateTime approvedAt,
+		String order
+	) {
 		return Payment.builder()
 			.member(member)
 			.gallery(gallery)
@@ -81,7 +90,7 @@ public class Payment {
 			.amount(this.amount)
 			.approvedAt(this.approvedAt)
 			.order(this.order.getValue())
-			.galleryName(this.gallery.getTitle())
+			.galleryName(this.galleryName)
 			.build();
 	}
 }
