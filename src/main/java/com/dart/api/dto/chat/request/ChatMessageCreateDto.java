@@ -1,13 +1,17 @@
 package com.dart.api.dto.chat.request;
 
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder
 public record ChatMessageCreateDto(
-	@NotBlank(message = "[❎ ERROR] 메시지 내용을 입력해주세요.")
-	@Size(max = 50)
-	String content
+	@Size(max = 50, message = "[❎ ERROR] 메시지 내용은 50자 이내여야 합니다.")
+	String content,
+	LocalDateTime createdAt,
+	String nickname,
+	String profileImageUrl,
+	boolean isAuthor
 ) {
 }
