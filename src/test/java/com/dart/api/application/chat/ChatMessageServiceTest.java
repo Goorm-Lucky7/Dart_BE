@@ -1,13 +1,11 @@
 package com.dart.api.application.chat;
 
-import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
@@ -35,7 +32,6 @@ import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.support.ChatFixture;
 import com.dart.support.MemberFixture;
 
@@ -63,19 +59,17 @@ class ChatMessageServiceTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor.create();
-		simpMessageHeaderAccessor.setSessionAttributes(Map.of(CHAT_SESSION_USER, MemberFixture.createAuthUserEntity()));
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 		Member member = MemberFixture.createMemberEntity();
-		ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
+		ChatMessage chatMessage = ChatFixture.createChatMessageEntity(chatRoom, member, chatMessageCreateDto);
 
 		when(chatRoomRepository.findById(anyLong())).thenReturn(Optional.of(chatRoom));
-		when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+		when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 		when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(chatMessage);
 
 		// WHEN
-		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto);
 
 		// THEN
 		verify(chatMessageRepository, times(1)).save(any(ChatMessage.class));
@@ -88,37 +82,33 @@ class ChatMessageServiceTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor.create();
-		simpMessageHeaderAccessor.setSessionAttributes(Map.of(CHAT_SESSION_USER, MemberFixture.createAuthUserEntity()));
 
 		when(chatRoomRepository.findById(anyLong())).thenReturn(Optional.empty());
 
 		// WHEN & THEN
 		assertThatThrownBy(
-			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
+			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 채팅방을 찾을 수 없습니다.");
 	}
 
 	@Test
-	@DisplayName("SAVE CHAT MESSAGE(❌ FAILURE): 존재하지 않은 사용자 이메일로 채팅 메세지를 전송했습니다.")
-	void saveChatMessage_member_UnauthorizedException_fail() {
+	@DisplayName("SAVE CHAT MESSAGE(❌ FAILURE): 존재하지 않은 사용자 닉네임으로 채팅 메세지를 전송했습니다.")
+	void saveChatMessage_member_NotFoundException_fail() {
 		// GIVEN
 		Long chatRoomId = 1L;
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor = SimpMessageHeaderAccessor.create();
-		simpMessageHeaderAccessor.setSessionAttributes(Map.of(CHAT_SESSION_USER, MemberFixture.createAuthUserEntity()));
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
 		when(chatRoomRepository.findById(anyLong())).thenReturn(Optional.of(chatRoom));
-		when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+		when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
 		// WHEN & THEN
 		assertThatThrownBy(
-			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor))
-			.isInstanceOf(UnauthorizedException.class)
-			.hasMessage("[❎ ERROR] 로그인이 필요한 기능입니다.");
+			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto))
+			.isInstanceOf(NotFoundException.class)
+			.hasMessage("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다.");
 	}
 
 	@Test
