@@ -31,7 +31,7 @@ public class EmailController {
 	public ResponseEntity<String> sendVerificationEmail(@RequestBody @Validated EmailSendReqDto emailSendReqDto,
 		@CookieValue(value = SESSION_ID, required = false) String sessionId, HttpServletResponse response) {
 		emailService.sendVerificationEmail(emailSendReqDto.email(), sessionId, response);
-		return ResponseEntity.ok("OK");
+		return ResponseEntity.ok("Email Sent Successfully");
 	}
 
 	@PostMapping("/verify")
