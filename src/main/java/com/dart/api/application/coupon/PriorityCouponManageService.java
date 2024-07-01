@@ -16,7 +16,11 @@ import com.dart.api.domain.coupon.entity.PriorityCoupon;
 import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
+import com.dart.api.domain.notification.entity.Notification;
+import com.dart.api.domain.notification.entity.NotificationType;
+import com.dart.api.domain.notification.repository.SSESessionRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
+import com.dart.api.dto.notification.response.NotificationReadDto;
 import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.model.ErrorCode;
@@ -32,6 +36,7 @@ public class PriorityCouponManageService {
 	private final PriorityCouponWalletRepository priorityCouponWalletRepository;
 	private final PriorityCouponRedisRepository priorityCouponRedisRepository;
 	private final PriorityCouponCacheService priorityCouponCacheService;
+	private final SSESessionRepository sseSessionRepository;
 	private final ClockHolder clockHolder;
 
 	@Scheduled(fixedDelay = ONE_SECOND)
@@ -46,7 +51,7 @@ public class PriorityCouponManageService {
 		final PriorityCoupon priorityCoupon = optionalCoupon.get();
 		final int maxCount = priorityCoupon.getStock();
 		final Long couponId = priorityCoupon.getId();
-		final int currentCount = priorityCouponRedisRepository.getCount(priorityCoupon.getId());
+		final long currentCount = priorityCouponRedisRepository.getCount(priorityCoupon.getId());
 
 		final Set<Long> membersId = priorityCouponRedisRepository
 			.rangeQueue(priorityCoupon.getId(), currentCount, currentCount + TEN_PERSON);
@@ -63,14 +68,14 @@ public class PriorityCouponManageService {
 			final int rank = priorityCouponRedisRepository.rankQueue(couponId, memberId);
 
 			if (maxCount <= rank) {
-				log.info("재고 부족");
+				notification(memberId, FAIL_NO_STOCK_MESSAGE);
 				priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
 				continue;
 			}
 
 			priorityCouponWalletRepository.save(PriorityCouponWallet.create(priorityCoupon, memberId));
 			priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
-			log.info("이벤트 성공");
+			notification(memberId, SUCCESS_MESSAGE);
 		}
 	}
 
@@ -89,8 +94,15 @@ public class PriorityCouponManageService {
 
 	private void validateRegisterQueue(PriorityCoupon priorityCoupon, Long memberId) {
 		if (priorityCouponRedisRepository.hasValue(priorityCoupon.getId(), memberId)) {
-			log.info("이미 발급 요청");
+			notification(memberId, FAIL_ALREADY_REQUEST_MESSAGE);
 			throw new ConflictException(ErrorCode.FAIL_COUPON_CONFLICT);
 		}
+	}
+
+	private void notification(Long memberId, String message) {
+		NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
+			message, NotificationType.COUPON.getName()
+		);
+		sseSessionRepository.sendEvent(memberId, notificationReadDto);
 	}
 }
