@@ -1,6 +1,6 @@
 package com.dart.api.domain.auth.repository;
 
-import static com.dart.global.common.util.RedisConstant.REDIS_TOKEN_PREFIX;
+import static com.dart.global.common.util.RedisConstant.*;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -14,22 +14,38 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TokenRedisRepository {
 
+	@Value("${jwt.access-expire}")
+	private long accessTokenExpire;
+
 	@Value("${jwt.refresh-expire}")
 	private long refreshTokenExpire;
 
 	private final ValueRedisRepository valueRedisRepository;
 
-	public void setToken(String key, String data) {
-		valueRedisRepository.saveValueWithExpiry(REDIS_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
+	public void setAccessToken(String key, String data) {
+		valueRedisRepository.saveValueWithExpiry(REDIS_ACCESS_TOKEN_PREFIX + key, data, accessTokenExpire/1000);
+	}
+	public void setRefreshToken(String key, String data) {
+		valueRedisRepository.saveValueWithExpiry(REDIS_REFRESH_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
 	}
 
 	@Transactional(readOnly = true)
-	public String getToken(String key) {
-		String value = valueRedisRepository.getValue(REDIS_TOKEN_PREFIX + key);
+	public String getAccessToken(String key) {
+		String value = valueRedisRepository.getValue(REDIS_ACCESS_TOKEN_PREFIX + key);
 		return value != null ? value : "false";
 	}
 
-	public void deleteToken(String key) {
-		valueRedisRepository.deleteValue(REDIS_TOKEN_PREFIX + key);
+	@Transactional(readOnly = true)
+	public String getRefreshToken(String key) {
+		String value = valueRedisRepository.getValue(REDIS_REFRESH_TOKEN_PREFIX + key);
+		return value != null ? value : "false";
+	}
+
+	public void deleteAccessToken(String key) {
+		valueRedisRepository.deleteValue(REDIS_ACCESS_TOKEN_PREFIX + key);
+	}
+
+	public void deleteRefreshToken(String key) {
+		valueRedisRepository.deleteValue(REDIS_REFRESH_TOKEN_PREFIX + key);
 	}
 }
