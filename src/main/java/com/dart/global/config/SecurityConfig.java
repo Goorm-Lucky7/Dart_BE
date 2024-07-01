@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -14,11 +15,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.global.auth.filter.AuthenticationFilter;
-import com.dart.global.auth.filter.CustomFilter;
-import com.dart.global.auth.handler.CustomAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -26,16 +25,13 @@ public class SecurityConfig {
 
 	private final JwtProviderService jwtProviderService;
 	private final HandlerExceptionResolver handlerExceptionResolver;
-	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
 	public SecurityConfig(
 		JwtProviderService jwtProviderService,
-		@Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver,
-		CustomAuthenticationEntryPoint customAuthenticationEntryPoint
+		@Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
 	) {
 		this.jwtProviderService = jwtProviderService;
 		this.handlerExceptionResolver = handlerExceptionResolver;
-		this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
 	}
 
 	@Bean
@@ -76,15 +72,14 @@ public class SecurityConfig {
 		);
 
 		httpSecurity
-			.addFilterBefore(new CustomFilter(), UsernamePasswordAuthenticationFilter.class)
 			.addFilterBefore(
 				new AuthenticationFilter(jwtProviderService, handlerExceptionResolver),
 				UsernamePasswordAuthenticationFilter.class
 			);
 
 		httpSecurity.exceptionHandling((exceptionHandling) -> {
-			exceptionHandling
-				.authenticationEntryPoint(customAuthenticationEntryPoint);
+			HttpStatusEntryPoint httpStatusEntryPoint = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
+			exceptionHandling.authenticationEntryPoint(httpStatusEntryPoint);
 		});
 
 		return httpSecurity.build();
