@@ -25,6 +25,7 @@ import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.request.GeneralCouponPublishDto;
 import com.dart.global.error.exception.ConflictException;
+import com.dart.support.AuthFixture;
 import com.dart.support.CouponFixture;
 import com.dart.support.MemberFixture;
 
@@ -63,7 +64,7 @@ class GeneralCouponManageServiceTest {
 		// GIVEN
 		GeneralCoupon generalCoupon = CouponFixture.createGeneralCoupon();
 		Member member = MemberFixture.createMemberEntity();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		GeneralCouponPublishDto dto = new GeneralCouponPublishDto(generalCoupon.getId());
 
 		given(generalCouponRepository.findById(dto.generalCouponId())).willReturn(Optional.of(generalCoupon));
@@ -83,7 +84,7 @@ class GeneralCouponManageServiceTest {
 		// GIVEN
 		GeneralCoupon generalCoupon = CouponFixture.createGeneralCoupon();
 		Member member = MemberFixture.createMemberEntity();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		GeneralCouponPublishDto dto = new GeneralCouponPublishDto(generalCoupon.getId());
 
 		given(generalCouponRepository.findById(dto.generalCouponId())).willReturn(Optional.of(generalCoupon));

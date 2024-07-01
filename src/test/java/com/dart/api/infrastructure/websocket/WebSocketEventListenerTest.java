@@ -25,6 +25,7 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.BadRequestException;
+import com.dart.support.AuthFixture;
 import com.dart.support.MemberFixture;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +62,7 @@ class WebSocketEventListenerTest {
 		String chatRoomId = "1";
 		String destination = TOPIC_PREFIX + chatRoomId;
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		Member member = MemberFixture.createMemberEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
@@ -94,7 +95,7 @@ class WebSocketEventListenerTest {
 		String chatRoomId = "1";
 		String destination = TOPIC_PREFIX + chatRoomId;
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put(CHAT_SESSION_USER, authUser);
@@ -121,7 +122,7 @@ class WebSocketEventListenerTest {
 		// GIVEN
 		String sessionId = "testSessionId";
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put(CHAT_SESSION_USER, authUser);
@@ -148,7 +149,7 @@ class WebSocketEventListenerTest {
 		// GIVEN
 		String sessionId = "testSessionId";
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put(CHAT_SESSION_USER, authUser);
@@ -174,7 +175,7 @@ class WebSocketEventListenerTest {
 	@DisplayName("HANDLE DISCONNECT EVENT(❌ FAILURE): 요청하신 채팅방에 세션 ID가 존재하지 않습니다.")
 	void handleDisconnectEvent_sessionId_BadRequestException_fail() {
 		// GIVEN
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put(CHAT_SESSION_USER, authUser);
