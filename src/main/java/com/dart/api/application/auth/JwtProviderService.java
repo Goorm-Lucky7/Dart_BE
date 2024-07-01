@@ -58,14 +58,11 @@ public class JwtProviderService {
 	}
 
 	public String generateAccessToken(Long id, String email, String nickname, String profileImage) {
-		Date now = new Date();
-
 		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
 			.claim(ID, id)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
-			.claim("iat", now.getTime())
 			.compact();
 	}
 
@@ -103,15 +100,6 @@ public class JwtProviderService {
 			claims.get(NICKNAME, String.class));
 	}
 
-	public String extractEmailFromRefreshToken(String refreshToken) {
-		try {
-			final Claims claims = getClaimsByToken(refreshToken);
-			return claims.get(EMAIL, String.class);
-		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
-		}
-	}
-
 	public boolean isUsable(String token) {
 		try {
 			Jwts.parser()
@@ -126,8 +114,9 @@ public class JwtProviderService {
 			log.warn("====== EMPTIED TOKEN ======");
 		} catch (Exception e) {
 			log.warn("====== INVALID TOKEN ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
+
 		return false;
 	}
 
@@ -148,20 +137,7 @@ public class JwtProviderService {
 		} catch (ExpiredJwtException e) {
 			return e.getClaims();
 		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
-		}
-	}
-
-	public void validateRefreshToken(String refreshToken) {
-		try {
-			Jwts.parser()
-				.setSigningKey(secretKey)
-				.build()
-				.parseClaimsJws(refreshToken);
-		} catch (ExpiredJwtException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_REFRESH_TOKEN_EXPIRED);
-		} catch (IllegalArgumentException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		}
 	}
 }

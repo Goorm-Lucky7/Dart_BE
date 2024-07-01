@@ -47,6 +47,7 @@ public class AuthenticationService {
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
+
 		setTokensInResponse(response, accessToken, refreshToken);
 
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
@@ -77,17 +78,6 @@ public class AuthenticationService {
 		setTokensInResponse(response, newAccessToken, newRefreshToken);
 
 		return new TokenResDto(accessToken);
-
-	}
-
-	private Member authenticateMember(LoginReqDto loginReqDto) {
-		Member member = findByMemberEmail(loginReqDto.email());
-		validatePasswordMatch(loginReqDto.password(), member.getPassword());
-		return member;
-	}
-
-	private LoginResDto createLoginResponse(String accessToken, Member member) {
-		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	private Member findByMemberEmail(String email) {
@@ -103,20 +93,15 @@ public class AuthenticationService {
 
 	private void validateRefreshToken(String refreshToken) {
 		if (!jwtProviderService.isUsable(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 	}
 
 	private void validateSavedRefreshToken(String email, String refreshToken) {
 		String savedRefreshToken = tokenRedisRepository.getToken(email);
 		if (!savedRefreshToken.equals(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
-	}
-
-	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
-		setAccessToken(response, accessToken);
-		setRefreshToken(response, refreshToken);
 	}
 
 	private Member getMemberByEmail(String email) {
@@ -124,6 +109,10 @@ public class AuthenticationService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
+	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
+		setAccessToken(response, accessToken);
+		setRefreshToken(response, refreshToken);
+	}
 
 	private String extractTokenFromHeader(HttpServletRequest request) {
 		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
