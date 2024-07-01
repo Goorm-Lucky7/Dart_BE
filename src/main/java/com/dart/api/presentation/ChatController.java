@@ -8,8 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,10 +35,9 @@ public class ChatController {
 	@MessageMapping(value = "/ws/{chat-room-id}/chat-messages")
 	public void saveAndSendChatMessage(
 		@DestinationVariable("chat-room-id") Long chatRoomId,
-		@Payload ChatMessageCreateDto chatMessageCreateDto,
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor
+		@Payload @Validated ChatMessageCreateDto chatMessageCreateDto
 	) {
-		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto);
 		simpMessageSendingOperations.convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
 	}
 
