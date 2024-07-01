@@ -38,7 +38,7 @@ public class ChatController {
 		@Payload @Validated ChatMessageCreateDto chatMessageCreateDto
 	) {
 		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto);
-		simpMessageSendingOperations.convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
+		simpMessageSendingOperations.convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto);
 	}
 
 	@GetMapping("/api/{chat-room-id}/chat-messages")

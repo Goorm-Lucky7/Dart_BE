@@ -65,7 +65,7 @@ class ChatControllerTest {
 
 		// THEN
 		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto);
-		verify(simpMessageSendingOperations).convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
+		verify(simpMessageSendingOperations).convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto);
 	}
 
 	@Test
@@ -73,7 +73,7 @@ class ChatControllerTest {
 	void getLoggedInVisitors_void_success() {
 		// GIVEN
 		Long chatRoomId = 1L;
-		String destination = "/sub/ws/" + chatRoomId;
+		String destination = TOPIC_PREFIX + chatRoomId;
 		List<MemberSessionDto> members = Arrays.asList(
 			new MemberSessionDto("member1", "sessionId1", destination, "https://example.com/profile1.jpg"),
 			new MemberSessionDto("member2", "sessionId2", destination, "https://example.com/profile2.jpg"),
@@ -96,7 +96,7 @@ class ChatControllerTest {
 	void getLoggedInVisitors_empty_success() {
 		// GIVEN
 		Long chatRoomId = 1L;
-		String destination = "/sub/ws/" + chatRoomId;
+		String destination = TOPIC_PREFIX + chatRoomId;
 
 		given(memberSessionRegistry.getMembersInChatRoom(destination)).willReturn(List.of());
 
