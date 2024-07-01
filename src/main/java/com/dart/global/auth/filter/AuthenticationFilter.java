@@ -82,11 +82,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			} else {
 				setAuthentication(accessToken);
 				filterChain.doFilter(request, response);
+
 				return;
 			}
 
-			throw new UnauthorizedException(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
-
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
