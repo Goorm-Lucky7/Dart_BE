@@ -3,6 +3,8 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +44,10 @@ public class AuthenticationService {
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
-			member.getNickname(), member.getProfileImageUrl());
+			member.getNickname(), member.getProfileImageUrl(), UUID.randomUUID().toString());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
-		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
+		tokenRedisRepository.setRefreshToken(loginReqDto.email(), refreshToken);
 
 		setTokensInResponse(response, accessToken, refreshToken);
 
@@ -61,7 +63,9 @@ public class AuthenticationService {
 		}
 
 		try {
-			jwtProviderService.validateRefreshToken(refreshToken);
+			jwtProviderService.validateTokenExists(accessToken);
+			jwtProviderService.validateTokenExists(refreshToken);
+
 			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
 			String emailFromRefresh = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
 
@@ -72,12 +76,12 @@ public class AuthenticationService {
 			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
 			String newRefreshToken = jwtProviderService.generateRefreshToken(emailFromRefresh);
 
-			tokenRedisRepository.deleteToken(emailFromRefresh);
-			tokenRedisRepository.setToken(emailFromRefresh, newRefreshToken);
+			tokenRedisRepository.deleteRefreshToken(emailFromRefresh);
+			tokenRedisRepository.setRefreshToken(emailFromRefresh, newRefreshToken);
 
 			setTokensInResponse(response, newAccessToken, newRefreshToken);
 
-			return new TokenResDto(accessToken);
+			return new TokenResDto(newAccessToken);
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
