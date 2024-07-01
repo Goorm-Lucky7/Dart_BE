@@ -23,7 +23,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -58,11 +61,14 @@ public class JwtProviderService {
 	}
 
 	public String generateAccessToken(Long id, String email, String nickname, String profileImage) {
+		Date now = new Date();
+
 		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
 			.claim(ID, id)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
+			.claim("iat", now.getTime())
 			.compact();
 	}
 
@@ -100,6 +106,15 @@ public class JwtProviderService {
 			claims.get(NICKNAME, String.class));
 	}
 
+	public String extractEmailFromRefreshToken(String refreshToken) {
+		try {
+			final Claims claims = getClaimsByToken(refreshToken);
+			return claims.get(EMAIL, String.class);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
 	public boolean isUsable(String token) {
 		try {
 			Jwts.parser()
@@ -110,14 +125,33 @@ public class JwtProviderService {
 			return true;
 		} catch (ExpiredJwtException e) {
 			log.warn("====== TOKEN EXPIRED ======");
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (IllegalArgumentException e) {
 			log.warn("====== EMPTIED TOKEN ======");
+		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
+			log.warn("====== WRONG TYPE TOKEN ======");
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			log.warn("====== INVALID TOKEN ======");
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 
 		return false;
+	}
+
+	public void validateRefreshToken(String refreshToken) {
+		try {
+			Jwts.parser()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(refreshToken);
+		} catch (ExpiredJwtException e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		} catch (IllegalArgumentException e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
 	}
 
 	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
