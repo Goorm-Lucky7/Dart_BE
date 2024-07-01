@@ -33,4 +33,6 @@ public class GlobalConstant {
 	public static final int FIRST_SORT = 0;
 
 	public static final int SECOND_SORT = 1;
+
+	public static final String WATERMARK_TEXT = "D'art";
 }
