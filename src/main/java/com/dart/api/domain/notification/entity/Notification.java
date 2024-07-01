@@ -39,18 +39,10 @@ public class Notification extends BaseTimeEntity {
 		this.notificationType = notificationType;
 	}
 
-	public static Notification createNotification(String message, NotificationType notificationType) {
-		return Notification.builder()
+	public static NotificationReadDto createNotificationReadDto(String message, NotificationType notificationType) {
+		return NotificationReadDto.builder()
 			.message(message)
 			.notificationType(notificationType)
-			.build();
-	}
-
-	public NotificationReadDto toNotificationReadDto() {
-		return NotificationReadDto.builder()
-			.createdAt(getCreatedAt())
-			.message(this.message)
-			.notificationType(this.notificationType)
 			.build();
 	}
 }

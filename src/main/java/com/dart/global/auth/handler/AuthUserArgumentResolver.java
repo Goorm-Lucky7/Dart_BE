@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.auth.annotation.Auth;
 import com.dart.global.error.exception.UnauthorizedException;
-import com.dart.global.error.model.ErrorCode;
 
 @Slf4j
 public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
@@ -45,7 +44,6 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
 
 		if (isAuthRequired) {
 			log.info("Unauthenticated User Access.");
-			throw new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED);
 		}
 
 		return null;
