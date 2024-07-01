@@ -23,10 +23,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -125,16 +122,13 @@ public class JwtProviderService {
 			return true;
 		} catch (ExpiredJwtException e) {
 			log.warn("====== TOKEN EXPIRED ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
 		} catch (IllegalArgumentException e) {
 			log.warn("====== EMPTIED TOKEN ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
-		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		} catch (Exception e) {
 			log.warn("====== INVALID TOKEN ======");
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		}
+		return false;
 	}
 
 	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
@@ -166,8 +160,6 @@ public class JwtProviderService {
 				.parseClaimsJws(refreshToken);
 		} catch (ExpiredJwtException e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_REFRESH_TOKEN_EXPIRED);
-		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
 		} catch (IllegalArgumentException e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
 		}

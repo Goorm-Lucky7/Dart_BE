@@ -1,8 +1,6 @@
 package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
-import static com.dart.global.common.util.RedisConstant.*;
-import static com.dart.global.common.util.SSEConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +22,6 @@ import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Template;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
-import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
@@ -67,7 +64,6 @@ public class GalleryService {
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
 	private final ChatRoomRepository chatRoomRepository;
-	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -93,8 +89,6 @@ public class GalleryService {
 		chatRoomService.createChatRoom(gallery);
 
 		waitPayment(gallery);
-
-		addKeywordsToRedis(createGalleryDto, authUser.nickname());
 
 		return gallery.toReadIdDto();
 	}
@@ -193,7 +187,6 @@ public class GalleryService {
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
 		hashtagService.deleteHashtagsByGallery(gallery);
-		removeKeywordsFromRedis(gallery);
 		deleteGallery(gallery);
 	}
 
@@ -356,23 +349,5 @@ public class GalleryService {
 				String.valueOf(gallery.getTitle())
 			);
 		}
-	}
-
-	private void addKeywordsToRedis(CreateGalleryDto createGalleryDto, String nickname) {
-		String title = createGalleryDto.title();
-		List<String> hashtags = createGalleryDto.hashtags();
-
-		autocompleteRedisRepository.insert(TITLE, title);
-		autocompleteRedisRepository.insert(AUTHOR, nickname);
-		hashtags.forEach(hashtag -> autocompleteRedisRepository.insert(HASHTAG, hashtag));
-	}
-
-	private void removeKeywordsFromRedis(Gallery gallery) {
-		String title = gallery.getTitle();
-		List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
-
-		autocompleteRedisRepository.remove(TITLE, title);
-		autocompleteRedisRepository.remove(AUTHOR, gallery.getMember().getNickname());
-		hashtags.forEach(hashtag -> autocompleteRedisRepository.remove(HASHTAG, hashtag));
 	}
 }

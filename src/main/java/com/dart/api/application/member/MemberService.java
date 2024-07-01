@@ -1,6 +1,5 @@
 package com.dart.api.application.member;
 
-import static com.dart.global.common.util.RedisConstant.*;
 import static java.lang.Boolean.*;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.MemberUpdateDto;
@@ -38,7 +36,6 @@ public class MemberService {
 	private final EmailRedisRepository emailRedisRepository;
 	private final NicknameRedisRepository nicknameRedisRepository;
 	private final SessionRedisRepository sessionRedisRepository;
-	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
@@ -114,8 +111,6 @@ public class MemberService {
 		if (newNickname != null && !newNickname.equals(currentNickname)) {
 			sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
 			nicknameRedisRepository.deleteNickname(newNickname);
-			autocompleteRedisRepository.remove(AUTHOR, currentNickname);
-			autocompleteRedisRepository.insert(AUTHOR, newNickname);
 		}
 	}
 
