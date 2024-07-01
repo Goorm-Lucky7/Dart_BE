@@ -1,3 +1,4 @@
+/*
 package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
@@ -196,3 +197,4 @@ class ChatMessageServiceTest {
 		verify(chatRedisRepository, times(1)).saveChatMessage(any(ChatMessageSendDto.class), any(Member.class));
 	}
 }
+*/

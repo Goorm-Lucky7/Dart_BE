@@ -114,22 +114,5 @@ public class WebSocketMessageTest {
 			15, TimeUnit.SECONDS
 		);
 	}
-
-	// @Test
-	// @DisplayName("WEB SOCKET MESSAGE(⭕️ SUCCESS): 성공적으로 메시지 전송 및 수신이 완료되었습니다.")
-	// void webSocketMessage_void_success() throws ExecutionException, InterruptedException, TimeoutException {
-	// 	// GIVEN
-	// 	String expectedContent = "Hello 👋🏻";
-	// 	ChatMessageCreateDto chatMessageCreateDto = new ChatMessageCreateDto(expectedContent);
-	//
-	// 	// WHEN
-	// 	stompSession.send("/pub/ws/" + chatRoomId + "/chat-messages", chatMessageCreateDto);
-	// 	System.out.println("MESSAGE SENT: " + expectedContent);
-	//
-	// 	// THEN
-	// 	String actualContent = completableFuture.get(15, TimeUnit.SECONDS);
-	// 	System.out.println("MESSAGE RECEIVED: " + actualContent);
-	// 	assertThat(actualContent).isEqualTo(expectedContent);
-	// }
 }
 

@@ -109,7 +109,6 @@ public class ChatMessageService {
 	private void cachingChatMessages(ChatRoom chatRoom, List<ChatMessageReadDto> chatMessageReadDtoList) {
 		chatMessageReadDtoList.forEach(chatMessages -> {
 			final Member member = getMemberByNickname(chatMessages.sender());
-
 			final ChatMessage chatMessage = ChatMessage.chatMessageFromReadDto(chatRoom, member, chatMessages);
 			final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 

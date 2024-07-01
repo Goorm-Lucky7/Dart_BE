@@ -75,7 +75,7 @@ class WebSocketErrorHandlerTest {
 	@DisplayName("HANDLE CLIENT MESSAGE PROCESSING ERROR(⭕️ SUCCESS): NotFound 예외를 처리하여 클라이언트 메시지 처리 오류를 성공적으로 핸들링했습니다.")
 	void handleClientMessageProcessingError_NotFoundException_success() {
 		// GIVEN
-		NotFoundException notFoundException = new NotFoundException(ErrorCode.FAIL_INVALID_TOKEN);
+		NotFoundException notFoundException = new NotFoundException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
 		Throwable throwable = new Throwable(notFoundException);
 
 		// WHEN
