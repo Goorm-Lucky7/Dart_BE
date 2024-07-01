@@ -15,7 +15,7 @@ public class AutocompleteService {
 
 	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
-	@Cacheable(value = "autocompleteCache", key = "#category + '_' + #keyword")
+	@Cacheable(value = "autocompleteCache", key = "#category + '_' + #keyword", cacheManager = "cacheManager")
 	public List<String> autocomplete(String keyword, String category) {
 		List<String> results = autocompleteRedisRepository.search(category, keyword);
 		return results;
