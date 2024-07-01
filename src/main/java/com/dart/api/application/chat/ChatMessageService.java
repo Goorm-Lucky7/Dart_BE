@@ -40,7 +40,7 @@ public class ChatMessageService {
 	@Transactional
 	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
-		final Member member = getMemberByNickname(chatMessageCreateDto.nickname());
+		final Member member = getMemberByNickname(chatMessageCreateDto.sender());
 		final ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
 		chatMessageRepository.save(chatMessage);
 
