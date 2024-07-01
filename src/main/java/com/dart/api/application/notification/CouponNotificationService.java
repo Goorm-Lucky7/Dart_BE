@@ -13,8 +13,8 @@ import com.dart.api.domain.coupon.entity.PriorityCoupon;
 import com.dart.api.domain.coupon.repository.PriorityCouponRepository;
 import com.dart.api.domain.notification.entity.Notification;
 import com.dart.api.domain.notification.entity.NotificationType;
-import com.dart.api.domain.notification.repository.NotificationRepository;
 import com.dart.api.domain.notification.repository.SSESessionRepository;
+import com.dart.api.dto.notification.response.NotificationReadDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class CouponNotificationService {
 
-	private final NotificationRepository notificationRepository;
 	private final SSESessionRepository sseSessionRepository;
 	private final PriorityCouponRepository priorityCouponRepository;
 
@@ -39,10 +38,7 @@ public class CouponNotificationService {
 			return;
 		}
 
-		final String couponTitles = priorityCouponList.get(0).getTitle();
-		final String couponDetails = "LIVE COUPON '" + couponTitles + "' IS NOW AVAILABLE";
-
-		sendCouponEventToAllNotification(couponDetails);
+		notifyAllClientsAboutNewCoupons();
 	}
 
 	private List<PriorityCoupon> getTodayCoupons() {
@@ -50,20 +46,12 @@ public class CouponNotificationService {
 		return priorityCouponRepository.findByStartedAt(startedAt);
 	}
 
-	private void sendCouponEventToAllNotification(String couponDetails) {
-		sseSessionRepository.sendEventToAll(couponDetails, NotificationType.LIVE.getName());
-		log.info("[✅ LOGGER] LIVE COUPON START NOTIFICATION SENT: {}", couponDetails);
+	private void notifyAllClientsAboutNewCoupons() {
+		NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
+			"실시간 쿠폰이 발행되었습니다!", NotificationType.LIVE
+		);
 
-		saveCommonNotification(couponDetails);
-	}
-
-	private void saveCommonNotification(String message) {
-		if (notificationRepository.existsByNotificationType(NotificationType.LIVE)) {
-			log.info("[✅ LOGGER] DUPLICATE LIVE COUPON START NOTIFICATION DETECTED: {}", message);
-			return;
-		}
-
-		final Notification notification = Notification.createNotification(message, NotificationType.LIVE);
-		notificationRepository.save(notification);
+		sseSessionRepository.sendEventToAll(notificationReadDto);
+		log.info("[✅ LOGGER] LIVE COUPON START NOTIFICATION SENT: {}", notificationReadDto.message());
 	}
 }
