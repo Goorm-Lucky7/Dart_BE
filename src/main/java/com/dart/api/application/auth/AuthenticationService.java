@@ -3,11 +3,12 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -43,10 +44,10 @@ public class AuthenticationService {
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
-			member.getNickname(), member.getProfileImageUrl());
+			member.getNickname(), member.getProfileImageUrl(), UUID.randomUUID().toString());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
-		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
+		tokenRedisRepository.setRefreshToken(loginReqDto.email(), refreshToken);
 
 		setTokensInResponse(response, accessToken, refreshToken);
 
@@ -57,27 +58,33 @@ public class AuthenticationService {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
-		validateRefreshToken(refreshToken);
+		if (accessToken == null || refreshToken == null) {
+			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
+		}
 
-		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-		validateSavedRefreshToken(authUser.email(), refreshToken);
+		try {
+			jwtProviderService.validateTokenExists(accessToken);
+			jwtProviderService.validateTokenExists(refreshToken);
 
-		Member member = getMemberByEmail(authUser.email());
+			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
+			String emailFromRefresh = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
 
-		String newAccessToken = jwtProviderService.generateAccessToken(
-			member.getId(),
-			member.getEmail(),
-			member.getNickname(),
-			member.getProfileImageUrl()
-		);
-		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
+			if (!emailFromRefresh.equals(emailFromAccess)) {
+				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
+			}
 
-		tokenRedisRepository.deleteToken(authUser.email());
-		tokenRedisRepository.setToken(authUser.email(), newRefreshToken);
+			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
+			String newRefreshToken = jwtProviderService.generateRefreshToken(emailFromRefresh);
 
-		setTokensInResponse(response, newAccessToken, newRefreshToken);
+			tokenRedisRepository.deleteRefreshToken(emailFromRefresh);
+			tokenRedisRepository.setRefreshToken(emailFromRefresh, newRefreshToken);
 
-		return new TokenResDto(accessToken);
+			setTokensInResponse(response, newAccessToken, newRefreshToken);
+
+			return new TokenResDto(newAccessToken);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
 	}
 
 	private Member findByMemberEmail(String email) {
@@ -89,24 +96,6 @@ public class AuthenticationService {
 		if (!passwordEncoder.matches(password, encodedPassword)) {
 			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_PASSWORD);
 		}
-	}
-
-	private void validateRefreshToken(String refreshToken) {
-		if (!jwtProviderService.isUsable(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
-	}
-
-	private void validateSavedRefreshToken(String email, String refreshToken) {
-		String savedRefreshToken = tokenRedisRepository.getToken(email);
-		if (!savedRefreshToken.equals(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
-	}
-
-	private Member getMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
