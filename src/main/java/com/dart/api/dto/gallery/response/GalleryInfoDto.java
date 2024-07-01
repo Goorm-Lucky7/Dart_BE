@@ -6,7 +6,6 @@ import java.util.List;
 public record GalleryInfoDto(
 	String thumbnail,
 	String nickname,
-	String profileImage,
 	String title,
 	String content,
 	LocalDateTime startDate,
@@ -15,6 +14,7 @@ public record GalleryInfoDto(
 	float reviewAverage,
 	boolean hasTicket,
 	boolean isOpen,
-	List<String> hashtags
+	List<String> hashtags,
+	String address
 ) {
 }

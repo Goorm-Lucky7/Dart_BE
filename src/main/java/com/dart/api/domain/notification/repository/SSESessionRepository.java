@@ -29,24 +29,6 @@ public class SSESessionRepository {
 		return sseEmitter;
 	}
 
-	public void sendEvent(Long clientId, Object event, String comment) {
-		SseEmitter sseEmitter = sseSessionDB.get(clientId);
-
-		if (sseEmitter != null) {
-			try {
-				sseEmitter.send(SseEmitter.event()
-					.id(String.valueOf(clientId))
-					.name(SSE_EMITTER_EVENT_NAME)
-					.data(event, MediaType.APPLICATION_JSON)
-					.comment(comment));
-				log.info("[✅ LOGGER] EVENT SENT TO CLIENT ID: {}", clientId);
-			} catch (Exception e) {
-				deleteSSEEmitterByClientId(clientId);
-				log.error("[✅ LOGGER] FAILED TO SEND EVENT TO CLIENT ID: {}", clientId, e);
-			}
-		}
-	}
-
 	public void sendEvent(Long clientId, NotificationReadDto notificationReadDto) {
 		SseEmitter sseEmitter = sseSessionDB.get(clientId);
 

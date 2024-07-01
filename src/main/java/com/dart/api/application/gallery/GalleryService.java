@@ -162,9 +162,9 @@ public class GalleryService {
 
 		boolean isOpen = isGalleryOpen(gallery);
 
-		return new GalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
-			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getContent(), gallery.getStartDate(),
-			gallery.getEndDate(), gallery.getFee(), reviewAverage, hasTicket, isOpen, hashtags);
+		return new GalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(), gallery.getTitle(),
+			gallery.getContent(), gallery.getStartDate(), gallery.getEndDate(), gallery.getFee(), reviewAverage,
+			hasTicket, isOpen, hashtags, gallery.getAddress());
 	}
 
 	@Transactional(readOnly = true)
