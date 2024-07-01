@@ -1,3 +1,4 @@
+/*
 package com.dart.api.infrastructure.redis;
 
 import static com.dart.global.common.util.RedisConstant.*;
@@ -58,3 +59,4 @@ public class RedisDataInitializer {
 		);
 	}
 }
+*/

@@ -26,7 +26,7 @@ public class AutocompleteRedisRepository {
 	private final ValueRedisRepository valueRedisRepository;
 	private final ZSetRedisRepository zSetRedisRepository;
 
-	public void insert(String keyword, String category) {
+	public void insert(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
 
 		for (int i = 1; i <= keyword.length(); i++) {
@@ -39,10 +39,10 @@ public class AutocompleteRedisRepository {
 		}
 	}
 
-	public List<String> search(String keyword, String category) {
+	public List<String> search(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
-		String key = generateCategoryPrefixKey(keyword, category);
-		String keyRemovedSpace = generateCategoryPrefixKey(keyword, category).trim();
+		String key = generateCategoryPrefixKey(category, keyword);
+		String keyRemovedSpace = generateCategoryPrefixKey(category, keyword).trim();
 
 		SortedSet<String> combinedSet = getCombinedSearchResults(key, keyRemovedSpace);
 
@@ -52,7 +52,7 @@ public class AutocompleteRedisRepository {
 			.collect(Collectors.toList());
 	}
 
-	public void remove(String keyword, String category) {
+	public void remove(String category, String keyword) {
 		keyword = CharacterProcessor.splitString(keyword);
 
 		for (int i = 1; i <= keyword.length(); i++) {
@@ -81,7 +81,7 @@ public class AutocompleteRedisRepository {
 		}
 	}
 
-	public boolean exists(String keyword, String category) {
+	public boolean exists(String category, String keyword) {
 		String key = generateCategoryPrefixKey(keyword, category);
 		Double score = zSetRedisRepository.score(key, keyword);
 		return score != null && score > 0;
