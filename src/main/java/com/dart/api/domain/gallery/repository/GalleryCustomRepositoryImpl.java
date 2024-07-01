@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.QGallery;
-import com.dart.api.domain.review.entity.QReview;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -30,7 +29,6 @@ public class GalleryCustomRepositoryImpl implements GalleryCustomRepository {
 	public Page<Gallery> findGalleriesByCriteria(Pageable pageable, String category, String keyword, String sort,
 		String cost, String display) {
 		final QGallery gallery = QGallery.gallery;
-		final QReview review = QReview.review;
 
 		BooleanBuilder builder = new BooleanBuilder()
 			.and(gallerySpecification.applyIsPaidCondition())

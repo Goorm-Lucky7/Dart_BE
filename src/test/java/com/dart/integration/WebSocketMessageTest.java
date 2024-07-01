@@ -3,6 +3,7 @@ package com.dart.integration;
 import static com.dart.global.common.util.AuthConstant.*;
 
 import java.lang.reflect.Type;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -65,7 +66,8 @@ public class WebSocketMessageTest {
 			1L,
 			"test1@example.com",
 			"test1",
-			"testProfileImage"
+			"testProfileImage",
+			UUID.randomUUID().toString()
 		);
 
 		// WebSocket 클라이언트 설정

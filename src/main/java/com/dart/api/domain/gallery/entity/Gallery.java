@@ -68,13 +68,16 @@ public class Gallery extends BaseTimeEntity {
 	@Column(name = "re_exhibition_request_count", nullable = false)
 	private int reExhibitionRequestCount;
 
+	@Column(name = "address")
+	private String address;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "meber_id")
 	private Member member;
 
 	@Builder
 	public Gallery(String title, String content, String thumbnail, LocalDateTime startDate, LocalDateTime endDate,
-		Cost cost, Template template, int fee, int generatedCost, Member member) {
+		Cost cost, Template template, int fee, int generatedCost, String address, Member member) {
 		this.title = title;
 		this.content = content;
 		this.thumbnail = thumbnail;
@@ -84,6 +87,7 @@ public class Gallery extends BaseTimeEntity {
 		this.endDate = endDate;
 		this.fee = fee;
 		this.generatedCost = generatedCost;
+		this.address = address;
 		this.isPaid = !Cost.PAY.equals(cost);
 		this.member = member;
 	}
@@ -98,6 +102,7 @@ public class Gallery extends BaseTimeEntity {
 			.template(Template.fromValue(createGalleryDto.template()))
 			.fee(createGalleryDto.fee())
 			.generatedCost(createGalleryDto.generatedCost())
+			.address(createGalleryDto.address())
 			.thumbnail(thumbnailUrl)
 			.member(member)
 			.build();

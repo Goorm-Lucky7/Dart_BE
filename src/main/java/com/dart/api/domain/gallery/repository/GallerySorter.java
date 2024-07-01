@@ -2,6 +2,8 @@ package com.dart.api.domain.gallery.repository;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Component;
 
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -24,24 +26,28 @@ public class GallerySorter {
 	public void applySorting(JPAQuery<Gallery> query, String sort) {
 		final QGallery gallery = QGallery.gallery;
 		final QReview review = QReview.review;
+		LocalDateTime currentDateTime = LocalDateTime.now();
 
 		if (sort == null || sort.isEmpty()) {
-			orderByLatest(query, gallery);
+			orderByLatest(query, gallery, currentDateTime);
 		} else {
 			Sort sortEnum = Sort.fromValue(sort);
 			switch (sortEnum) {
-				case LATEST -> orderByLatest(query, gallery);
-				case LIKED -> orderByLiked(query, gallery, review);
+				case LATEST -> orderByLatest(query, gallery, currentDateTime);
+				case LIKED -> orderByLiked(query, gallery, review, currentDateTime);
 				default -> throw new BadRequestException(ErrorCode.FAIL_INVALID_SORT_VALUE);
 			}
 		}
 	}
 
-	private void orderByLatest(JPAQuery<Gallery> query, QGallery gallery) {
-		query.orderBy(gallery.createdAt.desc());
+	private void orderByLatest(JPAQuery<Gallery> query, QGallery gallery, LocalDateTime currentDateTime) {
+		NumberExpression<Integer> sortingOrder = getSortingOrder(gallery, currentDateTime);
+
+		query.orderBy(sortingOrder.asc(), gallery.createdAt.desc());
 	}
 
-	private void orderByLiked(JPAQuery<Gallery> query, QGallery gallery, QReview review) {
+	private void orderByLiked(JPAQuery<Gallery> query, QGallery gallery, QReview review,
+		LocalDateTime currentDateTime) {
 		NumberExpression<Double> averageScore = new CaseBuilder()
 			.when(review.score.eq(Score.ONE_STAR)).then(ONE_STAR)
 			.when(review.score.eq(Score.TWO_STAR)).then(TWO_STAR)
@@ -51,8 +57,17 @@ public class GallerySorter {
 			.otherwise(ZERO_STAR)
 			.avg();
 
+		NumberExpression<Integer> sortingOrder = getSortingOrder(gallery, currentDateTime);
+
 		query.leftJoin(review).on(review.gallery.eq(gallery))
 			.groupBy(gallery.id)
-			.orderBy(averageScore.desc(), gallery.createdAt.desc());
+			.orderBy(sortingOrder.asc(), averageScore.desc(), gallery.createdAt.desc());
+	}
+
+	private NumberExpression<Integer> getSortingOrder(QGallery gallery, LocalDateTime currentDateTime) {
+		return new CaseBuilder()
+			.when(gallery.endDate.isNull().or(gallery.endDate.after(currentDateTime)))
+			.then(FIRST_SORT)
+			.otherwise(SECOND_SORT);
 	}
 }

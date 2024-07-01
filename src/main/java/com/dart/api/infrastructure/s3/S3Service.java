@@ -2,6 +2,8 @@ package com.dart.api.infrastructure.s3;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,12 +16,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import net.coobird.thumbnailator.Thumbnails;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
@@ -43,6 +46,19 @@ public class S3Service {
 	private String cloudFrontDomain;
 
 	public String uploadFile(MultipartFile multipartFile) {
+		return processAndUploadFile(multipartFile, false);
+	}
+
+	public String uploadThumbnail(MultipartFile imageFile) {
+		return processAndUploadFile(imageFile, true);
+	}
+
+	public void deleteFile(String fileUrl) {
+		String fileKey = extractFileKeyFromUrl(fileUrl);
+		amazonS3.deleteObject(new DeleteObjectRequest(bucket, fileKey));
+	}
+
+	private String processAndUploadFile(MultipartFile multipartFile, boolean isThumbnail) {
 		String fileName = generateUniqueFilename(multipartFile.getOriginalFilename());
 
 		if (!isValidImageFile(fileName)) {
@@ -50,24 +66,17 @@ public class S3Service {
 		}
 
 		try {
-			ObjectMetadata metadata = createMetadata(multipartFile.getSize(), getContentTypeFromExtension(fileName));
-			amazonS3.putObject(new PutObjectRequest(bucket, fileName, multipartFile.getInputStream(), metadata));
-		} catch (IOException e) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
-		}
+			BufferedImage image = ImageIO.read(multipartFile.getInputStream());
+			if (image == null) {
+				throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
+			}
 
-		return convertToCloudFrontUrl(fileName);
-	}
-
-	public String uploadThumbnail(MultipartFile imageFile) {
-		String fileName = generateUniqueFilename(imageFile.getOriginalFilename());
-
-		try {
-			BufferedImage image = ImageIO.read(imageFile.getInputStream());
-			BufferedImage thumbnail = resizeImageIfNeeded(image);
+			BufferedImage processedImage = isThumbnail ? resizeImageIfNeeded(image) : image;
+			String fileExtension = getFileExtension(fileName);
+			BufferedImage watermarkedImage = addWatermark(processedImage, WATERMARK_TEXT, fileExtension);
 
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			ImageIO.write(thumbnail, getFileExtension(fileName), os);
+			writeImage(watermarkedImage, fileExtension, os);
 			InputStream is = new ByteArrayInputStream(os.toByteArray());
 
 			ObjectMetadata metadata = createMetadata(os.size(), getContentTypeFromExtension(fileName));
@@ -79,14 +88,9 @@ public class S3Service {
 		}
 	}
 
-	public void deleteFile(String fileUrl) {
-		String fileKey = extractFileKeyFromUrl(fileUrl);
-		amazonS3.deleteObject(new DeleteObjectRequest(bucket, fileKey));
-	}
-
 	private boolean isValidImageFile(String fileName) {
-		String ext = getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png");
+		String ext = getFileExtension(fileName).toLowerCase();
+		return ext.equals("jpg") || ext.equals("jpeg") || ext.equals("png");
 	}
 
 	private String extractFileKeyFromUrl(String fileUrl) {
@@ -120,9 +124,17 @@ public class S3Service {
 
 	private BufferedImage resizeImageIfNeeded(BufferedImage image) throws IOException {
 		if (isNeedsResizing(image)) {
-			return Thumbnails.of(image)
-				.size(THUMBNAIL_RESIZING_SIZE, THUMBNAIL_RESIZING_SIZE)
-				.asBufferedImage();
+			int width = image.getWidth();
+			int height = image.getHeight();
+			int newWidth = width > height ? THUMBNAIL_RESIZING_SIZE : (THUMBNAIL_RESIZING_SIZE * width) / height;
+			int newHeight = height > width ? THUMBNAIL_RESIZING_SIZE : (THUMBNAIL_RESIZING_SIZE * height) / width;
+
+			BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, image.getType());
+			Graphics2D g2d = resizedImage.createGraphics();
+			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2d.drawImage(image, 0, 0, newWidth, newHeight, null);
+			g2d.dispose();
+			return resizedImage;
 		} else {
 			return image;
 		}
@@ -148,5 +160,47 @@ public class S3Service {
 
 	private String convertToCloudFrontUrl(String fileName) {
 		return String.format("%s/%s", cloudFrontDomain, fileName);
+	}
+
+	private BufferedImage addWatermark(BufferedImage sourceImage, String watermarkText, String fileExtension) {
+		int width = sourceImage.getWidth();
+		int height = sourceImage.getHeight();
+
+		int imageType =
+			fileExtension.equalsIgnoreCase("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+
+		BufferedImage watermarked = new BufferedImage(width, height, imageType);
+		Graphics2D g2d = watermarked.createGraphics();
+
+		g2d.drawImage(sourceImage, 0, 0, null);
+
+		AlphaComposite alphaChannel = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
+		g2d.setComposite(alphaChannel);
+		g2d.setColor(Color.GRAY);
+		g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+
+		FontMetrics fontMetrics = g2d.getFontMetrics();
+		Rectangle2D rect = fontMetrics.getStringBounds(watermarkText, g2d);
+
+		int centerX = width - (int)rect.getWidth() - 10;
+		int centerY = height - (int)rect.getHeight() - 10;
+
+		g2d.drawString(watermarkText, centerX, centerY);
+		g2d.dispose();
+
+		return watermarked;
+	}
+
+	private void writeImage(BufferedImage image, String fileExtension, ByteArrayOutputStream os) throws IOException {
+		if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("jpeg")) {
+			ImageIO.write(image, "jpg", os);
+		} else if (fileExtension.equalsIgnoreCase("png")) {
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
+			ImageWriteParam param = writer.getDefaultWriteParam();
+			ImageOutputStream ios = ImageIO.createImageOutputStream(os);
+			writer.setOutput(ios);
+			writer.write(null, new javax.imageio.IIOImage(image, null, null), param);
+			writer.dispose();
+		}
 	}
 }
