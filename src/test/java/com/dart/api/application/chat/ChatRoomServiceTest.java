@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.dart.api.domain.chat.entity.ChatRoom;
+import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
@@ -26,6 +27,9 @@ class ChatRoomServiceTest {
 
 	@Mock
 	private ChatRoomRepository chatRoomRepository;
+
+	@Mock
+	private ChatMessageRepository chatMessageRepository;
 
 	@Mock
 	private ChatRedisRepository chatRedisRepository;
@@ -60,6 +64,7 @@ class ChatRoomServiceTest {
 
 		// THEN
 		verify(chatRoomRepository).findByGallery(gallery);
+		verify(chatMessageRepository).deleteByChatRoom(chatRoom);
 		verify(chatRedisRepository).deleteChatMessages(chatRoom.getId());
 		verify(chatRoomRepository).delete(chatRoom);
 	}
