@@ -69,7 +69,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
 		if (!jwtProviderService.isUsable(accessToken)) {
 			log.warn("[✅ LOGGER] JWT TOKEN IS NOT USABLE");
-			throw new NotFoundException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+			throw new NotFoundException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 	}
 }

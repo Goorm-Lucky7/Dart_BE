@@ -13,9 +13,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.global.auth.filter.AuthenticationFilter;
 
@@ -43,14 +44,14 @@ public class SecurityConfig {
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/kakao/**")
-			.requestMatchers("/api/login");
+			.requestMatchers("/api/login")
+			.requestMatchers("/api/reissue");
 	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-		httpSecurity
-			.csrf(AbstractHttpConfigurer::disable)
+		httpSecurity.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
 
@@ -59,7 +60,7 @@ public class SecurityConfig {
 			.requestMatchers("/ws/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/reissue").permitAll()
+			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
@@ -67,15 +68,13 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/mypage").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
 			.anyRequest().authenticated()
 		);
 
-		httpSecurity
-			.addFilterBefore(
-				new AuthenticationFilter(jwtProviderService, handlerExceptionResolver),
-				UsernamePasswordAuthenticationFilter.class
-			);
+		httpSecurity.addFilterBefore(
+			new AuthenticationFilter(jwtProviderService, handlerExceptionResolver),
+			UsernamePasswordAuthenticationFilter.class
+		);
 
 		httpSecurity.exceptionHandling((exceptionHandling) -> {
 			HttpStatusEntryPoint httpStatusEntryPoint = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);

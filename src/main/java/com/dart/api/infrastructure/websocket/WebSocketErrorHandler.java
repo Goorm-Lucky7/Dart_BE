@@ -52,11 +52,11 @@ public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
 	}
 
 	private Message<byte[]> handleJwtException(Message<byte[]> clientMessage, Throwable throwable) {
-		return prepareErrorMessage(ErrorCode.FAIL_ACCESS_TOKEN_EXPIRED);
+		return prepareErrorMessage(ErrorCode.FAIL_TOKEN_EXPIRED);
 	}
 
 	private Message<byte[]> handleNotFoundException(Message<byte[]> clientMessage, Throwable throwable) {
-		return prepareErrorMessage(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
+		return prepareErrorMessage(ErrorCode.FAIL_INVALID_TOKEN);
 	}
 
 	private Message<byte[]> prepareErrorMessage(ErrorCode errorCode) {

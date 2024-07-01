@@ -1,6 +1,5 @@
 package com.dart.api.application.member;
 
-import static com.dart.global.common.util.RedisConstant.*;
 import static java.lang.Boolean.*;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.MemberUpdateDto;
@@ -22,7 +20,6 @@ import com.dart.api.dto.member.response.MemberProfileResDto;
 import com.dart.api.domain.auth.repository.EmailRedisRepository;
 import com.dart.api.domain.auth.repository.NicknameRedisRepository;
 import com.dart.api.domain.auth.repository.SessionRedisRepository;
-import com.dart.api.dto.member.response.MemberSimpleProfileResDto;
 import com.dart.api.infrastructure.s3.S3Service;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.ConflictException;
@@ -38,7 +35,6 @@ public class MemberService {
 	private final EmailRedisRepository emailRedisRepository;
 	private final NicknameRedisRepository nicknameRedisRepository;
 	private final SessionRedisRepository sessionRedisRepository;
-	private final AutocompleteRedisRepository autocompleteRedisRepository;
 
 	private final S3Service s3Service;
 	private final NicknameService nicknameService;
@@ -70,20 +66,18 @@ public class MemberService {
 	}
 
 	@Transactional
-	public MemberSimpleProfileResDto updateMemberProfile(
+	public void updateMemberProfile(
 		AuthUser authUser,
 		MemberUpdateDto memberUpdateDto,
 		MultipartFile profileImage,
 		String sessionId) {
 
 		Member member = findMemberByEmail(authUser.email());
-    validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
+		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
 		String newProfileImageUrl = handleProfileImageUpdate(profileImage, member.getProfileImageUrl());
 
 		member.updateMemberProfile(memberUpdateDto, newProfileImageUrl);
 		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
-
-		return new MemberSimpleProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public void checkNicknameDuplication(NicknameDuplicationCheckDto nicknameDuplicationCheckDto, String sessionId,
@@ -114,8 +108,6 @@ public class MemberService {
 		if (newNickname != null && !newNickname.equals(currentNickname)) {
 			sessionRedisRepository.deleteSessionNicknameMapping(sessionId);
 			nicknameRedisRepository.deleteNickname(newNickname);
-			autocompleteRedisRepository.remove(AUTHOR, currentNickname);
-			autocompleteRedisRepository.insert(AUTHOR, newNickname);
 		}
 	}
 
@@ -171,8 +163,8 @@ public class MemberService {
 	}
 
 	private void validateMemberExistsByNickname(String nickname) {
-		if (!memberRepository.existsByNickname(nickname)) {
-			throw new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND);
+		if (memberRepository.existsByEmail(nickname)) {
+			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
 	}
 }
