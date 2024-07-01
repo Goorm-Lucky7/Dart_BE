@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -38,8 +39,11 @@ public class AuthenticationService {
 
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
-		final Member member = authenticateMember(loginReqDto);
-		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+		final Member member = findByMemberEmail(loginReqDto.email());
+		validatePasswordMatch(loginReqDto.password(), member.getPassword());
+
+		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
+			member.getNickname(), member.getProfileImageUrl());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		tokenRedisRepository.setToken(loginReqDto.email(), refreshToken);
@@ -52,27 +56,28 @@ public class AuthenticationService {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
-		if (accessToken == null || refreshToken == null) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
-		}
+		validateRefreshToken(refreshToken);
 
-		try {
-			jwtProviderService.validateRefreshToken(refreshToken);
-			String email = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
+		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
+		validateSavedRefreshToken(authUser.email(), refreshToken);
 
-			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
+		Member member = getMemberByEmail(authUser.email());
 
-			tokenRedisRepository.deleteToken(email);
-			tokenRedisRepository.setToken(email, newRefreshToken);
+		String newAccessToken = jwtProviderService.generateAccessToken(
+			member.getId(),
+			member.getEmail(),
+			member.getNickname(),
+			member.getProfileImageUrl()
+		);
+		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
 
-			setTokensInResponse(response, BEARER + newAccessToken, refreshToken);
+		tokenRedisRepository.deleteToken(authUser.email());
+		tokenRedisRepository.setToken(authUser.email(), newRefreshToken);
 
-			return new TokenResDto(newAccessToken);
+		setTokensInResponse(response, newAccessToken, newRefreshToken);
 
-		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_ACCESS_TOKEN);
-		}
+		return new TokenResDto(accessToken);
+
 	}
 
 	private Member authenticateMember(LoginReqDto loginReqDto) {
@@ -113,6 +118,12 @@ public class AuthenticationService {
 		setAccessToken(response, accessToken);
 		setRefreshToken(response, refreshToken);
 	}
+
+	private Member getMemberByEmail(String email) {
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+	}
+
 
 	private String extractTokenFromHeader(HttpServletRequest request) {
 		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
