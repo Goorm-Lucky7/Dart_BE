@@ -58,18 +58,23 @@ public class AuthenticationService {
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
 		if (accessToken == null || refreshToken == null) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
 		}
 
 		try {
 			jwtProviderService.validateRefreshToken(refreshToken);
-			String email = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
+			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
+			String emailFromRefresh = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
+
+			if (!emailFromRefresh.equals(emailFromAccess)) {
+				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
+			}
 
 			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
+			String newRefreshToken = jwtProviderService.generateRefreshToken(emailFromRefresh);
 
-			tokenRedisRepository.deleteToken(email);
-			tokenRedisRepository.setToken(email, newRefreshToken);
+			tokenRedisRepository.deleteToken(emailFromRefresh);
+			tokenRedisRepository.setToken(emailFromRefresh, newRefreshToken);
 
 			setTokensInResponse(response, newAccessToken, newRefreshToken);
 

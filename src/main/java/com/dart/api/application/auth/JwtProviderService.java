@@ -106,6 +106,15 @@ public class JwtProviderService {
 			claims.get(NICKNAME, String.class));
 	}
 
+	public String extractEmailFromAccessToken(String accessToken) {
+		try {
+			final Claims claims = getClaimsByToken(accessToken);
+			return claims.get(EMAIL, String.class);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
 	public String extractEmailFromRefreshToken(String refreshToken) {
 		try {
 			final Claims claims = getClaimsByToken(refreshToken);
