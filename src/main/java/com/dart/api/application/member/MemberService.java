@@ -47,7 +47,7 @@ public class MemberService {
 
 		verifyEmailChecked(signUpDto.email());
 		verifyNicknameChecked(signUpDto.nickname());
-		validateMemberExistsByEmail(signUpDto.email());
+		validateMemberNotDuplicated(signUpDto.email());
 
 		final String encodedPassword = passwordEncoder.encode(signUpDto.password());
 		final Member member = Member.signup(signUpDto, encodedPassword);
@@ -58,7 +58,7 @@ public class MemberService {
 	}
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
-		validateMemberExistsByNickname(nickname);
+		validateMemberExists(nickname);
 		if(isOwnProfile(authUser.nickname(), nickname)) {
 			return getOwnProfile(nickname);
 		} else {
@@ -159,15 +159,15 @@ public class MemberService {
 		}
 	}
 
-	private void validateMemberExistsByEmail(String email) {
+	private void validateMemberNotDuplicated(String email) {
 		if (memberRepository.existsByEmail(email)) {
 			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
 		}
 	}
 
-	private void validateMemberExistsByNickname(String nickname) {
-		if (memberRepository.existsByEmail(nickname)) {
-			throw new ConflictException(ErrorCode.FAIL_EMAIL_CONFLICT);
+	private void validateMemberExists(String nickname) {
+		if (!memberRepository.existsByEmail(nickname)) {
+			throw new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND);
 		}
 	}
 }
