@@ -15,4 +15,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
 	@Query("SELECT cm FROM ChatMessage cm WHERE cm.chatRoom = :chatRoom ORDER BY cm.createdAt DESC")
 	Page<ChatMessage> findByChatRoomOrderByCreatedAtDesc(@Param("chatRoom") ChatRoom chatRoom, Pageable pageable);
+
+	void deleteByChatRoom(ChatRoom chatRoom);
 }
