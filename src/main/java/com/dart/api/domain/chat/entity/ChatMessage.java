@@ -52,9 +52,9 @@ public class ChatMessage {
 	private Member member;
 
 	@Builder
-	private ChatMessage(String content, boolean isAuthor, ChatRoom chatRoom, Member member) {
+	private ChatMessage(String content, LocalDateTime createdAt, boolean isAuthor, ChatRoom chatRoom, Member member) {
 		this.content = content;
-		this.createdAt = LocalDateTime.now();
+		this.createdAt = createdAt;
 		this.isAuthor = isAuthor;
 		this.chatRoom = chatRoom;
 		this.member = member;
@@ -66,9 +66,10 @@ public class ChatMessage {
 		ChatMessageCreateDto chatMessageCreateDto
 	) {
 		return ChatMessage.builder()
-			.chatRoom(chatRoom)
 			.content(chatMessageCreateDto.content())
-			.isAuthor(chatRoom.getGallery().getMember().equals(member))
+			.createdAt(chatMessageCreateDto.createdAt())
+			.isAuthor(chatMessageCreateDto.isAuthor())
+			.chatRoom(chatRoom)
 			.member(member)
 			.build();
 	}
