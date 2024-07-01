@@ -1,4 +1,3 @@
-/*
 package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
@@ -49,9 +47,6 @@ class ChatMessageServiceTest {
 
 	@Mock
 	private MemberRepository memberRepository;
-
-	@Mock
-	private SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Mock
 	private ChatRedisRepository chatRedisRepository;
@@ -85,7 +80,6 @@ class ChatMessageServiceTest {
 		// THEN
 		verify(chatMessageRepository, times(1)).save(any(ChatMessage.class));
 		verify(chatRedisRepository, times(1)).saveChatMessage(any(ChatMessageSendDto.class), any(Member.class));
-		verify(simpMessageSendingOperations, times(1)).convertAndSend(anyString(), anyString());
 	}
 
 	@Test
@@ -197,4 +191,3 @@ class ChatMessageServiceTest {
 		verify(chatRedisRepository, times(1)).saveChatMessage(any(ChatMessageSendDto.class), any(Member.class));
 	}
 }
-*/
