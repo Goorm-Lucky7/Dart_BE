@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.dart.api.dto.notification.response.NotificationReadDto;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,19 +47,41 @@ public class SSESessionRepository {
 		}
 	}
 
-	public void sendEventToAll(Object event, String comment) {
-		sseSessionDB.keySet().forEach(clientId -> sendEvent(clientId, event, comment));
+	public void sendEvent(Long clientId, NotificationReadDto notificationReadDto) {
+		SseEmitter sseEmitter = sseSessionDB.get(clientId);
+
+		if (sseEmitter != null) {
+			try {
+				sseEmitter.send(SseEmitter.event()
+					.name(SSE_EMITTER_EVENT_NAME)
+					.data(notificationReadDto, MediaType.APPLICATION_JSON));
+			} catch (Exception e) {
+				deleteSSEEmitterByClientId(clientId);
+			}
+		}
+	}
+
+	public void sendEventToAll(NotificationReadDto notificationReadDto) {
+		sseSessionDB.keySet().forEach(clientId -> sendEvent(clientId, notificationReadDto));
 	}
 
 	public void deleteSSEEmitterByClientId(Long clientId) {
 		sseSessionDB.remove(clientId);
-		log.info("[✅ LOGGER] DELETE SSE EMITTER FOR CLIENT ID: {}", clientId);
 	}
 
 	private void handleSSEEmitter(SseEmitter sseEmitter, Long clientId) {
-		sseEmitter.onCompletion(() -> deleteSSEEmitterByClientId(clientId));
-		sseEmitter.onTimeout(() -> deleteSSEEmitterByClientId(clientId));
-		sseEmitter.onError(error -> deleteSSEEmitterByClientId(clientId));
+		sseEmitter.onCompletion(() -> {
+			log.info("[✅ LOGGER] COMPLETION SSE EMITTER FOR CLIENT ID: {}", clientId);
+			deleteSSEEmitterByClientId(clientId);
+		});
+		sseEmitter.onTimeout(() -> {
+			log.info("[✅ LOGGER] TIMEOUT SSE EMITTER FOR CLIENT ID: {}", clientId);
+			deleteSSEEmitterByClientId(clientId);
+		});
+		sseEmitter.onError(error -> {
+			log.error("[✅ LOGGER] ERROR SSE EMITTER FOR CLIENT ID: {}", clientId, error);
+			deleteSSEEmitterByClientId(clientId);
+		});
 	}
 
 	public void completeSSEEmitter(Long clientId) {

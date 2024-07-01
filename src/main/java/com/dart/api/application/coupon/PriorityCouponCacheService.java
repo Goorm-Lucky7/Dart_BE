@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class PriorityCouponCacheService {
 	private final PriorityCouponRepository priorityCouponRepository;
 
-	@Cacheable(key = "#couponId + #now.toString()")
+	@Cacheable(key = "#couponId + #now.toString()", cacheManager = "couponCacheManager")
 	public PriorityCoupon getByIdAndStartAt(Long couponId, LocalDate now) {
 		return priorityCouponRepository.findCouponByIdAndDateRange(couponId, now)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
