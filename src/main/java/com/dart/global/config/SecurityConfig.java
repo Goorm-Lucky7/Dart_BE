@@ -35,6 +35,8 @@ public class SecurityConfig {
 		this.handlerExceptionResolver = handlerExceptionResolver;
 	}
 
+
+
 	@Bean
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		return web -> web.ignoring()
