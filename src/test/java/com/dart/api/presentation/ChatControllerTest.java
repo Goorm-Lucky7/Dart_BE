@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.dart.api.application.chat.ChatMessageService;
@@ -32,6 +33,9 @@ class ChatControllerTest {
 
 	@Mock
 	private ChatMessageService chatMessageService;
+
+	@Mock
+	private SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Mock
 	private SimpMessageHeaderAccessor simpMessageHeaderAccessor;
@@ -57,10 +61,11 @@ class ChatControllerTest {
 		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
 
 		// WHEN
-		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto);
 
 		// THEN
-		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto);
+		verify(simpMessageSendingOperations).convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@Test

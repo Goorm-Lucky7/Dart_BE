@@ -59,7 +59,7 @@ class WebSocketEventListenerTest {
 		// GIVEN
 		String sessionId = "testSessionId";
 		String chatRoomId = "1";
-		String destination = "/sub/ws/" + chatRoomId;
+		String destination = TOPIC_PREFIX + chatRoomId;
 
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 		Member member = MemberFixture.createMemberEntity();
@@ -92,7 +92,7 @@ class WebSocketEventListenerTest {
 	void handleSubscribeEvent_sessionId_BadRequestException_fail() {
 		// GIVEN
 		String chatRoomId = "1";
-		String destination = "/sub/ws/" + chatRoomId;
+		String destination = TOPIC_PREFIX + chatRoomId;
 
 		AuthUser authUser = MemberFixture.createAuthUserEntity();
 

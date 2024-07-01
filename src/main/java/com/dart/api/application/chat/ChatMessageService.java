@@ -8,12 +8,9 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
@@ -27,7 +24,6 @@ import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageInfo;
 import com.dart.api.dto.page.PageResponse;
 import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -40,23 +36,16 @@ public class ChatMessageService {
 	private final MemberRepository memberRepository;
 	private final ChatRedisRepository chatRedisRepository;
 	private final ChatMessageRepository chatMessageRepository;
-	private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 	@Transactional
-	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto,
-		SimpMessageHeaderAccessor simpMessageHeaderAccessor
-	) {
+	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
-		final AuthUser authUser = extractAuthUserEmail(simpMessageHeaderAccessor);
-		final Member member = getMemberByEmail(authUser.email());
+		final Member member = getMemberByNickname(chatMessageCreateDto.nickname());
 		final ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
-
 		chatMessageRepository.save(chatMessage);
 
 		final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
-
-		simpMessageSendingOperations.convertAndSend("/sub/ws/" + chatRoomId, chatMessageCreateDto.content());
 	}
 
 	@Transactional(readOnly = true)
@@ -72,18 +61,9 @@ public class ChatMessageService {
 		return createPageResponse(chatMessageReadDtoList, page, size);
 	}
 
-	private AuthUser extractAuthUserEmail(SimpMessageHeaderAccessor simpMessageHeaderAccessor) {
-		return (AuthUser)simpMessageHeaderAccessor.getSessionAttributes().get(CHAT_SESSION_USER);
-	}
-
 	private ChatRoom getChatRoomById(Long chatRoomId) {
 		return chatRoomRepository.findById(chatRoomId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
-	}
-
-	private Member getMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED));
 	}
 
 	private Member getMemberByNickname(String nickname) {
