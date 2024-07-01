@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.notification.repository.SSESessionRepository;
+import com.dart.api.dto.notification.response.NotificationReadDto;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -27,7 +28,10 @@ public class GalleryProgressService {
 	}
 
 	public void sendProgress(Long clientId, int progress) {
-		sseSessionRepository.sendEvent(clientId, progress, GALLERY_CREATE_UPDATE_PROGRESS);
+		NotificationReadDto notification = createNotification(progress);
+
+		sseSessionRepository.sendEvent(clientId, notification);
+
 		if (progress == ONE_HUNDRED_PERCENT) {
 			sseSessionRepository.completeSSEEmitter(clientId);
 		}
@@ -37,5 +41,12 @@ public class GalleryProgressService {
 		return memberRepository.findByEmail(authUser.email())
 			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_LOGIN_REQUIRED))
 			.getId();
+	}
+
+	public NotificationReadDto createNotification(int progress) {
+		return NotificationReadDto.builder()
+			.message(progress)
+			.type(null)
+			.build();
 	}
 }
