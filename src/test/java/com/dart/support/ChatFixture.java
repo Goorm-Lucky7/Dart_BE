@@ -4,8 +4,10 @@ import static com.dart.global.common.util.ChatConstant.*;
 
 import java.time.LocalDateTime;
 
+import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.gallery.entity.Gallery;
+import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
 
@@ -22,9 +24,25 @@ public class ChatFixture {
 			.build();
 	}
 
+	public static ChatMessage createChatMessageEntity(ChatRoom chatRoom, Member member,
+		ChatMessageCreateDto chatMessageCreateDto
+	) {
+		return ChatMessage.builder()
+			.content(chatMessageCreateDto.content())
+			.createdAt(chatMessageCreateDto.createdAt())
+			.isAuthor(chatMessageCreateDto.isAuthor())
+			.chatRoom(chatRoom)
+			.member(member)
+			.build();
+	}
+
 	public static ChatMessageCreateDto createChatMessageEntityForChatMessageCreateDto() {
 		return ChatMessageCreateDto.builder()
 			.content("Hello 👋🏻")
+			.createdAt(LocalDateTime.now())
+			.nickname("test1")
+			.profileImageUrl("https://example.com/profile.jpg")
+			.isAuthor(false)
 			.build();
 	}
 
