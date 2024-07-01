@@ -2,7 +2,6 @@ package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 import static com.dart.global.common.util.RedisConstant.*;
-import static com.dart.global.common.util.SSEConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,8 +22,8 @@ import com.dart.api.domain.chat.repository.ChatRoomRepository;
 import com.dart.api.domain.gallery.entity.Cost;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Template;
-import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.gallery.repository.AutocompleteRedisRepository;
+import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
