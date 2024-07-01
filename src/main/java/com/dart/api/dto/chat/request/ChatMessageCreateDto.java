@@ -10,7 +10,7 @@ public record ChatMessageCreateDto(
 	@Size(max = 50, message = "[❎ ERROR] 메시지 내용은 50자 이내여야 합니다.")
 	String content,
 	LocalDateTime createdAt,
-	String nickname,
+	String sender,
 	String profileImageUrl,
 	boolean isAuthor
 ) {
