@@ -57,27 +57,26 @@ public class AuthenticationService {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
-		validateRefreshToken(refreshToken);
+		if (accessToken == null || refreshToken == null) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
 
-		final AuthUser authUser = jwtProviderService.extractAuthUserByAccessToken(accessToken);
-		validateSavedRefreshToken(authUser.email(), refreshToken);
+		try {
+			jwtProviderService.validateRefreshToken(refreshToken);
+			String email = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
 
-		Member member = getMemberByEmail(authUser.email());
+			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
+			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
 
-		String newAccessToken = jwtProviderService.generateAccessToken(
-			member.getId(),
-			member.getEmail(),
-			member.getNickname(),
-			member.getProfileImageUrl()
-		);
-		String newRefreshToken = jwtProviderService.generateRefreshToken(authUser.email());
+			tokenRedisRepository.deleteToken(email);
+			tokenRedisRepository.setToken(email, newRefreshToken);
 
-		tokenRedisRepository.deleteToken(authUser.email());
-		tokenRedisRepository.setToken(authUser.email(), newRefreshToken);
+			setTokensInResponse(response, newAccessToken, newRefreshToken);
 
-		setTokensInResponse(response, newAccessToken, newRefreshToken);
-
-		return new TokenResDto(accessToken);
+			return new TokenResDto(accessToken);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
 	}
 
 	private Member findByMemberEmail(String email) {
@@ -89,24 +88,6 @@ public class AuthenticationService {
 		if (!passwordEncoder.matches(password, encodedPassword)) {
 			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_PASSWORD);
 		}
-	}
-
-	private void validateRefreshToken(String refreshToken) {
-		if (!jwtProviderService.isUsable(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
-	}
-
-	private void validateSavedRefreshToken(String email, String refreshToken) {
-		String savedRefreshToken = tokenRedisRepository.getToken(email);
-		if (!savedRefreshToken.equals(refreshToken)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
-	}
-
-	private Member getMemberByEmail(String email) {
-		return memberRepository.findByEmail(email)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
