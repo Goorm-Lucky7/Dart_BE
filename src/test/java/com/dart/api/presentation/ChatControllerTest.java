@@ -61,10 +61,10 @@ class ChatControllerTest {
 		given(simpMessageHeaderAccessor.getSessionAttributes()).willReturn(sessionAttributes);
 
 		// WHEN
-		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		chatController.saveAndSendChatMessage(chatRoomId, chatMessageCreateDto);
 
 		// THEN
-		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto, simpMessageHeaderAccessor);
+		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto);
 		verify(simpMessageSendingOperations).convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto.content());
 	}
 
