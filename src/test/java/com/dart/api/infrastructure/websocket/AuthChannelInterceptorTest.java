@@ -2,7 +2,6 @@ package com.dart.api.infrastructure.websocket;
 
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.ChatConstant.*;
-import static com.dart.global.common.util.GlobalConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,8 +24,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.error.exception.NotFoundException;
-import com.dart.global.error.model.ErrorCode;
-import com.dart.support.MemberFixture;
+import com.dart.support.AuthFixture;
 
 @ExtendWith(MockitoExtension.class)
 class AuthChannelInterceptorTest {
@@ -45,7 +43,7 @@ class AuthChannelInterceptorTest {
 	void preSend_void_success() {
 		// GIVEN
 		String accessToken = "testValidAccessToken";
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
 		stompHeaderAccessor.setNativeHeader(ACCESS_TOKEN_HEADER, BEARER + " " + accessToken);

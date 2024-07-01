@@ -29,6 +29,7 @@ import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.coupon.response.CouponReadAllDto;
 import com.dart.api.dto.coupon.response.MyCouponReadAllDto;
 import com.dart.global.common.util.ClockHolder;
+import com.dart.support.AuthFixture;
 import com.dart.support.CouponFixture;
 import com.dart.support.MemberFixture;
 
@@ -61,7 +62,7 @@ class CouponServiceTest {
 		// Given
 		List<PriorityCoupon> priorityCoupons = CouponFixture.createPriorityCouponList();
 		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		LocalDate nowDate = LocalDate.now();
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
@@ -89,7 +90,7 @@ class CouponServiceTest {
 		// Given
 		List<PriorityCouponWallet> priorityCouponWallets = CouponFixture.createPriorityCouponWalletList();
 		List<GeneralCouponWallet> generalCouponWallets = CouponFixture.createGeneralCouponWalletList();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		Member member = MemberFixture.createMemberEntity();
 
 		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.ofNullable(member));
@@ -111,7 +112,7 @@ class CouponServiceTest {
 	void readAll_hasCoupon_true() {
 		// Given
 		List<GeneralCoupon> generalCoupons = CouponFixture.createGeneralCouponList();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		LocalDate nowDate = LocalDate.now();
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
@@ -152,7 +153,7 @@ class CouponServiceTest {
 	void readAll_isFinished_true() {
 		// Given
 		List<PriorityCoupon> priorityCoupons = CouponFixture.createPriorityCouponList();
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		LocalDate nowDate = LocalDate.now().plusDays(2);
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
@@ -170,7 +171,7 @@ class CouponServiceTest {
 	@Test
 	void readAll_findAllWithStartedAtBeforeOrEqual_empty() {
 		// Given
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		LocalDate nowDate = LocalDate.now().plusDays(2);
 
 		given(clockHolder.nowDate()).willReturn(nowDate);
