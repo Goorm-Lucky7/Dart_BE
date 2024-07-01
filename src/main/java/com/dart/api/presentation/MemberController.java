@@ -57,7 +57,7 @@ public class MemberController {
 		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
 	}
 
-	@PostMapping("/reissue")
+	@GetMapping("/reissue")
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<TokenResDto> reissue(HttpServletRequest request, HttpServletResponse response) {
 		return ResponseEntity.ok(authenticationService.reissue(request, response));
