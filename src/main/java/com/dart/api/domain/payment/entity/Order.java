@@ -29,13 +29,21 @@ public class Order {
 	@Column(name = "gallery_id", updatable = false, nullable = false)
 	private Long galleryId;
 
+	@Column(name = "is_approved")
+	private boolean isApproved;
+
 	private Order(String tid, Long memberId, Long galleryId) {
 		this.tid = tid;
 		this.memberId = memberId;
 		this.galleryId = galleryId;
+		this.isApproved = false;
 	}
 
 	public static Order create(String tid, Long memberId, Long galleryId) {
 		return new Order(tid, memberId, galleryId);
+	}
+
+	public void approve() {
+		this.isApproved = true;
 	}
 }
