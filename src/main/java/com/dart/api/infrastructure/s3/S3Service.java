@@ -73,10 +73,12 @@ public class S3Service {
 
 			BufferedImage processedImage = isThumbnail ? resizeImageIfNeeded(image) : image;
 			String fileExtension = getFileExtension(fileName);
-			BufferedImage watermarkedImage = addWatermark(processedImage, WATERMARK_TEXT, fileExtension);
+
+			BufferedImage finalImage =
+				isThumbnail ? processedImage : addWatermark(processedImage, WATERMARK_TEXT, fileExtension);
 
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			writeImage(watermarkedImage, fileExtension, os);
+			writeImage(finalImage, fileExtension, os);
 			InputStream is = new ByteArrayInputStream(os.toByteArray());
 
 			ObjectMetadata metadata = createMetadata(os.size(), getContentTypeFromExtension(fileName));
@@ -123,25 +125,36 @@ public class S3Service {
 	}
 
 	private BufferedImage resizeImageIfNeeded(BufferedImage image) throws IOException {
-		if (isNeedsResizing(image)) {
-			int width = image.getWidth();
-			int height = image.getHeight();
-			int newWidth = width > height ? THUMBNAIL_RESIZING_SIZE : (THUMBNAIL_RESIZING_SIZE * width) / height;
-			int newHeight = height > width ? THUMBNAIL_RESIZING_SIZE : (THUMBNAIL_RESIZING_SIZE * height) / width;
+		int width = image.getWidth();
+		int height = image.getHeight();
 
-			BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, image.getType());
-			Graphics2D g2d = resizedImage.createGraphics();
-			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-			g2d.drawImage(image, 0, 0, newWidth, newHeight, null);
-			g2d.dispose();
-			return resizedImage;
-		} else {
+		if (width <= THUMBNAIL_RESIZING_SIZE && height <= THUMBNAIL_RESIZING_SIZE) {
 			return image;
+		}
+
+		Dimension newSize = calculateNewSize(width, height);
+		return resizeImage(image, newSize.width, newSize.height);
+	}
+
+	private Dimension calculateNewSize(int width, int height) {
+		if (width > height) {
+			return new Dimension(THUMBNAIL_RESIZING_SIZE, (THUMBNAIL_RESIZING_SIZE * height) / width);
+		} else {
+			return new Dimension((THUMBNAIL_RESIZING_SIZE * width) / height, THUMBNAIL_RESIZING_SIZE);
 		}
 	}
 
-	private boolean isNeedsResizing(BufferedImage image) {
-		return image.getWidth() > THUMBNAIL_RESIZING_SIZE || image.getHeight() > THUMBNAIL_RESIZING_SIZE;
+	private BufferedImage resizeImage(BufferedImage image, int newWidth, int newHeight) {
+		int imageType = (image.getType() == 0) ? BufferedImage.TYPE_INT_ARGB : image.getType();
+		BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, imageType);
+		Graphics2D g2d = resizedImage.createGraphics();
+		try {
+			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2d.drawImage(image, 0, 0, newWidth, newHeight, null);
+		} finally {
+			g2d.dispose();
+		}
+		return resizedImage;
 	}
 
 	private String getContentTypeFromExtension(String filename) {
@@ -177,7 +190,9 @@ public class S3Service {
 		AlphaComposite alphaChannel = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
 		g2d.setComposite(alphaChannel);
 		g2d.setColor(Color.GRAY);
-		g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+
+		int fontSize = Math.min(width, height) / 40;
+		g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, fontSize));
 
 		FontMetrics fontMetrics = g2d.getFontMetrics();
 		Rectangle2D rect = fontMetrics.getStringBounds(watermarkText, g2d);
