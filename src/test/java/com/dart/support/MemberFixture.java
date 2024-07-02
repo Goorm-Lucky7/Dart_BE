@@ -2,7 +2,6 @@ package com.dart.support;
 
 import java.time.LocalDate;
 
-import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.member.request.SignUpDto;
 
@@ -13,10 +12,6 @@ public class MemberFixture {
 			createSignUpDto("test1@example.com", "test1"),
 			"1q2w3e4r!"
 		);
-	}
-
-	public static AuthUser createAuthUserEntity() {
-		return AuthUser.create(1L, "test1@example.com", "test1");
 	}
 
 	public static SignUpDto createSignUpDto(String email, String nickname) {

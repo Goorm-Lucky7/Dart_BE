@@ -40,7 +40,7 @@ public class ChatFixture {
 		return ChatMessageCreateDto.builder()
 			.content("Hello 👋🏻")
 			.createdAt(LocalDateTime.now())
-			.nickname("test1")
+			.sender("test1")
 			.profileImageUrl("https://example.com/profile.jpg")
 			.isAuthor(false)
 			.build();

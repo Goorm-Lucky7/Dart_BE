@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 public class SSESessionRepository {
 
-	private final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
+	public final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
 	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
@@ -38,9 +38,10 @@ public class SSESessionRepository {
 					.name(SSE_EMITTER_EVENT_NAME)
 					.data(notificationReadDto, MediaType.APPLICATION_JSON);
 
+				log.info("[✅ LOGGER] SENDING EVENT: {}", notificationReadDto);
 				sseEmitter.send(sseEventBuilder);
-				sseEmitter.send("\n\n");
 			} catch (Exception e) {
+				log.error("[✅ LOGGER] ERROR SENDING EVENT TO CLIENT {}: {}", clientId, e.getMessage());
 				deleteSSEEmitterByClientId(clientId);
 			}
 		}

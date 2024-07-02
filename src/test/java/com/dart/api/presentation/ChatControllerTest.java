@@ -25,8 +25,8 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.MemberSessionDto;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
+import com.dart.support.AuthFixture;
 import com.dart.support.ChatFixture;
-import com.dart.support.MemberFixture;
 
 @ExtendWith(SpringExtension.class)
 class ChatControllerTest {
@@ -52,7 +52,7 @@ class ChatControllerTest {
 		// GIVEN
 		Long chatRoomId = 1L;
 
-		AuthUser authUser = MemberFixture.createAuthUserEntity();
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
 		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		Map<String, Object> sessionAttributes = new HashMap<>();

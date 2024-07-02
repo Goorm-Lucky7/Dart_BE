@@ -23,6 +23,7 @@ import com.dart.api.domain.coupon.entity.PriorityCoupon;
 import com.dart.api.domain.coupon.entity.PriorityCouponWallet;
 import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.coupon.repository.PriorityCouponWalletRepository;
+import com.dart.api.domain.notification.repository.SSESessionRepository;
 import com.dart.api.dto.coupon.request.PriorityCouponPublishDto;
 import com.dart.global.common.util.ClockHolder;
 import com.dart.global.error.exception.BadRequestException;
@@ -42,6 +43,9 @@ class PriorityCouponManageServiceTest {
 
 	@Mock
 	private ClockHolder clockHolder;
+
+	@Mock
+	private SSESessionRepository sseSessionRepository;
 
 	@InjectMocks
 	private PriorityCouponManageService priorityCouponManageService;
