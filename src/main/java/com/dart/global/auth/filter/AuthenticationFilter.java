@@ -19,6 +19,8 @@ import com.dart.global.common.util.CookieUtil;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,15 +52,16 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		@NotNull HttpServletRequest request,
 		@NotNull HttpServletResponse response,
 		@NotNull FilterChain filterChain
-	) {
+	) throws ServletException, IOException {
 		String requestURI = request.getRequestURI();
 
 		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
-			try {
-				filterChain.doFilter(request, response);
-			} catch (IOException | ServletException e) {
-				throw new RuntimeException(e);
-			}
+			proceedFilterChain(filterChain, request, response);
+			return;
+		}
+
+		if (requestURI.startsWith(REISSUE_PATH_PREFIX)) {
+			handleReissueRequest(request, response, filterChain);
 			return;
 		}
 
@@ -66,27 +69,69 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
 		try {
-			if (jwtProviderService.isUsable(accessToken)) {   // 액세스 토큰 정상
-				setAuthentication(accessToken);
-				filterChain.doFilter(request, response);
-			} else {
-				if (refreshToken != null && jwtProviderService.isUsable(refreshToken)) {  // 액세스 만료 && 리프레쉬 정상 ==> 액세스가 만료된 경우,
-					String newAccessToken = jwtProviderService.reGenerateAccessToken(refreshToken);
-					setAuthentication(newAccessToken);
-					response.setHeader(ACCESS_TOKEN_HEADER, newAccessToken);
-				} else if (accessToken == null) {  // 액세스가 없는 경우
-					AuthorizationThreadLocal.setAuthUser(null);
-					filterChain.doFilter(request, response);
-				} else {  // 액세스 토큰은 들어왔는데 그냥 이상한 경우나 액세스 만료 되었는데 리프레쉬도 이상한경우
-					throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-				}
+			if (accessToken == null) {
+				setUnauthenticatedAndProceed(filterChain, request, response);
+				return;
 			}
+
+			if (jwtProviderService.isUsable(accessToken)) {
+				setAuthentication(accessToken);
+				proceedFilterChain(filterChain, request, response);
+			} else {
+				handleExpiredAccessToken(refreshToken, response, filterChain, request);
+			}
+		} catch (ExpiredJwtException e) {
+			log.warn("Expired JWT token", e);
+			handleExpiredAccessToken(refreshToken, response, filterChain, request);
+		} catch (JwtException e) {
+			log.error("Invalid JWT token", e);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		} catch (Exception e) {
+			log.error("Authentication error", e);
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
 		} finally {
 			AuthorizationThreadLocal.remove();
 		}
+	}
+
+	private void handleExpiredAccessToken(String refreshToken, HttpServletResponse response, FilterChain filterChain,
+		HttpServletRequest request) throws IOException, ServletException {
+		if (refreshToken != null && jwtProviderService.isUsable(refreshToken)) {
+			String newAccessToken = jwtProviderService.reGenerateAccessToken(refreshToken);
+			setAuthentication(newAccessToken);
+			response.setHeader(ACCESS_TOKEN_HEADER, newAccessToken);
+			proceedFilterChain(filterChain, request, response);
+		} else {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	private void handleReissueRequest(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
+		if (refreshToken != null) {
+			try {
+				String newAccessToken = jwtProviderService.reGenerateAccessToken(refreshToken);
+				setAuthentication(newAccessToken);
+				response.setHeader(ACCESS_TOKEN_HEADER, newAccessToken);
+				proceedFilterChain(filterChain, request, response);
+			} catch (Exception e) {
+				throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			}
+		} else {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	private void setUnauthenticatedAndProceed(FilterChain filterChain, HttpServletRequest request,
+		HttpServletResponse response) throws IOException, ServletException {
+		AuthorizationThreadLocal.setAuthUser(null);
+		proceedFilterChain(filterChain, request, response);
+	}
+
+	private void proceedFilterChain(FilterChain filterChain, HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException {
+		filterChain.doFilter(request, response);
 	}
 
 	private void setAuthentication(String accessToken) {
