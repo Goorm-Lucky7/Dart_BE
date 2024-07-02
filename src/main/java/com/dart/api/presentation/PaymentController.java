@@ -72,13 +72,8 @@ public class PaymentController {
 		return new RedirectView(SUCCESS_REDIRECT_URL + response + "/" + orderType);
 	}
 
-	@GetMapping("/kakao/cancel/{member-id}/{gallery-id}")
-	public RedirectView cancel(
-		@PathVariable("member-id") Long memberId,
-		@PathVariable("gallery-id") Long galleryId
-	) {
-		kakaoPayApproveService.cancel(memberId, galleryId);
-
+	@GetMapping("/kakao/cancel")
+	public RedirectView cancel() {
 		return new RedirectView(FAIL_REDIRECT_URL);
 	}
 
