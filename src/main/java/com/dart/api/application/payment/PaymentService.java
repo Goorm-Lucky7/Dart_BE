@@ -57,13 +57,7 @@ public class PaymentService {
 		validateNotPaymentGallery(order, gallery);
 		validateFree(gallery);
 
-		return OrderReadDto.builder()
-			.title(gallery.getTitle())
-			.thumbnail(gallery.getThumbnail())
-			.nickname(gallery.getMember().getNickname())
-			.profileImage(gallery.getMember().getProfileImageUrl())
-			.cost(calculateCost(order, gallery))
-			.build();
+		return gallery.orderReadDto(calculateCost(order, gallery));
 	}
 
 	private static void validateNotPaymentGallery(String order, Gallery gallery) {
