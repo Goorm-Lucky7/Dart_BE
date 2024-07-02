@@ -67,7 +67,8 @@ public class CustomFilter extends OncePerRequestFilter {
 
 		if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
 			response.setStatus(HttpServletResponse.SC_OK);
-			return;
+		} else {
+			filterChain.doFilter(request, response);
 		}
 
 		if (!isApiValid(request)) {
