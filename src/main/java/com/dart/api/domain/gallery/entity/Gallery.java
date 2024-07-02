@@ -109,7 +109,7 @@ public class Gallery extends BaseTimeEntity {
 			.build();
 	}
 
-	public OrderReadDto orderReadDto(int cost) {
+	public OrderReadDto toOrderReadDto(int cost) {
 		return OrderReadDto.builder()
 			.title(this.getTitle())
 			.thumbnail(this.getThumbnail())

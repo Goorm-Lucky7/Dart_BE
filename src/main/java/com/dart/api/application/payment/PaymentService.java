@@ -57,7 +57,7 @@ public class PaymentService {
 		validateNotPaymentGallery(order, gallery);
 		validateFree(gallery);
 
-		return gallery.orderReadDto(calculateCost(order, gallery));
+		return gallery.toOrderReadDto(calculateCost(order, gallery));
 	}
 
 	private static void validateNotPaymentGallery(String order, Gallery gallery) {
