@@ -23,7 +23,14 @@ public class WebConfig implements WebMvcConfigurer {
 	};
 
 	public static final String CORS_MAPPING_PATH = "/api/**";
-	public static final String ALLOWED_HEADERS = "*";
+	public static final String[] ALLOWED_HEADERS = {
+		"Authorization", "Content-Type", "X-Requested-With",
+		"Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"
+	};
+
+	public static final String[] EXPOSED_HEADER = {
+		"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Custom-Header"
+	};
 
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
@@ -36,6 +43,8 @@ public class WebConfig implements WebMvcConfigurer {
 			.allowedOrigins(ALLOWED_ORIGINS)
 			.allowedMethods(ALLOWED_METHODS)
 			.allowedHeaders(ALLOWED_HEADERS)
-			.allowCredentials(true);
+			.exposedHeaders(EXPOSED_HEADER)
+			.allowCredentials(true)
+			.maxAge(3600);
 	}
 }
