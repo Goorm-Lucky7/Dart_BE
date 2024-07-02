@@ -5,10 +5,13 @@ import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.domain.auth.entity.RefreshToken;
+import com.dart.api.domain.auth.repository.RefreshTokenRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -35,21 +38,33 @@ public class AuthenticationService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
 	private final TokenRedisRepository tokenRedisRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	private final CookieUtil cookieUtil;
 
+	@Value("${jwt.access-expire}")
+	private long accessTokenExpire;
+
+	@Value("${jwt.refresh-expire}")
+	private long refreshTokenExpire;
+
 	@Transactional
-	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
+	public LoginResDto login(LoginReqDto loginReqDto, HttpServletRequest request, HttpServletResponse response) {
 		final Member member = findByMemberEmail(loginReqDto.email());
+		final String email = member.getEmail();
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
+
+		String clientInfo = extractClientInfo(request);
+
+		if (refreshTokenRepository.existsByEmail(email)) {
+			refreshTokenRepository.deleteByEmail(email);
+		}
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
 			member.getNickname(), member.getProfileImageUrl(), UUID.randomUUID().toString());
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
-		tokenRedisRepository.setRefreshToken(loginReqDto.email(), refreshToken);
-
-		setTokensInResponse(response, accessToken, refreshToken);
+		saveTokensInResponse(response, accessToken, refreshToken);
 
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
@@ -57,30 +72,51 @@ public class AuthenticationService {
 	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
+		String clientInfo = extractClientInfo(request);
 
 		if (accessToken == null || refreshToken == null) {
 			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
 		}
 
 		try {
-			jwtProviderService.validateTokenExists(refreshToken);
+			String email = jwtProviderService.extractEmailFromToken(refreshToken);
+			String storedAccessToken = tokenRedisRepository.getAccessToken(email);
 
-			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
-			String emailFromRefresh = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
-
-			if (!emailFromRefresh.equals(emailFromAccess)) {
-				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
+			if (!accessToken.equals(storedAccessToken)) {
+				throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 			}
 
-			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-			String newRefreshToken = jwtProviderService.generateRefreshToken(emailFromRefresh);
+			if (jwtProviderService.isValidRefreshToken(refreshToken)) {
+				RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
+					.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_TOKEN_NOT_FOUND));
 
-			tokenRedisRepository.deleteRefreshToken(emailFromRefresh);
-			tokenRedisRepository.setRefreshToken(emailFromRefresh, newRefreshToken);
+				if (refreshTokenEntity.isExpired()) {
+					throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+				}
 
-			setTokensInResponse(response, newAccessToken, newRefreshToken);
+				if (!refreshToken.equals(refreshTokenEntity.getToken())) {
+					throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+				}
 
-			return new TokenResDto(newAccessToken);
+				jwtProviderService.revokeAccessToken(email, accessToken);
+
+				handleRefreshToken(email);
+
+				String newAccessToken = jwtProviderService.generateAccessToken(
+					jwtProviderService.extractIdFromToken(accessToken),
+					email,
+					jwtProviderService.extractNicknameFromToken(accessToken),
+					jwtProviderService.extractProfileImageFromToken(accessToken),
+					clientInfo
+				);
+
+				String newRefreshToken = jwtProviderService.generateRefreshToken(email);
+
+				saveTokensInResponse(response, newAccessToken, newRefreshToken);
+				return new TokenResDto(newAccessToken);
+			} else {
+				throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			}
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
@@ -97,20 +133,38 @@ public class AuthenticationService {
 		}
 	}
 
-	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
-		setAccessToken(response, accessToken);
-		setRefreshToken(response, refreshToken);
+	private void saveTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
+		saveAccessTokenInResponse(response, accessToken);
+		saveRefreshTokenInResponse(response, refreshToken);
 	}
 
 	private String extractTokenFromHeader(HttpServletRequest request) {
 		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
 	}
 
-	private void setAccessToken(HttpServletResponse response, String accessToken) {
+	private void saveAccessTokenInResponse(HttpServletResponse response, String accessToken) {
 		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
 	}
 
-	private void setRefreshToken(HttpServletResponse response, String refreshToken) {
+	private void saveRefreshTokenInResponse(HttpServletResponse response, String refreshToken) {
 		cookieUtil.setRefreshCookie(response, refreshToken);
+	}
+
+	private String extractClientInfo(HttpServletRequest request) {
+		String ipAddress = request.getRemoteAddr();
+		String userAgent = request.getHeader("User-Agent");
+		return ipAddress + "|" + userAgent;
+	}
+
+	@Transactional
+	public void handleRefreshToken(String email) {
+		try {
+			if (refreshTokenRepository.existsByEmail(email)) {
+				refreshTokenRepository.deleteByEmail(email);
+			} else {
+			}
+		} catch (Exception e) {
+			throw e;
+		}
 	}
 }
