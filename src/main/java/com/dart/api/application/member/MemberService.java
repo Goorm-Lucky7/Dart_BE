@@ -166,7 +166,7 @@ public class MemberService {
 	}
 
 	private void validateMemberExists(String nickname) {
-		if (!memberRepository.existsByEmail(nickname)) {
+		if (!memberRepository.existsByNickname(nickname)) {
 			throw new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND);
 		}
 	}
