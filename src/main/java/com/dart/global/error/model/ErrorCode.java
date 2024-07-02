@@ -47,8 +47,8 @@ public enum ErrorCode {
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
-	FAIL_TOKEN_EXPIRED("[❎ ERROR] 인증 토큰이 만료되었습니다. 다시 로그인해 주세요."),
-	FAIL_INVALID_TOKEN("[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요."),
+	FAIL_TOKEN_EXPIRED("[❎ ERROR] 인증 토큰이 만료되었습니다."),
+	FAIL_INVALID_TOKEN("[❎ ERROR] 유효하지 않은 인증 토큰입니다."),
 	FAIL_TOKEN_MISMATCH("[❎ ERROR] 토큰 소유자가 일치하지 않습니다."),
 	FAIL_INVALID_EMAIL_CODE("[❎ ERROR] 인증 코드가 만료되었습니다. 이메일 중복확인을 다시 시도해 주세요."),
 
