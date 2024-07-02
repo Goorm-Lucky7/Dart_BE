@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.dart.api.application.payment.KakaoPayService;
+import com.dart.api.application.payment.KakaoPayApproveService;
+import com.dart.api.application.payment.KakaoPayReadyService;
 import com.dart.api.application.payment.PaymentService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.page.PageResponse;
@@ -30,11 +31,12 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/payment")
 public class PaymentController {
 	private final PaymentService paymentService;
-	private final KakaoPayService kakaoPayService;
+	private final KakaoPayApproveService kakaoPayApproveService;
+	private final KakaoPayReadyService kakaoPayReadyService;
 
 	@PostMapping
 	public PaymentReadyDto ready(@RequestBody @Valid PaymentCreateDto dto, @Auth AuthUser authUser) {
-		return kakaoPayService.ready(dto, authUser);
+		return kakaoPayReadyService.ready(dto, authUser);
 	}
 
 	@GetMapping
@@ -54,17 +56,20 @@ public class PaymentController {
 	) {
 		return paymentService.readOrder(galleryId, order, authUser);
 	}
-	
-	@GetMapping("/kakao/success/{id}/{order}/{coupon-id}/{is-priority}")
+
+	@GetMapping("/kakao/success/{member-id}/{order-type}/{coupon-id}/{is-priority}/{gallery-id}")
 	public RedirectView approve(
 		@RequestParam("pg_token") String token,
-		@PathVariable("id") Long id,
-		@PathVariable("order") String order,
+		@PathVariable("member-id") Long memberId,
+		@PathVariable("order-type") String orderType,
 		@PathVariable("coupon-id") Long couponId,
-		@PathVariable("is-priority") boolean isPriority
+		@PathVariable("is-priority") boolean isPriority,
+		@PathVariable("gallery-id") Long galleryId
 	) {
-		final String galleryId = kakaoPayService.approve(token, id, order, couponId, isPriority);
-		return new RedirectView(SUCCESS_REDIRECT_URL + galleryId + "/" + order);
+		final String response = kakaoPayApproveService.approve(token, memberId, orderType, couponId, isPriority,
+			galleryId);
+
+		return new RedirectView(SUCCESS_REDIRECT_URL + response + "/" + orderType);
 	}
 
 	@GetMapping("/kakao/cancel")

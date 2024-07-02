@@ -12,8 +12,6 @@ public class PaymentConstant {
 	public static final String FAIL_URL = "https://dartgallery.site/api/payment/kakao/fail";
 	public static final String SUCCESS_REDIRECT_URL = "https://www.dartgallery.site/payment/success/";
 	public static final String FAIL_REDIRECT_URL = "https://www.dartgallery.site/payment/fail";
-	public static final String PARTNER_USER = "USER";
-	public static final String PARTNER_ORDER = "DART";
 	public static final String TAX = "0";
 	public static final String CID = "TC0ONETIME";
 	public static final String QUANTITY = "1";

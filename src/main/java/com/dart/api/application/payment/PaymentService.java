@@ -13,7 +13,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.domain.payment.entity.Order;
+import com.dart.api.domain.payment.entity.OrderType;
 import com.dart.api.domain.payment.entity.Payment;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.page.PageInfo;
@@ -57,17 +57,11 @@ public class PaymentService {
 		validateNotPaymentGallery(order, gallery);
 		validateFree(gallery);
 
-		return OrderReadDto.builder()
-			.title(gallery.getTitle())
-			.thumbnail(gallery.getThumbnail())
-			.nickname(gallery.getMember().getNickname())
-			.profileImage(gallery.getMember().getProfileImageUrl())
-			.cost(calculateCost(order, gallery))
-			.build();
+		return gallery.toOrderReadDto(calculateCost(order, gallery));
 	}
 
 	private static void validateNotPaymentGallery(String order, Gallery gallery) {
-		if (!gallery.isPaid() && Order.TICKET.getValue().equals(order)) {
+		if (!gallery.isPaid() && OrderType.TICKET.getValue().equals(order)) {
 			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
 		}
 	}
@@ -85,7 +79,7 @@ public class PaymentService {
 	}
 
 	private int calculateCost(String order, Gallery gallery) {
-		if (Order.TICKET.getValue().equals(order)) {
+		if (OrderType.TICKET.getValue().equals(order)) {
 			return gallery.getFee();
 		}
 
@@ -93,7 +87,7 @@ public class PaymentService {
 	}
 
 	private static void validateOrder(String order) {
-		if (!Order.contains(order)) {
+		if (!OrderType.contains(order)) {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_ORDER);
 		}
 	}

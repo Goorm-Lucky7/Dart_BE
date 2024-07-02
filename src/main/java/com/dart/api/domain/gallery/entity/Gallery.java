@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.gallery.request.CreateGalleryDto;
 import com.dart.api.dto.gallery.response.GalleryReadIdDto;
+import com.dart.api.dto.payment.response.OrderReadDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -105,6 +106,16 @@ public class Gallery extends BaseTimeEntity {
 			.address(createGalleryDto.address())
 			.thumbnail(thumbnailUrl)
 			.member(member)
+			.build();
+	}
+
+	public OrderReadDto toOrderReadDto(int cost) {
+		return OrderReadDto.builder()
+			.title(this.getTitle())
+			.thumbnail(this.getThumbnail())
+			.nickname(this.getMember().getNickname())
+			.profileImage(this.getMember().getProfileImageUrl())
+			.cost(cost)
 			.build();
 	}
 

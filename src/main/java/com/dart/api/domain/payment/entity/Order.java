@@ -1,30 +1,49 @@
 package com.dart.api.domain.payment.entity;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@Entity
 @Getter
-@RequiredArgsConstructor
-public enum Order {
-	TICKET("ticket"),
-	PAID_GALLERY("paidGallery");
+@Table(name = "tbl_order")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Order {
+	@Id
+	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-	private final String value;
+	@Column(name = "tid", updatable = false, nullable = false)
+	private String tid;
 
-	private static final Map<String, Order> valuesMap = Collections.unmodifiableMap(Stream.of(values())
-		.collect(Collectors.toMap(Order::getValue, Function.identity())));
+	@Column(name = "member_id", updatable = false, nullable = false)
+	private Long memberId;
 
-	public static Order fromValue(String value) {
-		return valuesMap.get(value);
+	@Column(name = "gallery_id", updatable = false, nullable = false)
+	private Long galleryId;
+
+	@Column(name = "is_approved")
+	private boolean isApproved;
+
+	private Order(String tid, Long memberId, Long galleryId) {
+		this.tid = tid;
+		this.memberId = memberId;
+		this.galleryId = galleryId;
+		this.isApproved = false;
 	}
 
-	public static boolean contains(String value) {
-		return valuesMap.containsKey(value);
+	public static Order create(String tid, Long memberId, Long galleryId) {
+		return new Order(tid, memberId, galleryId);
+	}
+
+	public void approve() {
+		this.isApproved = true;
 	}
 }

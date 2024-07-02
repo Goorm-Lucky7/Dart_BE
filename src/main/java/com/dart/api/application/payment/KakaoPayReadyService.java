@@ -2,8 +2,6 @@ package com.dart.api.application.payment;
 
 import static com.dart.global.common.util.PaymentConstant.*;
 
-import java.time.LocalDateTime;
-
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,14 +21,14 @@ import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.domain.payment.entity.Order;
-import com.dart.api.domain.payment.entity.Payment;
-import com.dart.api.domain.payment.repository.PaymentRedisRepository;
+import com.dart.api.domain.payment.entity.OrderType;
+import com.dart.api.domain.payment.repository.OrderRepository;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.dto.payment.request.PaymentCreateDto;
-import com.dart.api.dto.payment.response.PaymentApproveDto;
 import com.dart.api.dto.payment.response.PaymentReadyDto;
 import com.dart.global.config.PaymentProperties;
 import com.dart.global.error.exception.BadRequestException;
+import com.dart.global.error.exception.ConflictException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -39,15 +37,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class KakaoPayService {
+public class KakaoPayReadyService {
 	private final GalleryRepository galleryRepository;
 	private final PaymentProperties paymentProperties;
 	private final MemberRepository memberRepository;
-	private final PaymentRedisRepository paymentRedisRepository;
 	private final PaymentRepository paymentRepository;
 	private final GeneralCouponWalletRepository generalCouponWalletRepository;
 	private final PriorityCouponWalletRepository priorityCouponWalletRepository;
-	private PaymentReadyDto paymentReadyDto;
+	private final OrderRepository orderRepository;
 
 	public PaymentReadyDto ready(PaymentCreateDto dto, AuthUser authUser) {
 		validateExistGallery(dto);
@@ -63,94 +60,44 @@ public class KakaoPayService {
 		final HttpHeaders headers = setHeaders();
 		final HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
 		final RestTemplate restTemplate = new RestTemplate();
-
-		return paymentReadyDto = restTemplate.postForObject(
+		final PaymentReadyDto paymentReadyDto = restTemplate.postForObject(
 			READY_URL,
 			requestEntity,
-			PaymentReadyDto.class);
+			PaymentReadyDto.class
+		);
+
+		validateAlreadyPayments(dto, member);
+		deleteUnpaidOrder(dto, member);
+
+		final Order order = Order.create(paymentReadyDto.tid(), member.getId(), dto.galleryId());
+		orderRepository.save(order);
+
+		return paymentReadyDto;
 	}
 
-	public String approve(String token, Long id, String order, Long couponId, boolean isPriority) {
-		final MultiValueMap<String, String> params = approveToBody(token);
-		final HttpHeaders headers = setHeaders();
-		final RestTemplate restTemplate = new RestTemplate();
-		final HttpEntity<MultiValueMap<String, String>> body = new HttpEntity<>(params, headers);
-		final PaymentApproveDto paymentApproveDto = restTemplate.postForObject(
-			APPROVE_URL,
-			body,
-			PaymentApproveDto.class);
-		final Member member = memberRepository.findById(id)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
-		final Gallery gallery = galleryRepository.findById(Long.parseLong(paymentApproveDto.item_code()))
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
-		final LocalDateTime approveAt = paymentApproveDto.approved_at();
-		final Payment payment = Payment.create(member, gallery, paymentApproveDto.amount().total(), approveAt, order);
-
-		payGallery(order, gallery);
-		useCoupon(couponId, isPriority, member);
-		paymentRepository.save(payment);
-
-		return gallery.getId().toString();
-	}
-
-	public MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
+	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
 
 		params.add("cid", CID);
-		params.add("partner_order_id", PARTNER_ORDER);
-		params.add("partner_user_id", PARTNER_USER);
-		params.add("item_name", String.valueOf(gallery.getTitle()));
+		params.add("partner_order_id", dto.galleryId().toString());
+		params.add("partner_user_id", memberId.toString());
+		params.add("item_name", gallery.getTitle());
 		params.add("item_code", gallery.getId().toString());
 		params.add("quantity", QUANTITY);
 		params.add("total_amount", decideCost(dto, gallery, memberId));
 		params.add("tax_free_amount", TAX);
 		params.add("approval_url",
-			SUCCESS_URL + "/" + memberId + "/" + dto.order() + "/" + dto.couponId() + "/" + dto.isPriority());
+			SUCCESS_URL + "/" + memberId + "/" + dto.order() + "/" + dto.couponId() + "/" + dto.isPriority() + "/"
+				+ dto.galleryId());
 		params.add("cancel_url", CANCEL_URL);
 		params.add("fail_url", FAIL_URL);
 
 		return params;
 	}
 
-	public MultiValueMap<String, String> approveToBody(String token) {
-		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-
-		params.add("cid", CID);
-		params.add("tid", paymentReadyDto.tid());
-		params.add("partner_order_id", PARTNER_ORDER);
-		params.add("partner_user_id", PARTNER_USER);
-		params.add("pg_token", token);
-
-		return params;
-	}
-
-	public HttpHeaders setHeaders() {
-		final HttpHeaders headers = new HttpHeaders();
-
-		headers.add("Authorization", "KakaoAK " + paymentProperties.getAdminKey());
-		headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
-
-		return headers;
-	}
-
-	private void useCoupon(Long couponId, boolean isPriority, Member member) {
-		if (couponId != FREE) {
-			if (isPriority) {
-				final PriorityCouponWallet priorityCouponWallet = findPriorityCouponWallet(member.getId(), couponId);
-				priorityCouponWallet.use();
-
-				return;
-			}
-
-			final GeneralCouponWallet generalCouponWallet = findGeneralCouponWallet(member.getId(), couponId);
-			generalCouponWallet.use();
-		}
-	}
-
-	public String decideCost(PaymentCreateDto dto, Gallery gallery, Long memberId) {
+	private String decideCost(PaymentCreateDto dto, Gallery gallery, Long memberId) {
 		if (dto.couponId() == FREE) {
 			return calculateWithoutCoupon(dto.order(), gallery);
 		}
@@ -168,42 +115,18 @@ public class KakaoPayService {
 			generalCouponWallet.getGeneralCoupon().getCouponType().getValue());
 	}
 
-	private void validateAlreadyTicket(PaymentCreateDto dto, Member member) {
-		if (dto.order().equals(Order.TICKET.getValue()) && paymentRepository.existsByMemberAndGalleryIdAndOrder(member,
-			dto.galleryId(), Order.TICKET)) {
-			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_TICKET);
+	private HttpHeaders setHeaders() {
+		final HttpHeaders headers = new HttpHeaders();
 
-		}
-	}
+		headers.add("Authorization", "KakaoAK " + paymentProperties.getAdminKey());
+		headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
-	private void validateAlreadyGallery(PaymentCreateDto dto, Member member) {
-		if (dto.order().equals(Order.PAID_GALLERY.getValue()) && paymentRepository.existsByMemberAndGalleryIdAndOrder(
-			member, dto.galleryId(), Order.PAID_GALLERY)) {
-			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_GALLERY);
-		}
-	}
-
-	private void payGallery(String order, Gallery gallery) {
-		if (order.equals(Order.PAID_GALLERY.getValue())) {
-			gallery.pay();
-			paymentRedisRepository.deleteData(gallery.getId().toString());
-		}
-	}
-
-	private static void validateOrder(String order) {
-		if (!Order.contains(order)) {
-			throw new BadRequestException(ErrorCode.FAIL_INVALID_ORDER);
-		}
-	}
-
-	private void validateExistGallery(PaymentCreateDto dto) {
-		if (dto.order().equals(Order.TICKET.getValue()) && !galleryRepository.findIsPaidById(dto.galleryId())) {
-			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
-		}
+		return headers;
 	}
 
 	private String calculateWithoutCoupon(String order, Gallery gallery) {
-		if (Order.TICKET.getValue().equals(order)) {
+		if (OrderType.TICKET.getValue().equals(order)) {
 			return String.valueOf(gallery.getFee());
 		}
 
@@ -211,7 +134,7 @@ public class KakaoPayService {
 	}
 
 	private String calculateWithCoupon(String order, Gallery gallery, int couponValue) {
-		if (Order.TICKET.getValue().equals(order)) {
+		if (OrderType.TICKET.getValue().equals(order)) {
 			return String.valueOf((int)((double)(100 - couponValue) / 100 * gallery.getFee()));
 		}
 
@@ -228,5 +151,45 @@ public class KakaoPayService {
 		return generalCouponWalletRepository
 			.findByMemberIdAndGeneralCouponIdAndIsUsedFalse(memberId, couponId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
+	}
+
+	private void validateAlreadyPayments(PaymentCreateDto dto, Member member) {
+		if (orderRepository.existsByMemberIdAndGalleryIdAndIsApprovedTrue(member.getId(), dto.galleryId())) {
+			throw new ConflictException(ErrorCode.FAIL_PAYMENT_CONFLICT);
+		}
+	}
+
+	private void deleteUnpaidOrder(PaymentCreateDto dto, Member member) {
+		orderRepository.findByMemberIdAndGalleryId(member.getId(), dto.galleryId())
+			.ifPresent(orderRepository::delete);
+	}
+
+	private static void validateOrder(String order) {
+		if (!OrderType.contains(order)) {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_ORDER);
+		}
+	}
+
+	private void validateExistGallery(PaymentCreateDto dto) {
+		if (dto.order().equals(OrderType.TICKET.getValue()) && !galleryRepository.findIsPaidById(dto.galleryId())) {
+			throw new BadRequestException(ErrorCode.FAIL_NOT_PAYMENT_GALLERY);
+		}
+	}
+
+	private void validateAlreadyTicket(PaymentCreateDto dto, Member member) {
+		if (dto.order().equals(OrderType.TICKET.getValue()) && paymentRepository.existsByMemberAndGalleryIdAndOrderType(
+			member,
+			dto.galleryId(), OrderType.TICKET)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_TICKET);
+
+		}
+	}
+
+	private void validateAlreadyGallery(PaymentCreateDto dto, Member member) {
+		if (dto.order().equals(OrderType.PAID_GALLERY.getValue())
+			&& paymentRepository.existsByMemberAndGalleryIdAndOrderType(
+			member, dto.galleryId(), OrderType.PAID_GALLERY)) {
+			throw new BadRequestException(ErrorCode.FAIL_ALREADY_PAID_GALLERY);
+		}
 	}
 }

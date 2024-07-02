@@ -24,7 +24,7 @@ import com.dart.api.domain.gallery.entity.Template;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.domain.payment.entity.Order;
+import com.dart.api.domain.payment.entity.OrderType;
 import com.dart.api.domain.payment.repository.PaymentRedisRepository;
 import com.dart.api.domain.payment.repository.PaymentRepository;
 import com.dart.api.domain.review.repository.ReviewRepository;
@@ -288,7 +288,7 @@ public class GalleryService {
 			return true;
 		}
 
-		return paymentRepository.existsByMemberAndGalleryIdAndOrder(member, gallery.getId(), Order.TICKET);
+		return paymentRepository.existsByMemberAndGalleryIdAndOrderType(member, gallery.getId(), OrderType.TICKET);
 	}
 
 	private boolean checkIfUserHasCommented(Gallery gallery, AuthUser authUser) {

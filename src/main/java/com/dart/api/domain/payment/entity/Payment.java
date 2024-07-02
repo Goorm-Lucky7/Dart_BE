@@ -46,7 +46,7 @@ public class Payment {
 
 	@Column(name = "`order`")
 	@Enumerated(EnumType.STRING)
-	private Order order;
+	private OrderType orderType;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
@@ -58,14 +58,14 @@ public class Payment {
 		LocalDateTime approvedAt,
 		Member member,
 		Gallery gallery,
-		Order order
+		OrderType orderType
 	) {
 		this.amount = amount;
 		this.approvedAt = approvedAt;
 		this.member = member;
 		this.galleryId = gallery.getId();
 		this.galleryName = gallery.getTitle();
-		this.order = order;
+		this.orderType = orderType;
 	}
 
 	public static Payment create(
@@ -73,13 +73,13 @@ public class Payment {
 		Gallery gallery,
 		int total,
 		LocalDateTime approvedAt,
-		String order
+		String orderType
 	) {
 		return Payment.builder()
 			.member(member)
 			.gallery(gallery)
 			.approvedAt(approvedAt)
-			.order(Order.fromValue(order))
+			.orderType(OrderType.fromValue(orderType))
 			.amount(total)
 			.build();
 	}
@@ -89,7 +89,7 @@ public class Payment {
 			.paymentId(this.id)
 			.amount(this.amount)
 			.approvedAt(this.approvedAt)
-			.order(this.order.getValue())
+			.order(this.orderType.getValue())
 			.galleryName(this.galleryName)
 			.build();
 	}
