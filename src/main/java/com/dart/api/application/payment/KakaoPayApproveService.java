@@ -33,10 +33,8 @@ import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @Transactional
 @RequiredArgsConstructor
 public class KakaoPayApproveService {
@@ -53,8 +51,6 @@ public class KakaoPayApproveService {
 		Long galleryId) {
 		final Order order = orderRepository.findByMemberIdAndGalleryId(memberId, galleryId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_ORDER_NOT_FOUND));
-		log.info("{order----------------------------}" + order.getTid() + "  galleryid :    " + order.getGalleryId());
-
 		final MultiValueMap<String, String> params = approveToBody(token, order);
 		final HttpHeaders headers = setHeaders();
 		final RestTemplate restTemplate = new RestTemplate();
@@ -71,18 +67,12 @@ public class KakaoPayApproveService {
 		final Payment payment = Payment.create(member, gallery, paymentApproveDto.amount().total(), approveAt,
 			orderType);
 
+		order.approve();
 		payGallery(orderType, gallery);
 		useCoupon(couponId, isPriority, member);
 		paymentRepository.save(payment);
 
 		return gallery.getId().toString();
-	}
-
-	public void cancel(Long memberId, Long galleryId) {
-		final Order order = orderRepository.findByMemberIdAndGalleryId(memberId, galleryId)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_ORDER_NOT_FOUND));
-
-		orderRepository.delete(order);
 	}
 
 	public MultiValueMap<String, String> approveToBody(String token, Order order) {
