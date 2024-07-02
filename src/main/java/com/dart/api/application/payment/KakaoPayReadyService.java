@@ -33,10 +33,8 @@ import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @Transactional
 @RequiredArgsConstructor
 public class KakaoPayReadyService {
@@ -68,7 +66,8 @@ public class KakaoPayReadyService {
 			PaymentReadyDto.class
 		);
 
-		validateAlreadyPayment(dto, member);
+		validateAlreadyPayments(dto, member);
+		deleteUnpaidOrder(dto, member);
 
 		final Order order = Order.create(paymentReadyDto.tid(), member.getId(), dto.galleryId());
 		orderRepository.save(order);
@@ -76,7 +75,13 @@ public class KakaoPayReadyService {
 		return paymentReadyDto;
 	}
 
-	public MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
+	private void validateAlreadyPayments(PaymentCreateDto dto, Member member) {
+		if (orderRepository.existsByMemberIdAndGalleryIdAndIsApprovedTrue(member.getId(), dto.galleryId())) {
+			throw new ConflictException(ErrorCode.FAIL_PAYMENT_CONFLICT);
+		}
+	}
+
+	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
@@ -92,13 +97,13 @@ public class KakaoPayReadyService {
 		params.add("approval_url",
 			SUCCESS_URL + "/" + memberId + "/" + dto.order() + "/" + dto.couponId() + "/" + dto.isPriority() + "/"
 				+ dto.galleryId());
-		params.add("cancel_url", CANCEL_URL + "/" + memberId + "/" + dto.galleryId());
+		params.add("cancel_url", CANCEL_URL);
 		params.add("fail_url", FAIL_URL);
 
 		return params;
 	}
 
-	public String decideCost(PaymentCreateDto dto, Gallery gallery, Long memberId) {
+	private String decideCost(PaymentCreateDto dto, Gallery gallery, Long memberId) {
 		if (dto.couponId() == FREE) {
 			return calculateWithoutCoupon(dto.order(), gallery);
 		}
@@ -116,7 +121,7 @@ public class KakaoPayReadyService {
 			generalCouponWallet.getGeneralCoupon().getCouponType().getValue());
 	}
 
-	public HttpHeaders setHeaders() {
+	private HttpHeaders setHeaders() {
 		final HttpHeaders headers = new HttpHeaders();
 
 		headers.add("Authorization", "KakaoAK " + paymentProperties.getAdminKey());
@@ -154,10 +159,9 @@ public class KakaoPayReadyService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
 	}
 
-	private void validateAlreadyPayment(PaymentCreateDto dto, Member member) {
-		if (orderRepository.existsByMemberIdAndGalleryId(member.getId(), dto.galleryId())) {
-			throw new ConflictException(ErrorCode.FAIL_PAYMENT_CONFLICT);
-		}
+	private void deleteUnpaidOrder(PaymentCreateDto dto, Member member) {
+		orderRepository.findByMemberIdAndGalleryId(member.getId(), dto.galleryId())
+			.ifPresent(orderRepository::delete);
 	}
 
 	private static void validateOrder(String order) {
