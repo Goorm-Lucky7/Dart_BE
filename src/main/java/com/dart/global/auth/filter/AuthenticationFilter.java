@@ -77,8 +77,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 				} else if (accessToken == null) {  // 액세스가 없는 경우
 					AuthorizationThreadLocal.setAuthUser(null);
 					filterChain.doFilter(request, response);
-
-					return;
 				} else {  // 액세스 토큰은 들어왔는데 그냥 이상한 경우나 액세스 만료 되었는데 리프레쉬도 이상한경우
 					throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 				}
