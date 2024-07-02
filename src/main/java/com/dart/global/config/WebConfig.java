@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
 		"Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"
 	};
 
-	public static final String[] EXPOSED_HEADER = {
+	public static final String[] EXPOSED_HEADERS = {
 		"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Custom-Header"
 	};
 
@@ -43,7 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
 			.allowedOrigins(ALLOWED_ORIGINS)
 			.allowedMethods(ALLOWED_METHODS)
 			.allowedHeaders(ALLOWED_HEADERS)
-			.exposedHeaders(EXPOSED_HEADER)
+			.exposedHeaders(EXPOSED_HEADERS)
 			.allowCredentials(true)
 			.maxAge(3600);
 	}
