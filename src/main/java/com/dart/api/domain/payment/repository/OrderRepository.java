@@ -11,5 +11,5 @@ import com.dart.api.domain.payment.entity.Order;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 	Optional<Order> findByMemberIdAndGalleryId(Long memberId, Long galleryId);
 
-	boolean existsByMemberIdAndGalleryId(Long memberId, Long galleryId);
+	boolean existsByMemberIdAndGalleryIdAndIsApprovedTrue(Long memberId, Long galleryId);
 }
