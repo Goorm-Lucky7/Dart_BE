@@ -75,12 +75,6 @@ public class KakaoPayReadyService {
 		return paymentReadyDto;
 	}
 
-	private void validateAlreadyPayments(PaymentCreateDto dto, Member member) {
-		if (orderRepository.existsByMemberIdAndGalleryIdAndIsApprovedTrue(member.getId(), dto.galleryId())) {
-			throw new ConflictException(ErrorCode.FAIL_PAYMENT_CONFLICT);
-		}
-	}
-
 	private MultiValueMap<String, String> readyToBody(PaymentCreateDto dto, Long memberId) {
 		final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		final Gallery gallery = galleryRepository.findById(dto.galleryId())
@@ -157,6 +151,12 @@ public class KakaoPayReadyService {
 		return generalCouponWalletRepository
 			.findByMemberIdAndGeneralCouponIdAndIsUsedFalse(memberId, couponId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_COUPON_NOT_FOUND));
+	}
+
+	private void validateAlreadyPayments(PaymentCreateDto dto, Member member) {
+		if (orderRepository.existsByMemberIdAndGalleryIdAndIsApprovedTrue(member.getId(), dto.galleryId())) {
+			throw new ConflictException(ErrorCode.FAIL_PAYMENT_CONFLICT);
+		}
 	}
 
 	private void deleteUnpaidOrder(PaymentCreateDto dto, Member member) {
