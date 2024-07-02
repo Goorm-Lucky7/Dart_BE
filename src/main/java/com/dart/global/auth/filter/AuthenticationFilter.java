@@ -15,6 +15,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.global.auth.AuthorizationThreadLocal;
+import com.dart.global.common.util.CookieUtil;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -28,16 +29,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-	private static final String PATH_API_TOKEN_REISSUE = "/api/reissue";
+	private static final String REISSUE_PATH_PREFIX = "/api/reissue";
 	private static final String WEBSOCKET_PATH_PREFIX = "/ws/";
 
+	private final CookieUtil cookieUtil;
 	private final JwtProviderService jwtProviderService;
 	private final HandlerExceptionResolver handlerExceptionResolver;
 
 	public AuthenticationFilter(
-		JwtProviderService jwtProviderService,
+		CookieUtil cookieUtil, JwtProviderService jwtProviderService,
 		@Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
 	) {
+		this.cookieUtil = cookieUtil;
 		this.jwtProviderService = jwtProviderService;
 		this.handlerExceptionResolver = handlerExceptionResolver;
 	}
@@ -60,33 +63,26 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
+		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
 		try {
-			if (!jwtProviderService.isUsable(accessToken) || PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-				if (PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-					filterChain.doFilter(request, response);
-
-					return;
-				}
-
-				if (jwtProviderService.isUsable(accessToken)) {
-					String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
+			if (jwtProviderService.isUsable(accessToken)) {   // 액세스 토큰 정상
+				setAuthentication(accessToken);
+				filterChain.doFilter(request, response);
+			} else {
+				if (refreshToken != null && jwtProviderService.isUsable(refreshToken)) {  // 액세스 만료 && 리프레쉬 정상 ==> 액세스가 만료된 경우,
+					String newAccessToken = jwtProviderService.reGenerateAccessToken(refreshToken);
 					setAuthentication(newAccessToken);
-				} else {
-					log.info("Access Token not usable");
+					response.setHeader(ACCESS_TOKEN_HEADER, newAccessToken);
+				} else if (accessToken == null) {  // 액세스가 없는 경우
 					AuthorizationThreadLocal.setAuthUser(null);
 					filterChain.doFilter(request, response);
 
 					return;
+				} else {  // 액세스 토큰은 들어왔는데 그냥 이상한 경우나 액세스 만료 되었는데 리프레쉬도 이상한경우
+					throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 				}
-			} else {
-				setAuthentication(accessToken);
-				filterChain.doFilter(request, response);
-
-				return;
 			}
-
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
