@@ -14,22 +14,28 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TokenRedisRepository {
 
-	@Value("${jwt.refresh-expire}")
-	private long refreshTokenExpire;
-
 	private final ValueRedisRepository valueRedisRepository;
 
-	public void setRefreshToken(String key, String data) {
-		valueRedisRepository.saveValueWithExpiry(REDIS_REFRESH_TOKEN_PREFIX + key, data, refreshTokenExpire/1000);
+	public void saveAccessToken(String key, String data, long accessTokenExpire) {
+		valueRedisRepository.saveValueWithExpiry(REDIS_ACCESS_TOKEN_PREFIX + key, data, accessTokenExpire /1000);
 	}
 
 	@Transactional(readOnly = true)
-	public String getRefreshToken(String key) {
-		String value = valueRedisRepository.getValue(REDIS_REFRESH_TOKEN_PREFIX + key);
+	public String getAccessToken(String key) {
+		String value = valueRedisRepository.getValue(REDIS_ACCESS_TOKEN_PREFIX + key);
 		return value != null ? value : "false";
 	}
 
-	public void deleteRefreshToken(String key) {
-		valueRedisRepository.deleteValue(REDIS_REFRESH_TOKEN_PREFIX + key);
+	public void deleteAccessToken(String key) {
+		valueRedisRepository.deleteValue(REDIS_ACCESS_TOKEN_PREFIX + key);
+	}
+
+	public void addToBlacklist(String token, long ttl) {
+		valueRedisRepository.saveValueWithExpiry(
+			REDIS_BLACKLIST_TOKEN_PREFIX + token, "blacklisted", ttl);
+	}
+
+	public boolean isBlacklisted(String token) {
+		return valueRedisRepository.isValueExists(REDIS_BLACKLIST_TOKEN_PREFIX + token);
 	}
 }
