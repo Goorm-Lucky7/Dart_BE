@@ -63,7 +63,6 @@ public class AuthenticationService {
 		}
 
 		try {
-			jwtProviderService.validateTokenExists(accessToken);
 			jwtProviderService.validateTokenExists(refreshToken);
 
 			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
