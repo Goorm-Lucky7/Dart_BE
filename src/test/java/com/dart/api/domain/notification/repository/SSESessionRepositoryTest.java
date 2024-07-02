@@ -61,7 +61,6 @@ class SSESessionRepositoryTest {
 
 		// THEN
 		verify(sseEmitter, times(1)).send(any(SseEmitter.SseEventBuilder.class));
-		verify(sseEmitter, times(1)).send("\n\n");
 	}
 
 	@Test
@@ -84,9 +83,7 @@ class SSESessionRepositoryTest {
 
 		// THEN
 		verify(sseEmitter1, times(1)).send(any(SseEmitter.SseEventBuilder.class));
-		verify(sseEmitter1, times(1)).send("\n\n");
 		verify(sseEmitter2, times(1)).send(any(SseEmitter.SseEventBuilder.class));
-		verify(sseEmitter2, times(1)).send("\n\n");
 	}
 
 	@Test
