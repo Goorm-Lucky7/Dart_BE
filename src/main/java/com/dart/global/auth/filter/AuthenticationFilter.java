@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-	private static final String PATH_API_TOKEN_REISSUE = "/api/reissue";
+	private static final String REISSUE_PATH_PREFIX = "/api/reissue";
 	private static final String WEBSOCKET_PATH_PREFIX = "/ws/";
 
 	private final JwtProviderService jwtProviderService;
@@ -59,34 +59,25 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		if (requestURI.startsWith(REISSUE_PATH_PREFIX)) {
+			try {
+				filterChain.doFilter(request, response);
+			} catch (IOException | ServletException e) {
+				throw new RuntimeException(e);
+			}
+			return;
+		}
+
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
 
 		try {
-			if (!jwtProviderService.isUsable(accessToken) || PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-				if (PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-					filterChain.doFilter(request, response);
-
-					return;
-				}
-
-				if (jwtProviderService.isUsable(accessToken)) {
-					String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-					setAuthentication(newAccessToken);
-				} else {
-					log.info("Access Token not usable");
-					AuthorizationThreadLocal.setAuthUser(null);
-					filterChain.doFilter(request, response);
-
-					return;
-				}
-			} else {
+			if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
 				setAuthentication(accessToken);
-				filterChain.doFilter(request, response);
-
-				return;
+			} else if (REISSUE_PATH_PREFIX.equals(requestURI)) {
+			} else {
+				AuthorizationThreadLocal.setAuthUser(null);
 			}
-
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+			filterChain.doFilter(request, response);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
