@@ -31,7 +31,7 @@ public class CouponNotificationService {
 	@Scheduled(cron = DAILY_AT_MIDNIGHT)
 	@Transactional
 	public void sendCouponPublishNotification() {
-		List<PriorityCoupon> priorityCouponList = getTodayCoupons();
+		final List<PriorityCoupon> priorityCouponList = getTodayCoupons();
 
 		if (priorityCouponList.isEmpty()) {
 			log.info("[✅ LOGGER] NO LIVE COUPONS STARTING TODAY");
@@ -47,8 +47,8 @@ public class CouponNotificationService {
 	}
 
 	private void notifyAllClientsAboutNewCoupons() {
-		NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
-			"실시간 쿠폰이 발행되었습니다!", NotificationType.LIVE.getName()
+		final NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
+			LIVE_COUPON_ISSUED_MESSAGE, NotificationType.LIVE.getName()
 		);
 
 		sseSessionRepository.sendEventToAll(notificationReadDto);
