@@ -14,9 +14,7 @@ import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SSENotificationService {
@@ -27,11 +25,9 @@ public class SSENotificationService {
 	public SseEmitter subscribe(AuthUser authUser) {
 		final Long memberId = getMemberIdFromAuthUser(authUser);
 
-		SseEmitter sseEmitter = sseSessionRepository.saveSSEEmitter(memberId, SSE_DEFAULT_TIMEOUT);
-		log.info("[✅ LOGGER] SUBSCRIBED CLIENT ID: {}", memberId);
-
-		NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
-			"SSE에 성공적으로 연결되었습니다.", null
+		final SseEmitter sseEmitter = sseSessionRepository.saveSSEEmitter(memberId, SSE_DEFAULT_TIMEOUT);
+		final NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
+			SSE_CONNECTION_SUCCESS_MESSAGE, null
 		);
 		sseSessionRepository.sendEvent(memberId, notificationReadDto);
 
