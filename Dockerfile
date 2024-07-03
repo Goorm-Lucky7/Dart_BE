@@ -6,4 +6,4 @@ COPY ${JAR_FILE} /app.jar
 
 COPY src/main/resources/application-dev.yml /config/application-dev.yml
 
-ENTRYPOINT ["java", "-Dspring.config.location=file:/config/application-dev.yml", "-Dspring.profiles.active=dev", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-Dspring.config.location=file:/config/application-dev.yml", "-Dspring.profiles.active=dev", "-Duser.timezone=Asia/Seoul", "-jar", "/app.jar"]
