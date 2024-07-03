@@ -35,7 +35,6 @@ public class AuthenticationService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
-	private final TokenRedisRepository tokenRedisRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 
 	private final CookieUtil cookieUtil;

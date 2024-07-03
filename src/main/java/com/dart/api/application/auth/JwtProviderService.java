@@ -159,8 +159,7 @@ public class JwtProviderService {
 
 	public boolean isUsable(String token) {
 		try {
-			if (isTokenBlacklisted(token)) {
-				log.warn("====== TOKEN BLACKLISTED ======");
+			if (token == null) {
 				return false;
 			}
 
