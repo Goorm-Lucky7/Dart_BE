@@ -3,8 +3,6 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -61,7 +59,8 @@ public class AuthenticationService {
 		}
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
-			member.getNickname(), member.getProfileImageUrl(), UUID.randomUUID().toString());
+			member.getNickname(), member.getProfileImageUrl(), clientInfo);
+
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 
 		saveTokensInResponse(response, accessToken, refreshToken);
@@ -69,22 +68,18 @@ public class AuthenticationService {
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
+	@Transactional
 	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 		String clientInfo = extractClientInfo(request);
 
-		if (accessToken == null || refreshToken == null) {
+		if ( accessToken == null || refreshToken == null) {
 			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
 		}
 
 		try {
 			String email = jwtProviderService.extractEmailFromToken(refreshToken);
-			String storedAccessToken = tokenRedisRepository.getAccessToken(email);
-
-			if (!accessToken.equals(storedAccessToken)) {
-				throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-			}
 
 			if (jwtProviderService.isValidRefreshToken(refreshToken)) {
 				RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
@@ -97,8 +92,6 @@ public class AuthenticationService {
 				if (!refreshToken.equals(refreshTokenEntity.getToken())) {
 					throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 				}
-
-				jwtProviderService.revokeAccessToken(email, accessToken);
 
 				handleRefreshToken(email);
 
@@ -133,13 +126,13 @@ public class AuthenticationService {
 		}
 	}
 
+	private String extractTokenFromHeader(HttpServletRequest request) {
+		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
+	}
+
 	private void saveTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
 		saveAccessTokenInResponse(response, accessToken);
 		saveRefreshTokenInResponse(response, refreshToken);
-	}
-
-	private String extractTokenFromHeader(HttpServletRequest request) {
-		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
 	}
 
 	private void saveAccessTokenInResponse(HttpServletResponse response, String accessToken) {
