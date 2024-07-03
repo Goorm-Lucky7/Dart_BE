@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class ZSetRedisRepository {
 
 	private final RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, String> redisStringTemplate;
 
 	public void addElement(String key, Object value, double score) {
 		redisTemplate.opsForZSet().add(requireNonNull(key), requireNonNull(value), score);
@@ -36,6 +37,10 @@ public class ZSetRedisRepository {
 
 	public Set<Object> getRange(String key, long start, long end) {
 		return redisTemplate.opsForZSet().range(requireNonNull(key), start, end);
+	}
+
+	public Set<String> getRangeAsStringSet(String key, long start, long end) {
+		return redisStringTemplate.opsForZSet().range(requireNonNull(key), start, end);
 	}
 
 	public void removeElement(String key, Object value) {
