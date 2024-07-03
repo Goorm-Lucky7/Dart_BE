@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.auth.entity.RefreshToken;
@@ -81,6 +82,7 @@ public class JwtProviderService {
 		return token;
 	}
 
+	@Transactional
 	public String generateRefreshToken(String email) {
 		String token = buildJwt(new Date(), new Date(System.currentTimeMillis() + refreshTokenExpire))
 			.claim(EMAIL, email)
@@ -89,6 +91,9 @@ public class JwtProviderService {
 		RefreshToken refreshToken = new RefreshToken(token, email,
 			LocalDateTime.now().plusSeconds(refreshTokenExpire / 1000));
 
+		if(refreshTokenRepository.existsByEmail(email)){
+			refreshTokenRepository.deleteByEmail(email);
+		}
 		refreshTokenRepository.save(refreshToken);
 
 		return token;
@@ -185,17 +190,14 @@ public class JwtProviderService {
 			String email = claims.getSubject();
 			String storedToken = tokenRedisRepository.getAccessToken(email);
 
-			return token.equals(storedToken) && claims.get("clientInfo").equals(clientInfo);
+			return token.equals(storedToken) && claims.get(CLEINT_INFO).equals(clientInfo);
+		} catch (ExpiredJwtException e) {
+			return e.getClaims().get(CLEINT_INFO).equals(clientInfo);
 		} catch (JwtException | IllegalArgumentException e) {
 			return false;
 		}
 	}
 
-	public void revokeAccessToken(String email, String accessToken) {
-		tokenRedisRepository.deleteAccessToken(email);
-		long remainingTime = getRemainingTime(accessToken);
-		tokenRedisRepository.addToBlacklist(accessToken, remainingTime);
-	}
 
 	private long getRemainingTime(String token) {
 		try {
