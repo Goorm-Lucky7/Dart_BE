@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dart.api.application.chat.ChatMessageReadService;
 import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
@@ -29,8 +30,9 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 
 	private final SimpMessageSendingOperations simpMessageSendingOperations;
-	private final ChatMessageService chatMessageService;
 	private final MemberSessionRegistry memberSessionRegistry;
+	private final ChatMessageService chatMessageService;
+	private final ChatMessageReadService chatMessageReadService;
 
 	@MessageMapping(value = "/ws/{chat-room-id}/chat-messages")
 	public void saveAndSendChatMessage(
@@ -47,7 +49,7 @@ public class ChatController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "99") int size
 	) {
-		return ResponseEntity.ok(chatMessageService.getChatMessageList(chatRoomId, page, size));
+		return ResponseEntity.ok(chatMessageReadService.getChatMessageList(chatRoomId, page, size));
 	}
 
 	@GetMapping("/api/chat-rooms/{chat-room-id}/members")
