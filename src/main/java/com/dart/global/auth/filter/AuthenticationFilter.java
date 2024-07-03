@@ -71,13 +71,17 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
 
 		try {
-			if (accessToken != null && jwtProviderService.isUsable(accessToken)) {
+			if (jwtProviderService.isUsable(accessToken)) {
 				setAuthentication(accessToken);
-			} else if (REISSUE_PATH_PREFIX.equals(requestURI)) {
-			} else {
+				filterChain.doFilter(request, response);
+				return;
+			} else if(accessToken == null) {
 				AuthorizationThreadLocal.setAuthUser(null);
+				filterChain.doFilter(request, response);
+				return;
 			}
-			filterChain.doFilter(request, response);
+
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
