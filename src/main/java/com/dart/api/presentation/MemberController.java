@@ -53,8 +53,8 @@ public class MemberController {
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<LoginResDto> login(
-		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletResponse response) {
-		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
+		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletRequest request, HttpServletResponse response) {
+		return ResponseEntity.ok(authenticationService.login(loginReqDto, request, response));
 	}
 
 	@GetMapping("/reissue")
