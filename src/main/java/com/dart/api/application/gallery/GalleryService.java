@@ -193,6 +193,7 @@ public class GalleryService {
 		final Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
 
 		validateUserOwnership(member, gallery);
+		checkPayGallery(gallery);
 
 		chatRoomService.deleteChatRoom(gallery);
 		reviewService.deleteReviewsByGallery(gallery);
@@ -304,6 +305,12 @@ public class GalleryService {
 		}
 
 		return hasMemberCommentedOnGallery(member, gallery);
+	}
+
+	private void checkPayGallery(Gallery gallery) {
+		if (gallery.getCost() == Cost.PAY) {
+			throw new BadRequestException(ErrorCode.FAIL_PAY_GALLERY_CANNOT_DELETE);
+		}
 	}
 
 	private boolean isAuthUserNull(AuthUser authUser) {
