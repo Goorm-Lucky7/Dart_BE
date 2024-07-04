@@ -59,20 +59,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
-		String email = jwtProviderService.extractEmailFromToken(accessToken);
-
 		try {
-			if (jwtProviderService.isUsable(accessToken)) {
+			String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
+
+			if (accessToken == null) {
+				AuthorizationThreadLocal.setAuthUser(null);
+				filterChain.doFilter(request, response);
+			} else if (jwtProviderService.isUsable(accessToken)) {
+				String email = jwtProviderService.extractEmailFromToken(accessToken);
 				if (jwtProviderService.isAccessToken(email)) {
 					setAuthentication(accessToken);
 					filterChain.doFilter(request, response);
-				} else {
-					throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 				}
-			} else if (accessToken == null) {
-				AuthorizationThreadLocal.setAuthUser(null);
-				filterChain.doFilter(request, response);
 			} else {
 				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 			}
