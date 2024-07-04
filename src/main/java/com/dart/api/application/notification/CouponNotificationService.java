@@ -42,8 +42,7 @@ public class CouponNotificationService {
 	}
 
 	private List<PriorityCoupon> getTodayCoupons() {
-		LocalDate startedAt = LocalDate.now();
-		return priorityCouponRepository.findByStartedAt(startedAt);
+		return priorityCouponRepository.findByStartedAt(LocalDate.now());
 	}
 
 	private void notifyAllClientsAboutNewCoupons() {
