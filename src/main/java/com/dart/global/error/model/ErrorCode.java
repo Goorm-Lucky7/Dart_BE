@@ -44,6 +44,7 @@ public enum ErrorCode {
 	FAIL_ALREADY_VERIFIED_EMAIL("[❎ ERROR] 이미 이메일 중복확인이 완료되었습니다."),
 	FAIL_NO_TARGET_MEMBER_PROVIDED("[❎ ERROR] 조회하고 싶은 대상을 입력해 주세요."),
 	FAIL_INVALID_STOCK_END("[❎ ERROR] 쿠폰 재고가 마감되었습니다."),
+	FAIL_NOW_NO_EVENT("진행 예정 중인 이벤트입니다."),
 
 	// 401 Unauthorized
 	FAIL_LOGIN_REQUIRED("[❎ ERROR] 로그인이 필요한 기능입니다."),
