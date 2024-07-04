@@ -144,6 +144,7 @@ public class AuthenticationService {
 		try {
 			if (refreshTokenRepository.existsByEmail(email)) {
 				refreshTokenRepository.deleteByEmail(email);
+				refreshTokenRepository.flush();
 			} else {
 			}
 		} catch (Exception e) {
