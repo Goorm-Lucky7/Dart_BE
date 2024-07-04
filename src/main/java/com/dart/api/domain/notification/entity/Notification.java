@@ -1,5 +1,7 @@
 package com.dart.api.domain.notification.entity;
 
+import java.util.UUID;
+
 import com.dart.api.dto.notification.response.NotificationReadDto;
 import com.dart.global.common.entity.BaseTimeEntity;
 
@@ -41,6 +43,7 @@ public class Notification extends BaseTimeEntity {
 
 	public static NotificationReadDto createNotificationReadDto(String message, String type) {
 		return NotificationReadDto.builder()
+			.eventId(UUID.randomUUID().toString())
 			.message(message)
 			.type(type)
 			.build();
