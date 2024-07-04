@@ -60,11 +60,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
-
+		String email = jwtProviderService.extractEmailFromToken(accessToken);
 
 		try {
 			if (jwtProviderService.isUsable(accessToken)) {
-				if (!jwtProviderService.isTokenBlacklisted(accessToken)) {
+				if (jwtProviderService.isAccessToken(email)) {
 					setAuthentication(accessToken);
 					filterChain.doFilter(request, response);
 				} else {
