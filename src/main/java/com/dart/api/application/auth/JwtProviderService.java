@@ -56,13 +56,55 @@ public class JwtProviderService {
 
 	private SecretKey secretKey;
 
-	private final MemberRepository memberRepository;
 	private final TokenRedisRepository tokenRedisRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 
 	@PostConstruct
 	private void init() {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+	}
+
+
+	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
+		return Jwts.builder()
+			.issuedAt(issuedDate)
+			.expiration(expiredDate)
+			.signWith(secretKey, Jwts.SIG.HS256);
+	}
+
+	public boolean isUsable(String token) {
+		try {
+			if (token == null) {
+				return false;
+			}
+
+			Jwts.parser()
+				.verifyWith(secretKey)
+				.build()
+				.parseSignedClaims(token);
+
+			return true;
+		} catch (ExpiredJwtException e) {
+			log.warn("====== TOKEN EXPIRED ======");
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		} catch (JwtException | IllegalArgumentException e) {
+			log.warn("====== INVALID TOKEN ======", e);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	private Claims getClaimsByToken(String token) {
+		try {
+			return Jwts.parser()
+				.verifyWith(secretKey)
+				.build()
+				.parseSignedClaims(token)
+				.getPayload();
+		} catch (ExpiredJwtException e) {
+			return e.getClaims();
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		}
 	}
 
 	public String generateAccessToken(Long id, String email, String nickname, String profileImage, String clientInfo) {
@@ -120,7 +162,7 @@ public class JwtProviderService {
 		try {
 			final Claims claims = getClaimsByToken(token);
 			Long id = claims.get(ID, Long.class);
-			return id;
+			return claims.get(ID, Long.class);
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
@@ -154,28 +196,7 @@ public class JwtProviderService {
 	}
 
 	public boolean isTokenBlacklisted(String token) {
-		return tokenRedisRepository.isBlacklisted(token);
-	}
-
-	public boolean isUsable(String token) {
-		try {
-			if (token == null) {
-				return false;
-			}
-
-			Jwts.parser()
-				.verifyWith(secretKey)
-				.build()
-				.parseSignedClaims(token);
-
-			return true;
-		} catch (ExpiredJwtException e) {
-			log.warn("====== TOKEN EXPIRED ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
-		} catch (JwtException | IllegalArgumentException e) {
-			log.warn("====== INVALID TOKEN ======", e);
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
+		return tokenRedisRepository.checkBlacklistExists(token);
 	}
 
 	public boolean validateAccessToken(String token, String clientInfo) {
@@ -194,48 +215,6 @@ public class JwtProviderService {
 			return e.getClaims().get(CLEINT_INFO).equals(clientInfo);
 		} catch (JwtException | IllegalArgumentException e) {
 			return false;
-		}
-	}
-
-
-	private long getRemainingTime(String token) {
-		try {
-			Claims claims = Jwts.parser()
-				.setSigningKey(secretKey)
-				.build()
-				.parseClaimsJws(token)
-				.getBody();
-
-			Date expiration = claims.getExpiration();
-			return (expiration.getTime() - System.currentTimeMillis()) / 1000;
-		} catch (Exception e) {
-			return 0;
-		}
-	}
-
-	public boolean isValidRefreshToken(String token) {
-		Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByToken(token);
-		return refreshTokenOpt.map(refreshToken -> !refreshToken.isExpired()).orElse(false);
-	}
-
-	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
-		return Jwts.builder()
-			.issuedAt(issuedDate)
-			.expiration(expiredDate)
-			.signWith(secretKey, Jwts.SIG.HS256);
-	}
-
-	private Claims getClaimsByToken(String token) {
-		try {
-			return Jwts.parser()
-				.verifyWith(secretKey)
-				.build()
-				.parseSignedClaims(token)
-				.getPayload();
-		} catch (ExpiredJwtException e) {
-			return e.getClaims();
-		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		}
 	}
 }
