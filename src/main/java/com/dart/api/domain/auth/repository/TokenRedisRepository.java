@@ -17,25 +17,36 @@ public class TokenRedisRepository {
 	private final ValueRedisRepository valueRedisRepository;
 
 	public void saveAccessToken(String key, String data, long accessTokenExpire) {
-		valueRedisRepository.saveValueWithExpiry(REDIS_ACCESS_TOKEN_PREFIX + key, data, accessTokenExpire /1000);
+		if (accessTokenExpire / 1000 >= 1.0) {
+			valueRedisRepository.saveValueWithExpiry(REDIS_ACCESS_TOKEN_PREFIX + key, data, accessTokenExpire / 1000);
+		}
+	}
+
+	public void saveBlacklistToken(String key) {
+		valueRedisRepository.saveValue(REDIS_BLACKLIST_TOKEN_PREFIX + key, "isBlacklisted");
 	}
 
 	@Transactional(readOnly = true)
 	public String getAccessToken(String key) {
 		String value = valueRedisRepository.getValue(REDIS_ACCESS_TOKEN_PREFIX + key);
-		return value != null ? value : "false";
+		return value;
+	}
+
+	@Transactional(readOnly = true)
+	public String getBlacklistToken(String key) {
+		String value = valueRedisRepository.getValue(REDIS_BLACKLIST_TOKEN_PREFIX + key);
+		return value;
 	}
 
 	public void deleteAccessToken(String key) {
 		valueRedisRepository.deleteValue(REDIS_ACCESS_TOKEN_PREFIX + key);
 	}
 
-	public void addToBlacklist(String token, long ttl) {
-		valueRedisRepository.saveValueWithExpiry(
-			REDIS_BLACKLIST_TOKEN_PREFIX + token, "blacklisted", ttl);
+	public void deleteBlacklistToken(String key) {
+		valueRedisRepository.deleteValue(REDIS_BLACKLIST_TOKEN_PREFIX + key);
 	}
 
-	public boolean isBlacklisted(String token) {
-		return valueRedisRepository.isValueExists(REDIS_BLACKLIST_TOKEN_PREFIX + token);
+	public boolean checkBlacklistExists(String email) {
+		return valueRedisRepository.isValueExists(REDIS_BLACKLIST_TOKEN_PREFIX + email);
 	}
 }
