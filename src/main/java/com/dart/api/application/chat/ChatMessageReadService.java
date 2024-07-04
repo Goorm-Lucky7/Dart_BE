@@ -52,7 +52,7 @@ public class ChatMessageReadService {
 		return createPageResponse(chatMessageReadDtoList, page, size);
 	}
 
-	private List<ChatMessageReadDto> fetchChatMessagesFromDBAndUpdateMembers(Long chatRoomId, int page, int size) {
+	public List<ChatMessageReadDto> fetchChatMessagesFromDBAndUpdateMembers(Long chatRoomId, int page, int size) {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final Pageable pageable = PageRequest.of(page, size);
 		final Page<ChatMessage> mySQLChatMessages = chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(
@@ -70,7 +70,7 @@ public class ChatMessageReadService {
 		return updatedChatMessageReadDtoList;
 	}
 
-	private List<ChatMessageReadDto> updateMembersInChatMessages(List<ChatMessageReadDto> chatMessageReadDtoList) {
+	public List<ChatMessageReadDto> updateMembersInChatMessages(List<ChatMessageReadDto> chatMessageReadDtoList) {
 		final List<String> emailList = chatMessageReadDtoList.stream()
 			.map(ChatMessageReadDto::sender)
 			.distinct()
