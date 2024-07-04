@@ -69,14 +69,14 @@ public class PriorityCouponManageService {
 
 			if (maxCount <= rank) {
 				notification(memberId, FAIL_NO_STOCK_MESSAGE);
-				priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
 				continue;
 			}
 
 			priorityCouponWalletRepository.save(PriorityCouponWallet.create(priorityCoupon, memberId));
-			priorityCouponRedisRepository.increase(priorityCoupon.getId(), ONE_PERSON);
 			notification(memberId, SUCCESS_MESSAGE);
 		}
+
+		priorityCouponRedisRepository.increase(priorityCoupon.getId(), membersId.size());
 	}
 
 	public void registerQueue(PriorityCouponPublishDto dto, Long memberId) {

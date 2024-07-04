@@ -50,16 +50,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 	) {
 		String requestURI = request.getRequestURI();
 
-		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
-			try {
-				filterChain.doFilter(request, response);
-			} catch (IOException | ServletException e) {
-				throw new RuntimeException(e);
-			}
-			return;
-		}
-
-		if (requestURI.startsWith(REISSUE_PATH_PREFIX)) {
+		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX) || requestURI.startsWith(REISSUE_PATH_PREFIX)) {
 			try {
 				filterChain.doFilter(request, response);
 			} catch (IOException | ServletException e) {
@@ -70,18 +61,21 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
 
+
 		try {
 			if (jwtProviderService.isUsable(accessToken)) {
-				setAuthentication(accessToken);
-				filterChain.doFilter(request, response);
-				return;
-			} else if(accessToken == null) {
+				if (!jwtProviderService.isTokenBlacklisted(accessToken)) {
+					setAuthentication(accessToken);
+					filterChain.doFilter(request, response);
+				} else {
+					throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+				}
+			} else if (accessToken == null) {
 				AuthorizationThreadLocal.setAuthUser(null);
 				filterChain.doFilter(request, response);
-				return;
+			} else {
+				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 			}
-
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);
