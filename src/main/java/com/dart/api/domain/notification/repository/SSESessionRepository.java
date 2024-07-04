@@ -19,6 +19,12 @@ public class SSESessionRepository {
 
 	public final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
+	private final PendingEventsRepository pendingEventsRepository;
+
+	public SSESessionRepository(PendingEventsRepository pendingEventsRepository) {
+		this.pendingEventsRepository = pendingEventsRepository;
+	}
+
 	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
 		final SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseSessionDB.put(clientId, sseEmitter);
@@ -40,7 +46,10 @@ public class SSESessionRepository {
 				sseEmitter.send(sseEventBuilder);
 			} catch (Exception e) {
 				deleteSSEEmitterByClientId(clientId);
+				pendingEventsRepository.savePendingEventCache(clientId, notificationReadDto);
 			}
+		} else {
+			pendingEventsRepository.savePendingEventCache(clientId, notificationReadDto);
 		}
 	}
 
@@ -50,6 +59,13 @@ public class SSESessionRepository {
 
 	public void deleteSSEEmitterByClientId(Long clientId) {
 		sseSessionDB.remove(clientId);
+	}
+
+	public void completeSSEEmitter(Long clientId) {
+		final SseEmitter sseEmitter = sseSessionDB.get(clientId);
+		if (sseEmitter != null) {
+			sseEmitter.complete();
+		}
 	}
 
 	private void handleSSEEmitter(SseEmitter sseEmitter, Long clientId) {
@@ -65,12 +81,5 @@ public class SSESessionRepository {
 			log.error("[✅ LOGGER] ERROR SSE EMITTER FOR CLIENT ID: {}", clientId, error);
 			deleteSSEEmitterByClientId(clientId);
 		});
-	}
-
-	public void completeSSEEmitter(Long clientId) {
-		final SseEmitter sseEmitter = sseSessionDB.get(clientId);
-		if (sseEmitter != null) {
-			sseEmitter.complete();
-		}
 	}
 }
