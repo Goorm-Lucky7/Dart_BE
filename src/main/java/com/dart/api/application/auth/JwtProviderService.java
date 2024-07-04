@@ -134,8 +134,8 @@ public class JwtProviderService {
 			refreshTokenRepository.deleteByEmail(email);
 			refreshTokenRepository.flush();
 		}
-		refreshTokenRepository.save(refreshToken);
 
+		refreshTokenRepository.save(refreshToken);
 		return token;
 	}
 
@@ -193,8 +193,7 @@ public class JwtProviderService {
 		}
 	}
 
-	public boolean isTokenBlacklisted(String token) {
-		return tokenRedisRepository.checkBlacklistExists(token);
+	public boolean isAccessToken(String email) {return tokenRedisRepository.checkAccessTokenExists(email);
 	}
 
 	public boolean validateAccessToken(String token, String clientInfo) {

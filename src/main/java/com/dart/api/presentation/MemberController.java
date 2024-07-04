@@ -57,6 +57,13 @@ public class MemberController {
 		return ResponseEntity.ok(authenticationService.login(loginReqDto, request, response));
 	}
 
+	@PostMapping("/logout")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+		authenticationService.logout(request, response);
+		return ResponseEntity.ok("Logout successfully");
+	}
+
 	@GetMapping("/reissue")
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<TokenResDto> reissue(HttpServletRequest request, HttpServletResponse response) {

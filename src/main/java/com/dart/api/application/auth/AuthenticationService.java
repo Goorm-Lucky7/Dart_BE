@@ -40,34 +40,31 @@ public class AuthenticationService {
 
 	private final CookieUtil cookieUtil;
 
-	@Value("${jwt.access-expire}")
-	private long accessTokenExpire;
-
 	@Transactional
 	public LoginResDto login(LoginReqDto loginReqDto, HttpServletRequest request, HttpServletResponse response) {
 		final Member member = findByMemberEmail(loginReqDto.email());
 		final String email = member.getEmail();
-		validatePasswordMatch(loginReqDto.password(), member.getPassword());
-
 		String clientInfo = extractClientInfo(request);
-		String oldAccessToken = tokenRedisRepository.getAccessToken(email);
 
-		if (oldAccessToken != null) {
-			tokenRedisRepository.saveBlacklistToken(oldAccessToken);
-			tokenRedisRepository.deleteAccessToken(email);
-		}
+		validatePasswordMatch(loginReqDto.password(), member.getPassword());
+		deleteAllTokensAndCookie(response, email);
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
 			member.getNickname(), member.getProfileImageUrl(), clientInfo);
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
-		handleRefreshToken(email);
-
-		tokenRedisRepository.saveBlacklistToken(accessToken);
-		tokenRedisRepository.saveAccessToken(email, accessToken, accessTokenExpire);
+		tokenRedisRepository.saveBlacklistToken(email, accessToken);
 
 		saveTokensInResponse(response, accessToken, refreshToken);
 
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+	}
+
+	@Transactional
+	public void logout(HttpServletRequest request, HttpServletResponse response) {
+		String accessToken = extractTokenFromHeader(request);
+		String email = jwtProviderService.extractEmailFromToken(accessToken);
+
+		deleteAllTokensAndCookie(response, email);
 	}
 
 	@Transactional
@@ -86,12 +83,12 @@ public class AuthenticationService {
 			validateRefreshToken(refreshToken);
 			validateBlacklist(email, accessToken);
 
-			String newAccessToken = generateAccessToken(accessToken, clientInfo);
-			tokenRedisRepository.deleteBlacklistToken(accessToken);
-			tokenRedisRepository.saveBlacklistToken(newAccessToken);
+			tokenRedisRepository.deleteBlacklistToken(email);
+			deleteRefreshToken(email);
 
-			handleRefreshToken(email);
+			String newAccessToken = generateAccessToken(accessToken, clientInfo);
 			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
+			tokenRedisRepository.saveBlacklistToken(email, newAccessToken);
 
 			saveTokensInResponse(response, newAccessToken, newRefreshToken);
 			return new TokenResDto(newAccessToken);
@@ -140,14 +137,10 @@ public class AuthenticationService {
 	}
 
 	@Transactional
-	public void handleRefreshToken(String email) {
-		try {
-			if (refreshTokenRepository.existsByEmail(email)) {
-				refreshTokenRepository.deleteByEmail(email);
-				refreshTokenRepository.flush();
-			}
-		} catch (Exception e) {
-			throw e;
+	public void deleteRefreshToken(String email) {
+		if (refreshTokenRepository.existsByEmail(email)) {
+			refreshTokenRepository.deleteByEmail(email);
+			refreshTokenRepository.flush();
 		}
 	}
 
@@ -157,7 +150,8 @@ public class AuthenticationService {
 		}
 	}
 
-	private RefreshToken validateRefreshToken(String refreshToken) {
+	@Transactional(readOnly = true)
+	protected RefreshToken validateRefreshToken(String refreshToken) {
 		RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
 			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_TOKEN_NOT_FOUND));
 
@@ -175,7 +169,14 @@ public class AuthenticationService {
 	}
 
 	private boolean isBlacklist(String email, String token) {
-		return tokenRedisRepository.checkBlacklistExists(token)
+		return tokenRedisRepository.getBlacklistToken(email).equals(token)
 			&& tokenRedisRepository.getAccessToken(email) == null;
+	}
+
+	private void deleteAllTokensAndCookie(HttpServletResponse response, String email) {
+		tokenRedisRepository.deleteAccessToken(email);
+		tokenRedisRepository.deleteBlacklistToken(email);
+		deleteRefreshToken(email);
+		cookieUtil.deleteRefreshCookie(response);
 	}
 }
