@@ -61,6 +61,29 @@ public class CookieUtil {
 		return null;
 	}
 
+	public void deleteCookie(HttpServletResponse response, String name) {
+		boolean isLocal = isLocalActiveProfile();
+		String domain = isLocal ? LOCAL_DOMAIN : COOKIE_DOMAIN;
+
+		ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, null)
+			.httpOnly(true)
+			.path("/")
+			.maxAge(0)
+			.sameSite("None")
+			.domain(domain);
+
+		if (!isLocal) {
+			cookieBuilder.secure(true);
+		}
+
+		ResponseCookie cookie = cookieBuilder.build();
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+	}
+
+	public void deleteRefreshCookie(HttpServletResponse response) {
+		deleteCookie(response, REFRESH_TOKEN_COOKIE_NAME);
+	}
+
 	private boolean isLocalActiveProfile() {
 		for (String profile : env.getActiveProfiles()) {
 			if ("local".equals(profile)) {

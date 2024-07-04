@@ -4,8 +4,8 @@ import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -14,20 +14,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.global.error.exception.NotFoundException;
+import com.dart.api.domain.auth.entity.RefreshToken;
+import com.dart.api.domain.auth.repository.RefreshTokenRepository;
+import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +40,8 @@ public class JwtProviderService {
 	private static final String EMAIL = "email";
 	private static final String NICKNAME = "nickname";
 	private static final String PROFILE_IMAGE = "profileImage";
+	private static final String CLEINT_INFO = "clientInfo";
+	private static final String IAT = "iat";
 
 	@Value("${jwt.secret.access-key}")
 	private String secret;
@@ -54,44 +54,89 @@ public class JwtProviderService {
 
 	private SecretKey secretKey;
 
-	private final MemberRepository memberRepository;
+	private final TokenRedisRepository tokenRedisRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	@PostConstruct
 	private void init() {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateAccessToken(Long id, String email, String nickname, String profileImage, String uniqueIdentifier) {
-		return buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
+	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
+		return Jwts.builder()
+			.issuedAt(issuedDate)
+			.expiration(expiredDate)
+			.signWith(secretKey, Jwts.SIG.HS256);
+	}
+
+	public boolean isUsable(String token) {
+		try {
+			if (token == null) {
+				return false;
+			}
+
+			Jwts.parser()
+				.verifyWith(secretKey)
+				.build()
+				.parseSignedClaims(token);
+
+			return true;
+		} catch (ExpiredJwtException e) {
+			log.warn("====== TOKEN EXPIRED ======");
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		} catch (JwtException | IllegalArgumentException e) {
+			log.warn("====== INVALID TOKEN ======", e);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	private Claims getClaimsByToken(String token) {
+		try {
+			return Jwts.parser()
+				.verifyWith(secretKey)
+				.build()
+				.parseSignedClaims(token)
+				.getPayload();
+		} catch (ExpiredJwtException e) {
+			return e.getClaims();
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		}
+	}
+
+	public String generateAccessToken(Long id, String email, String nickname, String profileImage, String clientInfo) {
+		String token = buildJwt(new Date(), new Date(System.currentTimeMillis() + accessTokenExpire))
 			.claim(ID, id)
 			.claim(EMAIL, email)
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
-			.claim("iat", new Date().getTime())
-			.claim("jti", uniqueIdentifier)
+			.claim(CLEINT_INFO, clientInfo)
+			.claim(IAT, new Date().getTime())
 			.issuedAt(new Date())
 			.expiration(new Date(System.currentTimeMillis() + accessTokenExpire))
 			.signWith(secretKey, Jwts.SIG.HS256)
 			.compact();
-	}
 
-	public String generateRefreshToken(String email) {
-		return buildJwt(new Date(), new Date(System.currentTimeMillis() + refreshTokenExpire))
-			.claim(EMAIL, email)
-			.compact();
+		tokenRedisRepository.saveAccessToken(email, token, accessTokenExpire);
+		return token;
 	}
 
 	@Transactional
-	public String reGenerateAccessToken(String accessToken) {
-		final Claims claims = getClaimsByToken(accessToken);
-		final String email = claims.get(EMAIL, String.class);
-		final Member member = memberRepository.findByEmail(email)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
+	public String generateRefreshToken(String email) {
+		String token = buildJwt(new Date(), new Date(System.currentTimeMillis() + refreshTokenExpire))
+			.claim(EMAIL, email)
+			.compact();
 
-		String uniqueIdentifier = UUID.randomUUID().toString();
+		RefreshToken refreshToken = new RefreshToken(token, email,
+			LocalDateTime.now().plusSeconds(refreshTokenExpire / 1000));
 
-		return generateAccessToken(member.getId(), member.getEmail(), member.getNickname(),
-			member.getProfileImageUrl(), uniqueIdentifier);
+		if(refreshTokenRepository.existsByEmail(email)){
+			refreshTokenRepository.deleteByEmail(email);
+			refreshTokenRepository.flush();
+		}
+
+		refreshTokenRepository.save(refreshToken);
+		return token;
 	}
 
 	public String extractToken(String header, HttpServletRequest request) {
@@ -111,7 +156,17 @@ public class JwtProviderService {
 			claims.get(NICKNAME, String.class));
 	}
 
-	public String extractEmailFromAccessToken(String accessToken) {
+	public Long extractIdFromToken(String token) {
+		try {
+			final Claims claims = getClaimsByToken(token);
+			Long id = claims.get(ID, Long.class);
+			return claims.get(ID, Long.class);
+		} catch (Exception e) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	public String extractEmailFromToken(String accessToken) {
 		try {
 			final Claims claims = getClaimsByToken(accessToken);
 			return claims.get(EMAIL, String.class);
@@ -120,72 +175,43 @@ public class JwtProviderService {
 		}
 	}
 
-	public String extractEmailFromRefreshToken(String refreshToken) {
+	public String extractNicknameFromToken(String token) {
 		try {
-			final Claims claims = getClaimsByToken(refreshToken);
-			return claims.get(EMAIL, String.class);
+			final Claims claims = getClaimsByToken(token);
+			return claims.get(NICKNAME, String.class);
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
 	}
 
-	public boolean isUsable(String token) {
+	public String extractProfileImageFromToken(String token) {
 		try {
-			Jwts.parser()
-				.verifyWith(secretKey)
-				.build()
-				.parseSignedClaims(token);
-
-			return true;
-		} catch (ExpiredJwtException e) {
-			log.warn("====== TOKEN EXPIRED ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
-		} catch (IllegalArgumentException e) {
-			log.warn("====== EMPTIED TOKEN ======");
-		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
-			log.warn("====== WRONG TYPE TOKEN ======");
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+			final Claims claims = getClaimsByToken(token);
+			return claims.get(PROFILE_IMAGE, String.class);
 		} catch (Exception e) {
-			log.warn("====== INVALID TOKEN ======");
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
-
-		return false;
 	}
 
-	public void validateTokenExists(String token) {
+	public boolean isAccessToken(String email) {return tokenRedisRepository.checkAccessTokenExists(email);
+	}
+
+	public boolean validateAccessToken(String token, String clientInfo) {
 		try {
-			Jwts.parser()
+			Claims claims = Jwts.parser()
 				.setSigningKey(secretKey)
 				.build()
-				.parseClaimsJws(token);
-		} catch (ExpiredJwtException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
-		} catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		} catch (IllegalArgumentException e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
-		}
-	}
+				.parseClaimsJws(token)
+				.getBody();
 
-	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
-		return Jwts.builder()
-			.issuedAt(issuedDate)
-			.expiration(expiredDate)
-			.signWith(secretKey, Jwts.SIG.HS256);
-	}
+			String email = claims.getSubject();
+			String storedToken = tokenRedisRepository.getAccessToken(email);
 
-	private Claims getClaimsByToken(String token) {
-		try {
-			return Jwts.parser()
-				.verifyWith(secretKey)
-				.build()
-				.parseSignedClaims(token)
-				.getPayload();
+			return token.equals(storedToken) && claims.get(CLEINT_INFO).equals(clientInfo);
 		} catch (ExpiredJwtException e) {
-			return e.getClaims();
-		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+			return e.getClaims().get(CLEINT_INFO).equals(clientInfo);
+		} catch (JwtException | IllegalArgumentException e) {
+			return false;
 		}
 	}
 }

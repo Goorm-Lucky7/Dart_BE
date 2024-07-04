@@ -4,6 +4,7 @@ import static com.dart.global.common.util.ChatConstant.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +21,14 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.dart.api.application.chat.ChatMessageReadService;
 import com.dart.api.application.chat.ChatMessageService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
+import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.chat.response.MemberSessionDto;
+import com.dart.api.dto.page.PageInfo;
+import com.dart.api.dto.page.PageResponse;
 import com.dart.api.infrastructure.websocket.MemberSessionRegistry;
 import com.dart.support.AuthFixture;
 import com.dart.support.ChatFixture;
@@ -33,6 +38,9 @@ class ChatControllerTest {
 
 	@Mock
 	private ChatMessageService chatMessageService;
+
+	@Mock
+	private ChatMessageReadService chatMessageReadService;
 
 	@Mock
 	private SimpMessageSendingOperations simpMessageSendingOperations;
@@ -66,6 +74,33 @@ class ChatControllerTest {
 		// THEN
 		verify(chatMessageService).saveChatMessage(chatRoomId, chatMessageCreateDto);
 		verify(simpMessageSendingOperations).convertAndSend(TOPIC_PREFIX + chatRoomId, chatMessageCreateDto);
+	}
+
+	@Test
+	@DisplayName("GET CHAT MESSAGES(⭕️ SUCCESS): 성공적으로 채팅 메시지 목록을 조회했습니다.")
+	void getChatMessageList_void_success() {
+		// GIVEN
+		Long chatRoomId = 1L;
+		int page = 0;
+		int size = 10;
+
+		List<ChatMessageReadDto> chatMessageReadDtoList = Arrays.asList(
+			new ChatMessageReadDto("member1", "Hello 👋🏻", LocalDateTime.now(), true, "https://example.com/profile1.jpg"),
+			new ChatMessageReadDto("member2", "Bye 👋🏻", LocalDateTime.now(), true, "https://example.com/profile2.jpg")
+		);
+
+		PageResponse<ChatMessageReadDto> pageResponse = new PageResponse<>(
+			chatMessageReadDtoList, new PageInfo(page, true)
+		);
+
+		given(chatMessageReadService.getChatMessageList(chatRoomId, page, size)).willReturn(pageResponse);
+
+		// WHEN
+		ResponseEntity<PageResponse<ChatMessageReadDto>> responseEntity = chatController.getChatMessageList(chatRoomId, page, size);
+
+		// THEN
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(responseEntity.getBody()).isEqualTo(pageResponse);
 	}
 
 	@Test

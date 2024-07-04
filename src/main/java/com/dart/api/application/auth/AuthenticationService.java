@@ -3,12 +3,13 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
-import java.util.UUID;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.domain.auth.entity.RefreshToken;
+import com.dart.api.domain.auth.repository.RefreshTokenRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -34,53 +35,64 @@ public class AuthenticationService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
+	private final RefreshTokenRepository refreshTokenRepository;
 	private final TokenRedisRepository tokenRedisRepository;
 
 	private final CookieUtil cookieUtil;
 
 	@Transactional
-	public LoginResDto login(LoginReqDto loginReqDto, HttpServletResponse response) {
+	public LoginResDto login(LoginReqDto loginReqDto, HttpServletRequest request, HttpServletResponse response) {
 		final Member member = findByMemberEmail(loginReqDto.email());
+		final String email = member.getEmail();
+		String clientInfo = extractClientInfo(request);
+
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
+		deleteAllTokensAndCookie(response, email);
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
-			member.getNickname(), member.getProfileImageUrl(), UUID.randomUUID().toString());
+			member.getNickname(), member.getProfileImageUrl(), clientInfo);
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
+		tokenRedisRepository.saveBlacklistToken(email, accessToken);
 
-		tokenRedisRepository.setRefreshToken(loginReqDto.email(), refreshToken);
-
-		setTokensInResponse(response, accessToken, refreshToken);
+		saveTokensInResponse(response, accessToken, refreshToken);
 
 		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
 	}
 
+	@Transactional
+	public void logout(HttpServletRequest request, HttpServletResponse response) {
+		String accessToken = extractTokenFromHeader(request);
+		String email = jwtProviderService.extractEmailFromToken(accessToken);
+
+		deleteAllTokensAndCookie(response, email);
+	}
+
+	@Transactional
 	public TokenResDto reissue(HttpServletRequest request, HttpServletResponse response) {
 		String accessToken = extractTokenFromHeader(request);
 		String refreshToken = cookieUtil.getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
-		if (accessToken == null || refreshToken == null) {
+		if ( accessToken == null || refreshToken == null) {
 			throw new NotFoundException(ErrorCode.FAIL_TOKEN_NOT_FOUND);
 		}
 
 		try {
-			jwtProviderService.validateTokenExists(refreshToken);
+			String email = jwtProviderService.extractEmailFromToken(refreshToken);
+			String clientInfo = extractClientInfo(request);
 
-			String emailFromAccess = jwtProviderService.extractEmailFromAccessToken(accessToken);
-			String emailFromRefresh = jwtProviderService.extractEmailFromRefreshToken(refreshToken);
+			validateRefreshToken(refreshToken);
+			validateBlacklist(email, accessToken);
 
-			if (!emailFromRefresh.equals(emailFromAccess)) {
-				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_MISMATCH);
-			}
+			tokenRedisRepository.deleteBlacklistToken(email);
+			deleteRefreshToken(email);
 
-			String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-			String newRefreshToken = jwtProviderService.generateRefreshToken(emailFromRefresh);
+			String newAccessToken = generateAccessToken(accessToken, clientInfo);
+			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
+			tokenRedisRepository.saveBlacklistToken(email, newAccessToken);
 
-			tokenRedisRepository.deleteRefreshToken(emailFromRefresh);
-			tokenRedisRepository.setRefreshToken(emailFromRefresh, newRefreshToken);
-
-			setTokensInResponse(response, newAccessToken, newRefreshToken);
-
+			saveTokensInResponse(response, newAccessToken, newRefreshToken);
 			return new TokenResDto(newAccessToken);
+
 		} catch (Exception e) {
 			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
@@ -91,26 +103,80 @@ public class AuthenticationService {
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
 	}
 
-	private void validatePasswordMatch(String password, String encodedPassword) {
-		if (!passwordEncoder.matches(password, encodedPassword)) {
-			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_PASSWORD);
-		}
+	private String generateAccessToken(String accessToken, String clientInfo) {
+		return jwtProviderService.generateAccessToken(
+			jwtProviderService.extractIdFromToken(accessToken),
+			jwtProviderService.extractEmailFromToken(accessToken),
+			jwtProviderService.extractNicknameFromToken(accessToken),
+			jwtProviderService.extractProfileImageFromToken(accessToken),
+			clientInfo
+		);
 	}
 
-	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
-		setAccessToken(response, accessToken);
-		setRefreshToken(response, refreshToken);
+	private void saveTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
+		saveAccessTokenInResponse(response, accessToken);
+		saveRefreshTokenInResponse(response, refreshToken);
+	}
+
+	private void saveAccessTokenInResponse(HttpServletResponse response, String accessToken) {
+		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
+	}
+
+	private void saveRefreshTokenInResponse(HttpServletResponse response, String refreshToken) {
+		cookieUtil.setRefreshCookie(response, refreshToken);
 	}
 
 	private String extractTokenFromHeader(HttpServletRequest request) {
 		return request.getHeader(ACCESS_TOKEN_HEADER).replace(BEARER, BLANK).trim();
 	}
 
-	private void setAccessToken(HttpServletResponse response, String accessToken) {
-		response.setHeader(ACCESS_TOKEN_HEADER, accessToken);
+	private String extractClientInfo(HttpServletRequest request) {
+		String ipAddress = request.getRemoteAddr();
+		String userAgent = request.getHeader("User-Agent");
+		return ipAddress + "|" + userAgent;
 	}
 
-	private void setRefreshToken(HttpServletResponse response, String refreshToken) {
-		cookieUtil.setRefreshCookie(response, refreshToken);
+	@Transactional
+	public void deleteRefreshToken(String email) {
+		if (refreshTokenRepository.existsByEmail(email)) {
+			refreshTokenRepository.deleteByEmail(email);
+			refreshTokenRepository.flush();
+		}
+	}
+
+	private void validatePasswordMatch(String password, String encodedPassword) {
+		if (!passwordEncoder.matches(password, encodedPassword)) {
+			throw new BadRequestException(ErrorCode.FAIL_INCORRECT_PASSWORD);
+		}
+	}
+
+	@Transactional(readOnly = true)
+	protected RefreshToken validateRefreshToken(String refreshToken) {
+		RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
+			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_TOKEN_NOT_FOUND));
+
+		if (refreshTokenEntity.isExpired()) {
+			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+		}
+
+		return refreshTokenEntity;
+	}
+
+	private void validateBlacklist(String email, String token) {
+		if (!isBlacklist(email, token)) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+		}
+	}
+
+	private boolean isBlacklist(String email, String token) {
+		return tokenRedisRepository.getBlacklistToken(email).equals(token)
+			&& tokenRedisRepository.getAccessToken(email) == null;
+	}
+
+	private void deleteAllTokensAndCookie(HttpServletResponse response, String email) {
+		tokenRedisRepository.deleteAccessToken(email);
+		tokenRedisRepository.deleteBlacklistToken(email);
+		deleteRefreshToken(email);
+		cookieUtil.deleteRefreshCookie(response);
 	}
 }

@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-	private static final String PATH_API_TOKEN_REISSUE = "/api/reissue";
+	private static final String REISSUE_PATH_PREFIX = "/api/reissue";
 	private static final String WEBSOCKET_PATH_PREFIX = "/ws/";
 
 	private final JwtProviderService jwtProviderService;
@@ -50,7 +50,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 	) {
 		String requestURI = request.getRequestURI();
 
-		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX)) {
+		if (requestURI.startsWith(WEBSOCKET_PATH_PREFIX) || requestURI.startsWith(REISSUE_PATH_PREFIX)) {
 			try {
 				filterChain.doFilter(request, response);
 			} catch (IOException | ServletException e) {
@@ -59,34 +59,21 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
-
 		try {
-			if (!jwtProviderService.isUsable(accessToken) || PATH_API_TOKEN_REISSUE.equals(requestURI)) {
-				if (PATH_API_TOKEN_REISSUE.equals(requestURI)) {
+			String accessToken = jwtProviderService.extractToken(ACCESS_TOKEN_HEADER, request);
+
+			if (accessToken == null) {
+				AuthorizationThreadLocal.setAuthUser(null);
+				filterChain.doFilter(request, response);
+			} else if (jwtProviderService.isUsable(accessToken)) {
+				String email = jwtProviderService.extractEmailFromToken(accessToken);
+				if (jwtProviderService.isAccessToken(email)) {
+					setAuthentication(accessToken);
 					filterChain.doFilter(request, response);
-
-					return;
-				}
-
-				if (jwtProviderService.isUsable(accessToken)) {
-					String newAccessToken = jwtProviderService.reGenerateAccessToken(accessToken);
-					setAuthentication(newAccessToken);
-				} else {
-					log.info("Access Token not usable");
-					AuthorizationThreadLocal.setAuthUser(null);
-					filterChain.doFilter(request, response);
-
-					return;
 				}
 			} else {
-				setAuthentication(accessToken);
-				filterChain.doFilter(request, response);
-
-				return;
+				throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 			}
-
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			handlerExceptionResolver.resolveException(request, response, null, e);

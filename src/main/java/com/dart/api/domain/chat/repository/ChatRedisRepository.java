@@ -72,9 +72,9 @@ public class ChatRedisRepository {
 		try {
 			return objectMapper.readValue(messageValue.toString(), ChatMessageReadDto.class);
 		} catch (JsonMappingException e) {
-			throw new RuntimeException("Failed to map JSON to ChatMessageReadDto", e);
+			throw new RuntimeException("[✅ LOGGER] FAILED TO MAP JSON TO CHAT MESSAGE READ DTO", e);
 		} catch (JsonProcessingException e) {
-			throw new RuntimeException("Failed to process JSON", e);
+			throw new RuntimeException("[✅ LOGGER] FAILED TO PROCESS JSON", e);
 		}
 	}
 }

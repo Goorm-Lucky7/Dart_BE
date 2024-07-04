@@ -53,8 +53,15 @@ public class MemberController {
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<LoginResDto> login(
-		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletResponse response) {
-		return ResponseEntity.ok(authenticationService.login(loginReqDto, response));
+		@RequestBody @Validated LoginReqDto loginReqDto, HttpServletRequest request, HttpServletResponse response) {
+		return ResponseEntity.ok(authenticationService.login(loginReqDto, request, response));
+	}
+
+	@PostMapping("/logout")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+		authenticationService.logout(request, response);
+		return ResponseEntity.ok("Logout successfully");
 	}
 
 	@GetMapping("/reissue")
