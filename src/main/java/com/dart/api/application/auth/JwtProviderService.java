@@ -6,7 +6,6 @@ import static com.dart.global.common.util.GlobalConstant.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
@@ -18,7 +17,6 @@ import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.auth.entity.RefreshToken;
 import com.dart.api.domain.auth.repository.RefreshTokenRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
-import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -63,7 +61,6 @@ public class JwtProviderService {
 	private void init() {
 		secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
-
 
 	private JwtBuilder buildJwt(Date issuedDate, Date expiredDate) {
 		return Jwts.builder()
@@ -135,6 +132,7 @@ public class JwtProviderService {
 
 		if(refreshTokenRepository.existsByEmail(email)){
 			refreshTokenRepository.deleteByEmail(email);
+			refreshTokenRepository.flush();
 		}
 		refreshTokenRepository.save(refreshToken);
 
