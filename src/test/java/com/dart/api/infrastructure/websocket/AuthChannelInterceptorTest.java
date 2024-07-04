@@ -83,7 +83,7 @@ class AuthChannelInterceptorTest {
 		// WHEN & THEN
 		assertThatThrownBy(() -> authChannelInterceptor.preSend(message, messageChannel))
 			.isInstanceOf(NotFoundException.class)
-			.hasMessage("[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요.");
+			.hasMessage("[❎ ERROR] 유효하지 않은 인증 토큰입니다.");
 
 		verify(jwtProviderService, times(1)).isUsable(anyString());
 		verify(jwtProviderService, never()).extractAuthUserByAccessToken(anyString());

@@ -47,7 +47,7 @@ class WebSocketErrorHandlerTest {
 		StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(errorMessage);
 		assertEquals(StompCommand.ERROR, stompHeaderAccessor.getCommand());
 		assertEquals(
-			"[❎ ERROR] 인증 토큰이 만료되었습니다. 다시 로그인해 주세요.",
+			"[❎ ERROR] 인증 토큰이 만료되었습니다.",
 			new String(errorMessage.getPayload(), StandardCharsets.UTF_8));
 	}
 
@@ -87,7 +87,7 @@ class WebSocketErrorHandlerTest {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(errorMessage);
 		assertEquals(StompCommand.ERROR, accessor.getCommand());
 		assertEquals(
-			"[❎ ERROR] 유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요.",
+			"[❎ ERROR] 유효하지 않은 인증 토큰입니다.",
 			new String(errorMessage.getPayload(), StandardCharsets.UTF_8));
 	}
 
