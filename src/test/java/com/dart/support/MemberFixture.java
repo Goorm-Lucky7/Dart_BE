@@ -14,6 +14,13 @@ public class MemberFixture {
 		);
 	}
 
+	public static Member createMemberEntityWithEmailAndNickname(String email, String nickname) {
+		return Member.signup(
+			createSignUpDto(email, nickname),
+			"1q2w3e4r!"
+		);
+	}
+
 	public static SignUpDto createSignUpDto(String email, String nickname) {
 		return SignUpDto.builder()
 			.email(email)
