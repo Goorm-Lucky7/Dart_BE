@@ -4,6 +4,7 @@ import static java.util.Objects.*;
 
 import java.time.Duration;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 public class ZSetRedisRepository {
 
 	private final RedisTemplate<String, Object> redisTemplate;
-	private final RedisTemplate<String, String> redisStringTemplate;
 
 	public void addElement(String key, Object value, double score) {
 		redisTemplate.opsForZSet().add(requireNonNull(key), requireNonNull(value), score);
@@ -40,7 +40,11 @@ public class ZSetRedisRepository {
 	}
 
 	public Set<String> getRangeAsStringSet(String key, long start, long end) {
-		return redisStringTemplate.opsForZSet().range(requireNonNull(key), start, end);
+		Set<Object> result = redisTemplate.opsForZSet().range(key, start, end);
+		Set<String> stringResult = result.stream()
+									.map(object -> (String) object)
+									.collect(Collectors.toSet());
+		return stringResult;
 	}
 
 	public void removeElement(String key, Object value) {
