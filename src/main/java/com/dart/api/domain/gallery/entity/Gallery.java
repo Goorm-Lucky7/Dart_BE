@@ -130,4 +130,12 @@ public class Gallery extends BaseTimeEntity {
 	public GalleryReadIdDto toReadIdDto() {
 		return new GalleryReadIdDto(this.id);
 	}
+
+	public void incrementReExhibitionRequestCount() {
+		this.reExhibitionRequestCount++;
+	}
+
+	public void resetReExhibitionRequestCount() {
+		this.reExhibitionRequestCount = 0;
+	}
 }
