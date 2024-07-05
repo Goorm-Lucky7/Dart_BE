@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
+import com.dart.api.domain.notification.repository.PendingEventsRepository;
 import com.dart.api.domain.notification.repository.SSESessionRepository;
 import com.dart.api.dto.notification.response.NotificationReadDto;
 import com.dart.global.error.exception.UnauthorizedException;
@@ -32,6 +34,9 @@ class SSENotificationServiceTest {
 
 	@Mock
 	private SSESessionRepository sseSessionRepository;
+
+	@Mock
+	private PendingEventsRepository pendingEventsRepository;
 
 	@InjectMocks
 	private SSENotificationService sseNotificationService;
@@ -49,11 +54,39 @@ class SSENotificationServiceTest {
 		doNothing().when(sseSessionRepository).sendEvent(eq(member.getId()), any(NotificationReadDto.class));
 
 		// WHEN
-		SseEmitter actualSseEmitter = sseNotificationService.subscribe(authUser);
+		SseEmitter actualSseEmitter = sseNotificationService.subscribe(authUser, null);
 
 		// THEN
 		assertThat(actualSseEmitter).isEqualTo(sseEmitter);
 		verify(sseSessionRepository).sendEvent(eq(member.getId()), any(NotificationReadDto.class));
+	}
+
+	@Test
+	@DisplayName("SUBSCRIBE SSE WITH PENDING EVENTS(⭕️ SUCCESS): 대기 중인 이벤트와 함께 SSE에 성공적으로 연결 및 구독했습니다.")
+	void subscribe_withPendingEvents_success() {
+		// GIVEN
+		String lastEventId = "last-event-id";
+		AuthUser authUser = AuthFixture.createAuthUserEntity();
+		Member member = MemberFixture.createMemberEntity();
+		SseEmitter sseEmitter = new SseEmitter();
+
+		NotificationReadDto pendingEvent1 = new NotificationReadDto("event-1", "message1", "type1");
+		NotificationReadDto pendingEvent2 = new NotificationReadDto("event-2", "message2", "type2");
+
+		List<NotificationReadDto> pendingEvents = List.of(pendingEvent1, pendingEvent2);
+
+		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.of(member));
+		given(sseSessionRepository.saveSSEEmitter(eq(member.getId()), eq(SSE_DEFAULT_TIMEOUT))).willReturn(sseEmitter);
+		given(pendingEventsRepository.getPendingEvents(eq(member.getId()))).willReturn(pendingEvents);
+
+		// WHEN
+		SseEmitter actualSseEmitter = sseNotificationService.subscribe(authUser, lastEventId);
+
+		// THEN
+		assertThat(actualSseEmitter).isEqualTo(sseEmitter);
+		verify(sseSessionRepository).sendEvent(eq(member.getId()), any(NotificationReadDto.class));
+		verify(pendingEventsRepository).getPendingEvents(eq(member.getId()));
+		verify(pendingEventsRepository).clearPendingEvents(eq(member.getId()));
 	}
 
 	@Test
@@ -65,7 +98,7 @@ class SSENotificationServiceTest {
 		given(memberRepository.findByEmail(authUser.email())).willReturn(Optional.empty());
 
 		// WHEN & THEN
-		assertThatThrownBy(() -> sseNotificationService.subscribe(authUser))
+		assertThatThrownBy(() -> sseNotificationService.subscribe(authUser, null))
 			.isInstanceOf(UnauthorizedException.class)
 			.hasMessage("[❎ ERROR] 로그인이 필요한 기능입니다.");
 	}
