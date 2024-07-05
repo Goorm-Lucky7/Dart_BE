@@ -10,7 +10,7 @@ import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.QGallery;
 import com.dart.api.domain.gallery.entity.Sort;
 import com.dart.api.domain.review.entity.QReview;
-import com.dart.api.domain.review.entity.Score;
+import com.dart.global.common.util.ScoreUtil;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.model.ErrorCode;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -48,14 +48,7 @@ public class GallerySorter {
 
 	private void orderByLiked(JPAQuery<Gallery> query, QGallery gallery, QReview review,
 		LocalDateTime currentDateTime) {
-		NumberExpression<Double> averageScore = new CaseBuilder()
-			.when(review.score.eq(Score.ONE_STAR)).then(ONE_STAR)
-			.when(review.score.eq(Score.TWO_STAR)).then(TWO_STAR)
-			.when(review.score.eq(Score.THREE_STAR)).then(THREE_STAR)
-			.when(review.score.eq(Score.FOUR_STAR)).then(FOUR_STAR)
-			.when(review.score.eq(Score.FIVE_STAR)).then(FIVE_STAR)
-			.otherwise(ZERO_STAR)
-			.avg();
+		NumberExpression<Double> averageScore = ScoreUtil.getAverageScore(review);
 
 		NumberExpression<Integer> sortingOrder = getSortingOrder(gallery, currentDateTime);
 

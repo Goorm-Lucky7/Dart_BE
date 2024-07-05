@@ -1,5 +1,7 @@
 package com.dart.api.application.review;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +57,11 @@ public class ReviewService {
 		final PageInfo pageInfo = new PageInfo(reviews.getNumber(), reviews.isLast());
 
 		return new PageResponse<>(reviews.map(Review::toReviewReadDto).toList(), pageInfo);
+	}
+
+	public void deleteReviewsByGallery(Gallery gallery) {
+		List<Review> reviews = reviewRepository.findByGallery(gallery);
+		reviewRepository.deleteAll(reviews);
 	}
 
 	private void validateMyGalley(Gallery gallery, Member member) {
