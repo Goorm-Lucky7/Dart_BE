@@ -246,8 +246,9 @@ public class GalleryService {
 	}
 
 	private GalleryAllResDto convertToGalleryAllResDto(Gallery gallery) {
+		final List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
 		return new GalleryAllResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(), gallery.getStartDate(),
-			gallery.getEndDate());
+			gallery.getEndDate(), hashtags);
 	}
 
 	private void validateRequest(String nickname, AuthUser authUser) {
