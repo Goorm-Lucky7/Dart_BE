@@ -11,19 +11,17 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.dart.api.dto.notification.response.NotificationReadDto;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 @Repository
 public class SSESessionRepository {
 
-	public final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
-
 	private final PendingEventsRepository pendingEventsRepository;
 
-	public SSESessionRepository(PendingEventsRepository pendingEventsRepository) {
-		this.pendingEventsRepository = pendingEventsRepository;
-	}
+	public final Map<Long, SseEmitter> sseSessionDB = new ConcurrentHashMap<>();
 
 	public SseEmitter saveSSEEmitter(Long clientId, long timeout) {
 		final SseEmitter sseEmitter = new SseEmitter(timeout);
@@ -37,18 +35,17 @@ public class SSESessionRepository {
 	public void sendEvent(Long clientId, NotificationReadDto notificationReadDto) {
 		SseEmitter sseEmitter = sseSessionDB.get(clientId);
 
-		if (sseEmitter != null) {
-			try {
-				final SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
-					.name(SSE_EMITTER_EVENT_NAME)
-					.data(notificationReadDto, MediaType.APPLICATION_JSON);
+		if (sseEmitter == null) {
+			pendingEventsRepository.savePendingEventCache(clientId, notificationReadDto);
+			return;
+		}
 
-				sseEmitter.send(sseEventBuilder);
-			} catch (Exception e) {
-				deleteSSEEmitterByClientId(clientId);
-				pendingEventsRepository.savePendingEventCache(clientId, notificationReadDto);
-			}
-		} else {
+		try {
+			sseEmitter.send(SseEmitter.event()
+					.name(SSE_EMITTER_EVENT_NAME)
+					.data(notificationReadDto, MediaType.APPLICATION_JSON));
+		} catch (Exception e) {
+			deleteSSEEmitterByClientId(clientId);
 			pendingEventsRepository.savePendingEventCache(clientId, notificationReadDto);
 		}
 	}
