@@ -56,6 +56,9 @@ dependencies {
     // S3
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+    // Image-Metadate
+    implementation 'com.drewnoakes:metadata-extractor:2.16.0'
+
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'redis.clients:jedis:4.2.3'
