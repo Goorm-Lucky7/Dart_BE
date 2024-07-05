@@ -26,21 +26,25 @@ public class SSENotificationService {
 
 	public SseEmitter subscribe(AuthUser authUser, String lastEventId) {
 		final Long memberId = getMemberIdFromAuthUser(authUser);
-
 		final SseEmitter sseEmitter = sseSessionRepository.saveSSEEmitter(memberId, SSE_DEFAULT_TIMEOUT);
 		final NotificationReadDto notificationReadDto = Notification.createNotificationReadDto(
-			SSE_CONNECTION_SUCCESS_MESSAGE, null
-		);
+			SSE_CONNECTION_SUCCESS_MESSAGE, null);
+
 		sseSessionRepository.sendEvent(memberId, notificationReadDto);
 
-		if (lastEventId != null && !lastEventId.isEmpty()) {
-			pendingEventsRepository.getPendingEvents(memberId).stream()
-				.filter(pendingEvent -> lastEventId.compareTo(pendingEvent.eventId()) < 0)
-				.forEach(pendingEvent -> sseSessionRepository.sendEvent(memberId, pendingEvent));
-			pendingEventsRepository.clearPendingEvents(memberId);
-		}
+		sendPendingEventsIfAny(memberId, lastEventId);
 
 		return sseEmitter;
+	}
+
+	private void sendPendingEventsIfAny(Long memberId, String lastEventId) {
+		if (lastEventId != null && !lastEventId.isEmpty()) {
+			pendingEventsRepository.getPendingEvents(memberId).stream()
+				.filter(pendingEvent -> lastEventId.compareTo(pendingEvent.eventId()) < EVENT_ID_COMPARISON_RESULT)
+				.forEach(pendingEvent -> sseSessionRepository.sendEvent(memberId, pendingEvent));
+
+			pendingEventsRepository.clearPendingEvents(memberId);
+		}
 	}
 
 	private Long getMemberIdFromAuthUser(AuthUser authUser) {
