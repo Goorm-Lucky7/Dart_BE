@@ -100,7 +100,7 @@ public class MemberService {
 	}
 
 	private String handleProfileImageUpdate(MultipartFile profileImage, String savedProfileImage) {
-		if (profileImage == null || profileImage.isEmpty()) return savedProfileImage;
+		if (profileImage == null || profileImage.isEmpty()) return null;
 
 		String newProfileImageUrl = s3Service.uploadFile(profileImage);
 		if (savedProfileImage != null) {
