@@ -56,8 +56,10 @@ public class CharacterProcessor {
 			} else if (isJongSeong(charAtI)) {
 				jong = str.charAt(i++);
 				sb.append(mergeKoreanCharacter(SPACE, SPACE, jong));
-			} else {
+			} else if (charAtI != SPACE || charAtI != '\u0000'){
 				sb.append(charAtI);
+				i++;
+			} else {
 				i++;
 			}
 		}
@@ -144,5 +146,21 @@ public class CharacterProcessor {
 			}
 		}
 		return false;
+	}
+
+
+	public static void printSplitResult(String input) {
+		String result = splitString(input);
+		System.out.println("Input: " + input + " -> Split: " + result);
+	}
+
+	public static void printMergeResult(String input) {
+		String result = mergeString(input);
+		System.out.println("Input: " + input + " -> Merge: " + result);
+	}
+
+	public static void printUnicodeScore(String input) {
+		double score = getUnicodeScore(input);
+		System.out.println("Input: " + input + " -> Unicode Score: " + score);
 	}
 }
