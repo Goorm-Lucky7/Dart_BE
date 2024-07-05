@@ -1,6 +1,6 @@
 package com.dart.api.infrastructure.s3;
 
-import static com.dart.global.common.util.GlobalConstant.*;
+import static com.dart.global.common.util.ImageConstant.*;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -30,6 +30,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.model.ErrorCode;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 
 import lombok.RequiredArgsConstructor;
 
@@ -65,13 +68,15 @@ public class S3Service {
 			throw new BadRequestException(ErrorCode.FAIL_INVALID_IMAGE_EXTENSION);
 		}
 
-		try {
-			BufferedImage image = ImageIO.read(multipartFile.getInputStream());
+		try (InputStream imageInputStream = multipartFile.getInputStream()) {
+			BufferedImage image = ImageIO.read(imageInputStream);
 			if (image == null) {
 				throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
 			}
 
-			BufferedImage processedImage = isThumbnail ? resizeImageIfNeeded(image) : image;
+			BufferedImage correctedImage = correctOrientation(image, multipartFile.getInputStream());
+
+			BufferedImage processedImage = isThumbnail ? resizeImageIfNeeded(correctedImage) : correctedImage;
 			String fileExtension = getFileExtension(fileName);
 
 			BufferedImage finalImage =
@@ -128,19 +133,38 @@ public class S3Service {
 		int width = image.getWidth();
 		int height = image.getHeight();
 
-		if (width <= THUMBNAIL_RESIZING_SIZE && height <= THUMBNAIL_RESIZING_SIZE) {
-			return image;
+		if (shouldResizeToMaxSize(width, height)) {
+			Dimension newSize = calculateMaxSize(width, height);
+			return resizeImage(image, newSize.width, newSize.height);
+		} else if (shouldResizeToMinSize(width, height)) {
+			Dimension newSize = calculateMinSize(width, height);
+			return resizeImage(image, newSize.width, newSize.height);
 		}
 
-		Dimension newSize = calculateNewSize(width, height);
-		return resizeImage(image, newSize.width, newSize.height);
+		return image;
 	}
 
-	private Dimension calculateNewSize(int width, int height) {
+	private boolean shouldResizeToMaxSize(int width, int height) {
+		return width > THUMBNAIL_RESIZING_SIZE || height > THUMBNAIL_RESIZING_SIZE;
+	}
+
+	private boolean shouldResizeToMinSize(int width, int height) {
+		return width < MINIMUM_RESIZING_SIZE || height < MINIMUM_RESIZING_SIZE;
+	}
+
+	private Dimension calculateMaxSize(int width, int height) {
 		if (width > height) {
 			return new Dimension(THUMBNAIL_RESIZING_SIZE, (THUMBNAIL_RESIZING_SIZE * height) / width);
 		} else {
 			return new Dimension((THUMBNAIL_RESIZING_SIZE * width) / height, THUMBNAIL_RESIZING_SIZE);
+		}
+	}
+
+	private Dimension calculateMinSize(int width, int height) {
+		if (width < height) {
+			return new Dimension(MINIMUM_RESIZING_SIZE, (MINIMUM_RESIZING_SIZE * height) / width);
+		} else {
+			return new Dimension((MINIMUM_RESIZING_SIZE * width) / height, MINIMUM_RESIZING_SIZE);
 		}
 	}
 
@@ -217,5 +241,45 @@ public class S3Service {
 			writer.write(null, new javax.imageio.IIOImage(image, null, null), param);
 			writer.dispose();
 		}
+	}
+
+	private BufferedImage correctOrientation(BufferedImage image, InputStream imageInputStream) throws IOException {
+		try {
+			Metadata metadata = ImageMetadataReader.readMetadata(imageInputStream);
+			ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+
+			if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+				int orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+				int rotationAngle = switch (orientation) {
+					case ORIENTATION_ROTATE_90 -> ROTATE_90_DEGREES;
+					case ORIENTATION_ROTATE_180 -> ROTATE_180_DEGREES;
+					case ORIENTATION_ROTATE_270 -> ROTATE_270_DEGREES;
+					default -> 0;
+				};
+				if (rotationAngle != 0) {
+					return rotateImage(image, rotationAngle);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return image;
+	}
+
+	private BufferedImage rotateImage(BufferedImage image, int angle) {
+		int width = image.getWidth();
+		int height = image.getHeight();
+		int newWidth = (angle == ROTATE_90_DEGREES || angle == ROTATE_270_DEGREES) ? height : width;
+		int newHeight = (angle == ROTATE_90_DEGREES || angle == ROTATE_270_DEGREES) ? width : height;
+
+		BufferedImage rotatedImage = new BufferedImage(newWidth, newHeight, image.getType());
+		Graphics2D g2d = rotatedImage.createGraphics();
+
+		g2d.translate((newWidth - width) / 2, (newHeight - height) / 2);
+		g2d.rotate(Math.toRadians(angle), (double)width / 2, (double)height / 2);
+		g2d.drawRenderedImage(image, null);
+		g2d.dispose();
+
+		return rotatedImage;
 	}
 }
