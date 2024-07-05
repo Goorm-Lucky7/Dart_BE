@@ -62,7 +62,7 @@ public class MemberService {
 
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
 		validateMemberExists(nickname);
-		if(isOwnProfile(authUser.nickname(), nickname)) {
+		if(isOwnProfile(authUser, nickname)) {
 			return getOwnProfile(nickname);
 		} else {
 			return getOtherProfile(nickname);
@@ -100,7 +100,7 @@ public class MemberService {
 	}
 
 	private String handleProfileImageUpdate(MultipartFile profileImage, String savedProfileImage) {
-		if (profileImage == null || profileImage.isEmpty()) return savedProfileImage;
+		if (profileImage == null || profileImage.isEmpty()) return null;
 
 		String newProfileImageUrl = s3Service.uploadFile(profileImage);
 		if (savedProfileImage != null) {
@@ -127,7 +127,9 @@ public class MemberService {
 		nicknameRedisRepository.deleteNickname(nickname);
 	}
 
-	private boolean isOwnProfile(String authUserNickname, String profileNickname) {
+	private boolean isOwnProfile(AuthUser authUser, String profileNickname) {
+		if (authUser == null) { return false; }
+		String authUserNickname = authUser.nickname();
 		return authUserNickname.equals(profileNickname);
 	}
 
