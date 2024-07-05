@@ -45,8 +45,7 @@ public class SecurityConfig {
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/kakao/**")
-			.requestMatchers("/api/login")
-			.requestMatchers("/api/reissue");
+			.requestMatchers("/api/login");
 	}
 
 	@Bean
@@ -72,6 +71,7 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/reissue").permitAll()
 			.anyRequest().authenticated()
 		);
 
