@@ -71,7 +71,6 @@ public class OAuthLoginService {
 		Map<String, Object> rawAttributes = oauth2User.getAttributes();
 		Map<String, String> extractedAttributes = new HashMap<>();
 		Map<String, Object> kakaoAccount, profile;
-		System.out.println("kakao account: "+rawAttributes);
 
 		kakaoAccount = (Map<String, Object>)rawAttributes.get("kakao_account");
 		profile = (Map<String, Object>) kakaoAccount.get("profile");

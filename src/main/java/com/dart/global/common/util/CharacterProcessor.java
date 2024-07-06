@@ -148,19 +148,15 @@ public class CharacterProcessor {
 		return false;
 	}
 
-
 	public static void printSplitResult(String input) {
 		String result = splitString(input);
-		System.out.println("Input: " + input + " -> Split: " + result);
 	}
 
 	public static void printMergeResult(String input) {
 		String result = mergeString(input);
-		System.out.println("Input: " + input + " -> Merge: " + result);
 	}
 
 	public static void printUnicodeScore(String input) {
 		double score = getUnicodeScore(input);
-		System.out.println("Input: " + input + " -> Unicode Score: " + score);
 	}
 }
