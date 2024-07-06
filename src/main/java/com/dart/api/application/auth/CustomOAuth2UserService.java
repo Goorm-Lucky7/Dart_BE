@@ -2,8 +2,6 @@ package com.dart.api.application.auth;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -22,8 +20,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 	private final OAuthLoginService oauthLoginService;
 	private final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-
-	private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {

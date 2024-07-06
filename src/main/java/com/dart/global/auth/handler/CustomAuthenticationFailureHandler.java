@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -24,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
 	private final ObjectMapper objectMapper;
-	private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
