@@ -1,5 +1,7 @@
 package com.dart.api.application.auth;
 
+import static com.dart.global.common.util.OAuthConstant.*;
+
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
@@ -31,19 +33,15 @@ public class OAuthLoginService {
 	@Transactional
 	public Map<String, Object> socialLogin(OAuth2User oauth2User, String oauthProvider) {
 		Map<String, String> extractedAttributes = extractAttributesByProvider(oauth2User, oauthProvider);
-		System.out.println("Loading OAuth2 user11");
-
 
 		String email = extractedAttributes.get("email");
-		String nickname = extractedAttributes.get("nickname");
 		boolean isNewUser = false;
 
-		if (isMemberSignedUp(email)) {
-			if(!isMemberSignedUpWithProvider(email, oauthProvider)){
-				updateOAuthProvider(email, oauthProvider);
-			}
-		} else {
-			signUp(email, nickname, oauthProvider);
+		if (!isMemberSignedUp(email)) {
+			String nickname = extractedAttributes.get("nickname");
+			String profileImage = extractedAttributes.get("profileImage");
+
+			signUp(email, nickname, profileImage, oauthProvider);
 			isNewUser = true;
 		}
 
@@ -58,53 +56,61 @@ public class OAuthLoginService {
 		return memberRepository.existsByEmail(email);
 	}
 
-	public boolean isMemberSignedUpWithProvider(String email, String providerName) {
-		return memberRepository.existsByEmailAndOauthProvider(email, OAuthProvider.findByName(providerName));
-	}
 	private Map<String, String> extractAttributesByProvider(OAuth2User oauth2User, String oauthProvider) {
-		if ("kakao".equals(oauthProvider)) {
-			return extractKakaoAttributes(oauth2User);
-		} else {
-			throw new NotFoundException(ErrorCode.FAIL_REGISTRATION_NOT_FOUND);
+		switch (oauthProvider) {
+			case KAKAO:
+				return extractKakaoAttributes(oauth2User);
+			case GOOGLE:
+				return extractGoogleAttributes(oauth2User);
+			default:
+				throw new NotFoundException(ErrorCode.FAIL_REGISTRATION_NOT_FOUND);
 		}
 	}
 
 	private Map<String, String> extractKakaoAttributes(OAuth2User oauth2User) {
 		Map<String, Object> rawAttributes = oauth2User.getAttributes();
 		Map<String, String> extractedAttributes = new HashMap<>();
-
 		Map<String, Object> kakaoAccount, profile;
+		System.out.println("kakao account: "+rawAttributes);
+
 		kakaoAccount = (Map<String, Object>)rawAttributes.get("kakao_account");
-		extractedAttributes.put("email", String.valueOf(kakaoAccount.get("email")));
-
 		profile = (Map<String, Object>) kakaoAccount.get("profile");
-		extractedAttributes.put("nickname", String.valueOf(profile.get("nickname")));
-
 		String rawPassword = generateRandomPassword();
 		String encodedPassword = passwordEncoder.encode(rawPassword);
 
+		extractedAttributes.put("email", String.valueOf(profile.get("email")));
+		extractedAttributes.put("nickname", String.valueOf(profile.get("nickname")));
+		extractedAttributes.put("profileImage", String.valueOf(profile.get("profile_image_url")));
 		extractedAttributes.put("password", encodedPassword);
-		System.out.println("여기까지는 왔니? service");
 
 		return extractedAttributes;
 	}
 
-	private Member signUp(String email, String nickname, String oauthProvider) {
+	private Map<String, String> extractGoogleAttributes(OAuth2User oauth2User) {
+		Map<String, Object> rawAttributes = oauth2User.getAttributes();
+		Map<String, String> extractedAttributes = new HashMap<>();
+
+		String email = (String)rawAttributes.get("email");
+		String nickname = (String)rawAttributes.get("given_name");
+		String profileImage = (String)rawAttributes.get("picture");
+		String rawPassword = generateRandomPassword();
+		String encodedPassword = passwordEncoder.encode(rawPassword);
+
+		extractedAttributes.put("email", email);
+		extractedAttributes.put("nickname", nickname);
+		extractedAttributes.put("profileImage", profileImage);
+		extractedAttributes.put("password", encodedPassword);
+
+		return extractedAttributes;
+	}
+
+	private Member signUp(String email, String nickname, String profileImage, String oauthProvider) {
 		String password = passwordEncoder.encode(generateRandomPassword());
 		Member member = Member.signup(new SignUpDto(email, nickname, password, null, null), password);
 		memberRepository.save(member);
-
-		member.updateOAuthProvider(new OAuthProviderUpdateDto(oauthProvider));
+		member.updateProfileImage(profileImage);
 
 		return member;
-	}
-
-	private void updateOAuthProvider(String email, String providerName) {
-		Optional<Member> member = memberRepository.findByEmail(email);
-		if (member.isPresent()) {
-			Member existingMember = member.get();
-			existingMember.updateOAuthProvider(new OAuthProviderUpdateDto(providerName));
-		}
 	}
 
 	private String generateRandomPassword() {
