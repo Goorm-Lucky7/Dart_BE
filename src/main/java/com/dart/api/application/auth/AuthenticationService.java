@@ -3,13 +3,10 @@ package com.dart.api.application.auth;
 import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dart.api.domain.auth.entity.RefreshToken;
-import com.dart.api.domain.auth.repository.RefreshTokenRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -35,7 +32,6 @@ public class AuthenticationService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
-	private final RefreshTokenRepository refreshTokenRepository;
 	private final TokenRedisRepository tokenRedisRepository;
 
 	private final CookieUtil cookieUtil;
@@ -80,7 +76,7 @@ public class AuthenticationService {
 			String email = jwtProviderService.extractEmailFromToken(refreshToken);
 			String clientInfo = extractClientInfo(request);
 
-			validateRefreshToken(refreshToken);
+			validateRefreshToken(email);
 			validateBlacklist(email, accessToken);
 
 			tokenRedisRepository.deleteBlacklistToken(email);
@@ -88,8 +84,8 @@ public class AuthenticationService {
 
 			String newAccessToken = generateAccessToken(accessToken, clientInfo);
 			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
-			tokenRedisRepository.saveBlacklistToken(email, newAccessToken);
 
+			tokenRedisRepository.saveBlacklistToken(email, newAccessToken);
 			saveTokensInResponse(response, newAccessToken, newRefreshToken);
 			return new TokenResDto(newAccessToken);
 
@@ -136,12 +132,8 @@ public class AuthenticationService {
 		return ipAddress + "|" + userAgent;
 	}
 
-	@Transactional
 	public void deleteRefreshToken(String email) {
-		if (refreshTokenRepository.existsByEmail(email)) {
-			refreshTokenRepository.deleteByEmail(email);
-			refreshTokenRepository.flush();
-		}
+		tokenRedisRepository.deleteRefreshToken(email);
 	}
 
 	private void validatePasswordMatch(String password, String encodedPassword) {
@@ -150,16 +142,10 @@ public class AuthenticationService {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	protected RefreshToken validateRefreshToken(String refreshToken) {
-		RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
-			.orElseThrow(() -> new UnauthorizedException(ErrorCode.FAIL_TOKEN_NOT_FOUND));
-
-		if (refreshTokenEntity.isExpired()) {
-			throw new UnauthorizedException(ErrorCode.FAIL_TOKEN_EXPIRED);
+	protected void validateRefreshToken(String email) {
+		if(!tokenRedisRepository.checkRefreshTokenExists(email)) {
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
 		}
-
-		return refreshTokenEntity;
 	}
 
 	private void validateBlacklist(String email, String token) {
@@ -176,7 +162,6 @@ public class AuthenticationService {
 	private void deleteAllTokensAndCookie(HttpServletResponse response, String email) {
 		tokenRedisRepository.deleteAccessToken(email);
 		tokenRedisRepository.deleteBlacklistToken(email);
-		deleteRefreshToken(email);
-		cookieUtil.deleteRefreshCookie(response);
+		tokenRedisRepository.deleteRefreshToken(email);
 	}
 }

@@ -21,13 +21,21 @@ public final class AuthConstant {
 	public static final String EMAIL_TITLE = "Dart 인증 이메일";
 	public static final int EMAIL_CODE_LENGTH = 6;
 
-	public static long REFRESH_TOKEN_EXPIRATION_TIME_SECONDS = THIRTY_DAYS;
+	public static long ACCESS_TOKEN_EXPIRATION_TIME_SECONDS;
+	public static long REFRESH_TOKEN_EXPIRATION_TIME_SECONDS;
 	public static long EMAIL_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 	public static final int SESSION_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 
 
+
+
 	@Component
 	public static class PropertyLoader {
+
+		@Value("${jwt.access-expire}")
+		public void setAccessTokenExpire(long accessTokenExpire) {
+			ACCESS_TOKEN_EXPIRATION_TIME_SECONDS = TimeUnit.MILLISECONDS.toSeconds(accessTokenExpire);
+		}
 
 		@Value("${jwt.refresh-expire}")
 		public void setRefreshTokenExpire(long refreshTokenExpire) {
