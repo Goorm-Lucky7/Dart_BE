@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.CustomOAuth2User;
+import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.auth.response.TokenResDto;
 import com.dart.global.common.util.CookieUtil;
@@ -23,6 +24,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
 	private final ObjectMapper objectMapper;
 	private final JwtProviderService jwtProviderService;
+	private final TokenRedisRepository tokenRedisRepository;
 	private final CookieUtil cookieUtil;
 
 	@Override
@@ -32,12 +34,13 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 		CustomOAuth2User customOAuth2User = (CustomOAuth2User)authentication.getPrincipal();
 
 		Member member = customOAuth2User.getMember();
-		TokenResDto tokenResDto = new TokenResDto(generateAccessToken(member, request));
+		String accessToken = generateAccessToken(member, request);
+		generateBlacklistToken(member, accessToken);
 		generateRefreshTokenAndCookie(member, response);
 
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
-		response.getWriter().write(objectMapper.writeValueAsString(tokenResDto));
+		response.getWriter().write(objectMapper.writeValueAsString(new TokenResDto(accessToken)));
 
 		if(customOAuth2User.isNewUser()) response.setStatus(HttpServletResponse.SC_CREATED);
 		else response.setStatus(HttpServletResponse.SC_OK);
@@ -46,6 +49,10 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 	private String generateAccessToken(Member member, HttpServletRequest request) {
 		return jwtProviderService.generateAccessToken(member.getId(), member.getEmail(), member.getNickname(),
 			member.getProfileImageUrl(), extractClientInfo(request));
+	}
+
+	private void generateBlacklistToken(Member member, String accessToken) {
+		tokenRedisRepository.saveBlacklistToken(member.getEmail(), accessToken);
 	}
 
 	private String extractClientInfo(HttpServletRequest request) {
