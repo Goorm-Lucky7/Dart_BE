@@ -1,12 +1,9 @@
 package com.dart.api.domain.review.repository;
 
-import static com.dart.global.common.util.GlobalConstant.*;
-
 import java.util.Optional;
 
 import com.dart.api.domain.review.entity.QReview;
-import com.dart.api.domain.review.entity.Score;
-import com.querydsl.core.types.dsl.CaseBuilder;
+import com.dart.global.common.util.ScoreUtil;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -21,14 +18,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 	public Float calculateAverageScoreByGalleryId(Long galleryId) {
 		QReview review = QReview.review;
 
-		NumberExpression<Double> averageScore = new CaseBuilder()
-			.when(review.score.eq(Score.ONE_STAR)).then(ONE_STAR)
-			.when(review.score.eq(Score.TWO_STAR)).then(TWO_STAR)
-			.when(review.score.eq(Score.THREE_STAR)).then(THREE_STAR)
-			.when(review.score.eq(Score.FOUR_STAR)).then(FOUR_STAR)
-			.when(review.score.eq(Score.FIVE_STAR)).then(FIVE_STAR)
-			.otherwise(ZERO_STAR)
-			.avg();
+		NumberExpression<Double> averageScore = ScoreUtil.getAverageScore(review);
 
 		Double result = queryFactory
 			.select(averageScore)

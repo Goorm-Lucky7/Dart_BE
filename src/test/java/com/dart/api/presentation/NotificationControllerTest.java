@@ -33,11 +33,12 @@ class NotificationControllerTest {
 	@DisplayName("SUBSCRIBE SSE(⭕️ SUCCESS): 성공적으로 SSE에 연결 및 구독했습니다.")
 	void subscribe_void_success() {
 		// GIVEN
+		String lastEventId = "last-event-id";
 		AuthUser authUser = AuthFixture.createAuthUserEntity();
-		when(sseNotificationService.subscribe(any(AuthUser.class))).thenReturn(sseEmitter);
+		when(sseNotificationService.subscribe(any(AuthUser.class), any(String.class))).thenReturn(sseEmitter);
 
 		// WHEN
-		ResponseEntity<SseEmitter> responseEntity = notificationController.subscribe(authUser);
+		ResponseEntity<SseEmitter> responseEntity = notificationController.subscribe(authUser, lastEventId);
 
 		// THEN
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);

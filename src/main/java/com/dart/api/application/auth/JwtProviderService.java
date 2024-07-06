@@ -4,7 +4,6 @@ import static com.dart.global.common.util.AuthConstant.*;
 import static com.dart.global.common.util.GlobalConstant.*;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -14,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.auth.entity.AuthUser;
-import com.dart.api.domain.auth.entity.RefreshToken;
-import com.dart.api.domain.auth.repository.RefreshTokenRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
@@ -41,7 +38,6 @@ public class JwtProviderService {
 	private static final String NICKNAME = "nickname";
 	private static final String PROFILE_IMAGE = "profileImage";
 	private static final String CLEINT_INFO = "clientInfo";
-	private static final String IAT = "iat";
 
 	@Value("${jwt.secret.access-key}")
 	private String secret;
@@ -55,7 +51,6 @@ public class JwtProviderService {
 	private SecretKey secretKey;
 
 	private final TokenRedisRepository tokenRedisRepository;
-	private final RefreshTokenRepository refreshTokenRepository;
 
 	@PostConstruct
 	private void init() {
@@ -111,13 +106,9 @@ public class JwtProviderService {
 			.claim(NICKNAME, nickname)
 			.claim(PROFILE_IMAGE, profileImage)
 			.claim(CLEINT_INFO, clientInfo)
-			.claim(IAT, new Date().getTime())
-			.issuedAt(new Date())
-			.expiration(new Date(System.currentTimeMillis() + accessTokenExpire))
-			.signWith(secretKey, Jwts.SIG.HS256)
 			.compact();
 
-		tokenRedisRepository.saveAccessToken(email, token, accessTokenExpire);
+		tokenRedisRepository.saveAccessToken(email, token);
 		return token;
 	}
 
@@ -127,15 +118,7 @@ public class JwtProviderService {
 			.claim(EMAIL, email)
 			.compact();
 
-		RefreshToken refreshToken = new RefreshToken(token, email,
-			LocalDateTime.now().plusSeconds(refreshTokenExpire / 1000));
-
-		if(refreshTokenRepository.existsByEmail(email)){
-			refreshTokenRepository.deleteByEmail(email);
-			refreshTokenRepository.flush();
-		}
-
-		refreshTokenRepository.save(refreshToken);
+		tokenRedisRepository.saveRefreshToken(email, token);
 		return token;
 	}
 

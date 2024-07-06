@@ -2,6 +2,7 @@ package com.dart.api.application.gallery;
 
 import static com.dart.global.common.util.GlobalConstant.*;
 import static com.dart.global.common.util.RedisConstant.*;
+import static com.dart.global.common.util.SSEConstant.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dart.api.application.chat.ChatRoomService;
+import com.dart.api.application.notification.ExhibitionNotificationService;
+import com.dart.api.application.review.ReviewService;
 import com.dart.api.domain.auth.entity.AuthUser;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
@@ -48,12 +51,10 @@ import com.dart.global.error.exception.UnauthorizedException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class GalleryService {
 
 	private final MemberRepository memberRepository;
@@ -66,7 +67,9 @@ public class GalleryService {
 	private final PaymentRedisRepository paymentRedisRepository;
 	private final ChatRoomService chatRoomService;
 	private final ChatRoomRepository chatRoomRepository;
+	private final ReviewService reviewService;
 	private final AutocompleteRedisRepository autocompleteRedisRepository;
+	private final ExhibitionNotificationService exhibitionNotificationService;
 
 	public GalleryReadIdDto createGallery(CreateGalleryDto createGalleryDto, MultipartFile thumbnail,
 		List<MultipartFile> imageFiles, AuthUser authUser) {
@@ -106,7 +109,9 @@ public class GalleryService {
 		final Page<Gallery> galleryPage = galleryRepository.findGalleriesByCriteria(pageRequest, category, keyword,
 			sort, cost, display);
 
-		final List<GalleryAllResDto> galleries = mapGalleriesToDto(galleryPage.getContent());
+		final List<GalleryAllResDto> galleries = galleryPage.stream()
+			.map(this::convertToGalleryAllResDto)
+			.collect(Collectors.toList());
 
 		final PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
 
@@ -123,9 +128,13 @@ public class GalleryService {
 
 		Page<Gallery> galleryPage = galleryRepository.findByMemberAndIsPaidTrueOrderByCreatedAtDesc(member,
 			pageRequest);
-		List<GalleryMypageResDto> galleryDtos = convertToGalleryMypageResDtos(galleryPage);
+
+		final List<GalleryMypageResDto> galleryDtos = galleryPage.stream()
+			.map(this::convertToGalleryMypageResDto)
+			.collect(Collectors.toList());
 
 		PageInfo pageInfo = new PageInfo(galleryPage.getNumber(), galleryPage.isLast());
+
 		return new PageResponse<>(galleryDtos, pageInfo);
 	}
 
@@ -137,7 +146,7 @@ public class GalleryService {
 
 		boolean hasTicket = checkIfUserHasTicket(authUser, gallery);
 
-		List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
+		final List<ImageResDto> images = imageService.getImagesByGalleryId(galleryId);
 
 		final ChatRoom chatRoom = chatRoomRepository.findByGallery(gallery)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
@@ -176,6 +185,7 @@ public class GalleryService {
 	public ReviewGalleryInfoDto getReviewGalleryInfo(Long galleryId) {
 		final Gallery gallery = findGalleryById(galleryId);
 		final Float reviewAverage = calculateReviewAverage(gallery.getId());
+
 		return new ReviewGalleryInfoDto(gallery.getThumbnail(), gallery.getMember().getNickname(),
 			gallery.getMember().getProfileImageUrl(), gallery.getTitle(), gallery.getStartDate(), gallery.getEndDate(),
 			reviewAverage);
@@ -186,14 +196,34 @@ public class GalleryService {
 		final Gallery gallery = findGalleryById(deleteGalleryDto.galleryId());
 
 		validateUserOwnership(member, gallery);
+		checkPayGallery(gallery);
 
 		chatRoomService.deleteChatRoom(gallery);
-
+		reviewService.deleteReviewsByGallery(gallery);
+		removeKeywordsFromRedis(gallery);
+		hashtagService.deleteHashtagsByGallery(gallery);
 		imageService.deleteImagesByGallery(gallery);
 		imageService.deleteThumbnail(gallery);
-		hashtagService.deleteHashtagsByGallery(gallery);
-		removeKeywordsFromRedis(gallery);
-		deleteGallery(gallery);
+		galleryRepository.delete(gallery);
+	}
+
+	public void updateReExhibitionRequestCount(Long galleryId) {
+		final Gallery gallery = getGalleryById(galleryId);
+		gallery.incrementReExhibitionRequestCount();
+
+		checkAndNotificationReExhibitionRequest(gallery);
+	}
+
+	private Gallery getGalleryById(Long galleryId) {
+		return galleryRepository.findById(galleryId)
+			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_GALLERY_NOT_FOUND));
+	}
+
+	private void checkAndNotificationReExhibitionRequest(Gallery gallery) {
+		if (gallery.getReExhibitionRequestCount() >= REEXHIBITION_REQUEST_COUNT) {
+			exhibitionNotificationService.sendReExhibitionRequestNotification(gallery.getId());
+			gallery.resetReExhibitionRequestCount();
+		}
 	}
 
 	private Member findMemberByEmail(String email) {
@@ -237,17 +267,10 @@ public class GalleryService {
 		}
 	}
 
-	private List<GalleryAllResDto> mapGalleriesToDto(List<Gallery> galleryList) {
-		return galleryList.stream().map(this::mapGalleryToDto).toList();
-	}
-
-	private GalleryAllResDto mapGalleryToDto(Gallery gallery) {
-		return createGalleryAllResDto(gallery);
-	}
-
-	private GalleryAllResDto createGalleryAllResDto(Gallery gallery) {
+	private GalleryAllResDto convertToGalleryAllResDto(Gallery gallery) {
+		final List<String> hashtags = hashtagService.findHashtagsByGallery(gallery);
 		return new GalleryAllResDto(gallery.getId(), gallery.getThumbnail(), gallery.getTitle(), gallery.getStartDate(),
-			gallery.getEndDate());
+			gallery.getEndDate(), hashtags);
 	}
 
 	private void validateRequest(String nickname, AuthUser authUser) {
@@ -261,10 +284,6 @@ public class GalleryService {
 			.filter(name -> !name.isEmpty())
 			.map(this::findMemberByNickname)
 			.orElseGet(() -> findMemberByEmail(authUser.email()));
-	}
-
-	private List<GalleryMypageResDto> convertToGalleryMypageResDtos(Page<Gallery> galleryPage) {
-		return galleryPage.stream().map(this::convertToGalleryMypageResDto).collect(Collectors.toList());
 	}
 
 	private GalleryMypageResDto convertToGalleryMypageResDto(Gallery gallery) {
@@ -311,6 +330,12 @@ public class GalleryService {
 		return hasMemberCommentedOnGallery(member, gallery);
 	}
 
+	private void checkPayGallery(Gallery gallery) {
+		if (gallery.getCost() == Cost.PAY) {
+			throw new BadRequestException(ErrorCode.FAIL_PAY_GALLERY_CANNOT_DELETE);
+		}
+	}
+
 	private boolean isAuthUserNull(AuthUser authUser) {
 		return authUser == null;
 	}
@@ -336,10 +361,6 @@ public class GalleryService {
 		LocalDateTime now = LocalDateTime.now();
 		return (gallery.getStartDate().isBefore(now) || gallery.getStartDate().isEqual(now)) &&
 			(gallery.getEndDate() == null || gallery.getEndDate().isAfter(now) || gallery.getEndDate().isEqual(now));
-	}
-
-	private void deleteGallery(Gallery gallery) {
-		galleryRepository.delete(gallery);
 	}
 
 	private void validateUserOwnership(Member member, Gallery gallery) {

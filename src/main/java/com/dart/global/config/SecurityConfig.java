@@ -83,6 +83,7 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/reissue").permitAll()
 			.anyRequest().authenticated()
 		);
 

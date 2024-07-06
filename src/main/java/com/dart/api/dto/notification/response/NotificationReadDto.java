@@ -4,6 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record NotificationReadDto(
+	String eventId,
 	Object message,
 	String type
 ) {

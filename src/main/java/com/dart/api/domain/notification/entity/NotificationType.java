@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
 public enum NotificationType {
 
 	LIVE("live"),
-	COUPON("coupon");
+	COUPON("coupon"),
+	REEXHIBITION("reexhibition");
 
 	private final String name;
 }

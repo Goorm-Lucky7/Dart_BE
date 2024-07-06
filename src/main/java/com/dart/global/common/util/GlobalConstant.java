@@ -24,8 +24,6 @@ public class GlobalConstant {
 	public static final int THIRTY_MINUTES = 30 * 60;
 	public static final int THIRTY_DAYS = 30 * 24 * 60 * 60;
 
-	public static final int THUMBNAIL_RESIZING_SIZE = 800;
-
 	public static final int ONE_HUNDRED_PERCENT = 100;
 
 	public static final int INCREMENT_BY_ONE = 1;
@@ -34,5 +32,4 @@ public class GlobalConstant {
 
 	public static final int SECOND_SORT = 1;
 
-	public static final String WATERMARK_TEXT = "D'art";
 }
