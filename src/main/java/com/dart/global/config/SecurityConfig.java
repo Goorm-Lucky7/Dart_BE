@@ -93,7 +93,7 @@ public class SecurityConfig {
 				.baseUri("/oauth2/authorization")
 			)
 			.redirectionEndpoint(redirection -> redirection
-				.baseUri("/api/login/oauth2/code/*")
+				.baseUri("/login/oauth2/code/*")
 			)
 			.userInfoEndpoint(userInfo -> userInfo
 				.userService(customOAuth2UserService)
