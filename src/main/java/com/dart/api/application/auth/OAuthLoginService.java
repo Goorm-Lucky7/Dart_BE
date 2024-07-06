@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dart.api.domain.member.entity.Member;
-import com.dart.api.domain.member.entity.OAuthProvider;
 import com.dart.api.domain.member.repository.MemberRepository;
-import com.dart.api.dto.auth.request.OAuthProviderUpdateDto;
 import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
@@ -41,7 +39,7 @@ public class OAuthLoginService {
 			String nickname = extractedAttributes.get("nickname");
 			String profileImage = extractedAttributes.get("profileImage");
 
-			signUp(email, nickname, profileImage, oauthProvider);
+			signUp(email, nickname, profileImage);
 			isNewUser = true;
 		}
 
@@ -57,14 +55,11 @@ public class OAuthLoginService {
 	}
 
 	private Map<String, String> extractAttributesByProvider(OAuth2User oauth2User, String oauthProvider) {
-		switch (oauthProvider) {
-			case KAKAO:
-				return extractKakaoAttributes(oauth2User);
-			case GOOGLE:
-				return extractGoogleAttributes(oauth2User);
-			default:
-				throw new NotFoundException(ErrorCode.FAIL_REGISTRATION_NOT_FOUND);
-		}
+		return switch (oauthProvider) {
+			case KAKAO -> extractKakaoAttributes(oauth2User);
+			case GOOGLE -> extractGoogleAttributes(oauth2User);
+			default -> throw new NotFoundException(ErrorCode.FAIL_REGISTRATION_NOT_FOUND);
+		};
 	}
 
 	private Map<String, String> extractKakaoAttributes(OAuth2User oauth2User) {
@@ -77,7 +72,7 @@ public class OAuthLoginService {
 		String rawPassword = generateRandomPassword();
 		String encodedPassword = passwordEncoder.encode(rawPassword);
 
-		extractedAttributes.put("email", String.valueOf(profile.get("email")));
+		extractedAttributes.put("email", String.valueOf(kakaoAccount.get("email")));
 		extractedAttributes.put("nickname", String.valueOf(profile.get("nickname")));
 		extractedAttributes.put("profileImage", String.valueOf(profile.get("profile_image_url")));
 		extractedAttributes.put("password", encodedPassword);
@@ -103,13 +98,11 @@ public class OAuthLoginService {
 		return extractedAttributes;
 	}
 
-	private Member signUp(String email, String nickname, String profileImage, String oauthProvider) {
+	private void signUp(String email, String nickname, String profileImage) {
 		String password = passwordEncoder.encode(generateRandomPassword());
 		Member member = Member.signup(new SignUpDto(email, nickname, password, null, null), password);
 		memberRepository.save(member);
 		member.updateProfileImage(profileImage);
-
-		return member;
 	}
 
 	private String generateRandomPassword() {
