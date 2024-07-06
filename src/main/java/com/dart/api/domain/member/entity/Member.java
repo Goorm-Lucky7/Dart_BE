@@ -83,7 +83,7 @@ public class Member extends BaseTimeEntity {
 		this.introduce = memberUpdateDto.introduce();
 	}
 
-	public void updateOAuthProvider(OAuthProviderUpdateDto oauthProviderUpdateDto) {
-		this.oauthProvider = OAuthProvider.findByName(oauthProviderUpdateDto.oauthProvider());
+	public void updateProfileImage(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 }
