@@ -6,7 +6,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
 import com.dart.api.dto.member.request.SignUpDto;
+import com.dart.global.error.exception.BadRequestException;
 import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
@@ -67,8 +67,19 @@ public class OAuthLoginService {
 		Map<String, String> extractedAttributes = new HashMap<>();
 		Map<String, Object> kakaoAccount, profile;
 
-		kakaoAccount = (Map<String, Object>)rawAttributes.get("kakao_account");
-		profile = (Map<String, Object>) kakaoAccount.get("profile");
+		Object kakaoAccountObj = rawAttributes.get("kakao_account");
+		if (kakaoAccountObj instanceof Map) {
+			kakaoAccount = (Map<String, Object>) kakaoAccountObj;
+			Object profileObj = kakaoAccount.get("profile");
+			if (profileObj instanceof Map) {
+				profile = (Map<String, Object>) profileObj;
+			} else {
+				throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
+			}
+		} else {
+			throw new BadRequestException(ErrorCode.FAIL_INVALID_REQUEST);
+		}
+
 		String rawPassword = generateRandomPassword();
 		String encodedPassword = passwordEncoder.encode(rawPassword);
 
@@ -113,12 +124,6 @@ public class OAuthLoginService {
 	}
 
 	private Member findMember(String email) {
-		Optional<Member> optionalMember = memberRepository.findByEmail(email);
-		if (optionalMember.isPresent()) {
-			Member member = optionalMember.get();
-
-			return member;
-		}
-		return null;
+		return memberRepository.findByEmail(email).orElse(null);
 	}
 }
