@@ -18,8 +18,11 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import com.dart.api.application.auth.CustomOAuth2UserService;
 import com.dart.api.application.auth.JwtProviderService;
 import com.dart.global.auth.filter.AuthenticationFilter;
+import com.dart.global.auth.handler.CustomAuthenticationFailureHandler;
+import com.dart.global.auth.handler.CustomAuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -27,13 +30,22 @@ public class SecurityConfig {
 
 	private final JwtProviderService jwtProviderService;
 	private final HandlerExceptionResolver handlerExceptionResolver;
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+	private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
 	public SecurityConfig(
 		JwtProviderService jwtProviderService,
-		@Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver
+		@Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver,
+		CustomOAuth2UserService customOAuth2UserService,
+		CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+		CustomAuthenticationFailureHandler customAuthenticationFailureHandler
 	) {
 		this.jwtProviderService = jwtProviderService;
 		this.handlerExceptionResolver = handlerExceptionResolver;
+		this.customOAuth2UserService = customOAuth2UserService;
+		this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
+		this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
 	}
 
 	@Bean
@@ -61,7 +73,7 @@ public class SecurityConfig {
 			.requestMatchers("/favicon.ico").permitAll()
 			.requestMatchers("/ws/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/signup/*").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/login/oauth2/*").permitAll()
+			.requestMatchers(HttpMethod.GET, "/api/reissue").permitAll()
 			.requestMatchers(HttpMethod.POST, "/api/email/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/galleries/info").permitAll()
@@ -71,8 +83,22 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.GET, "/api/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/reviews/info").permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/autocomplete").permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/reissue").permitAll()
 			.anyRequest().authenticated()
+		);
+
+		httpSecurity.oauth2Login((oauth) -> oauth
+			.loginPage("/api/login")
+			.authorizationEndpoint(authorization -> authorization
+				.baseUri("/oauth2/authorization")
+			)
+			.redirectionEndpoint(redirection -> redirection
+				.baseUri("/login/oauth2/code/*")
+			)
+			.userInfoEndpoint(userInfo -> userInfo
+				.userService(customOAuth2UserService)
+			)
+			.successHandler(customAuthenticationSuccessHandler)
+			.failureHandler(customAuthenticationFailureHandler)
 		);
 
 		httpSecurity.addFilterBefore(

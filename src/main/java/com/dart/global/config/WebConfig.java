@@ -22,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
 		"GET", "POST", "PUT", "DELETE", "OPTIONS"
 	};
 
-	public static final String CORS_MAPPING_PATH = "/api/**";
+	public static final String CORS_MAPPING_PATH = "/**";
 	public static final String ALLOWED_HEADERS = "*";
 
 	@Override

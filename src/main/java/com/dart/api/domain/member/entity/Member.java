@@ -14,6 +14,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.dart.api.dto.auth.request.OAuthProviderUpdateDto;
 import com.dart.api.dto.member.request.SignUpDto;
 import com.dart.api.dto.member.request.MemberUpdateDto;
 import com.dart.global.common.entity.BaseTimeEntity;
@@ -79,5 +81,9 @@ public class Member extends BaseTimeEntity {
 		this.nickname = memberUpdateDto.nickname();
 		this.profileImageUrl = profileImageUrl;
 		this.introduce = memberUpdateDto.introduce();
+	}
+
+	public void updateProfileImage(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 }

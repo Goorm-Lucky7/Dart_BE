@@ -20,6 +20,11 @@ spring:
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope: profile_nickname, profile_image, account_email
+          google:
+            provider: "google"
+            client-id: ${google.client-id}
+            client-secret: ${google.client-secret}
+            scope: profile, email
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
@@ -41,7 +46,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
