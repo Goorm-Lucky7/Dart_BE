@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
+import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
@@ -31,6 +32,7 @@ public class ChatRedisRepository {
 		final String messageValue = convertToJson(chatMessageReadDto);
 
 		listRedisRepository.addElementWithExpiry(key, messageValue, chatMessageSendDto.expirySeconds());
+		listRedisRepository.addElement(REDIS_BATCH_PREFIX, messageValue);
 	}
 
 	public PageResponse<ChatMessageReadDto> getChatMessageReadDto(Long chatRoomId, int page, int size) {
@@ -50,8 +52,18 @@ public class ChatRedisRepository {
 		return new PageResponse<>(chatMessageReadDtoList, pageInfo);
 	}
 
+	public List<ChatMessage> getAllBatchMessages() {
+		return listRedisRepository.getRange(REDIS_BATCH_PREFIX, 0, -1).stream()
+			.map(this::parseChatMessage)
+			.toList();
+	}
+
 	public void deleteChatMessages(Long chatRoomId) {
 		listRedisRepository.deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
+	}
+
+	public void clearBatchMessages() {
+		listRedisRepository.deleteAllElements(REDIS_BATCH_PREFIX);
 	}
 
 	private ChatMessageReadDto createChatMessageReadDto(ChatMessageSendDto chatMessageSendDto, Member member) {
@@ -60,11 +72,19 @@ public class ChatRedisRepository {
 			chatMessageSendDto.isAuthor(), member.getProfileImageUrl());
 	}
 
-	private String convertToJson(ChatMessageReadDto chatMessageReadDto) {
+	private String convertToJson(Object object) {
 		try {
-			return objectMapper.writeValueAsString(chatMessageReadDto);
+			return objectMapper.writeValueAsString(object);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	private ChatMessage parseChatMessage(Object messageValue) {
+		try {
+			return objectMapper.readValue(messageValue.toString(), ChatMessage.class);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("[✅ LOGGER] FAILED TO PROCESS JSON", e);
 		}
 	}
 
