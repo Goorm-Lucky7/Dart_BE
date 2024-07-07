@@ -40,15 +40,18 @@ public class ChatMessageReadService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<ChatMessageReadDto> getChatMessageList(Long chatRoomId, int page, int size) {
-		final PageResponse<ChatMessageReadDto> redisChatMessageReadDtoList =
-			chatRedisRepository.getChatMessageReadDto(chatRoomId, page, size);
+		final PageResponse<ChatMessageReadDto> redisChatMessageReadDtoList = chatRedisRepository.getChatMessageReadDto(
+			chatRoomId, page, size);
 
 		if (redisChatMessageReadDtoList != null && !redisChatMessageReadDtoList.pages().isEmpty()) {
 			return createPageResponse(new ArrayList<>(redisChatMessageReadDtoList.pages()), page, size);
 		}
 
-		final List<ChatMessageReadDto> chatMessageReadDtoList =
-			fetchChatMessagesFromDBAndUpdateMembers(chatRoomId, page, size);
+		final List<ChatMessageReadDto> chatMessageReadDtoList = fetchChatMessagesFromDBAndUpdateMembers(
+			chatRoomId, page, size);
+
+		cachingChatMessages(getChatRoomById(chatRoomId), chatMessageReadDtoList);
+
 		return createPageResponse(chatMessageReadDtoList, page, size);
 	}
 
@@ -62,12 +65,7 @@ public class ChatMessageReadService {
 			.map(ChatMessage::toChatMessageReadDto)
 			.toList();
 
-		final List<ChatMessageReadDto> updatedChatMessageReadDtoList = updateMembersInChatMessages(
-			mySQLChatMessageReadDtoList);
-
-		cachingChatMessages(chatRoom, mySQLChatMessageReadDtoList);
-
-		return updatedChatMessageReadDtoList;
+		return updateMembersInChatMessages(mySQLChatMessageReadDtoList);
 	}
 
 	public List<ChatMessageReadDto> updateMembersInChatMessages(List<ChatMessageReadDto> chatMessageReadDtoList) {
@@ -111,6 +109,15 @@ public class ChatMessageReadService {
 		});
 	}
 
+	private PageResponse<ChatMessageReadDto> createPageResponse(List<ChatMessageReadDto> chatMessageReadDtoList,
+		int page, int size
+	) {
+		final boolean isDone = chatMessageReadDtoList.size() < size;
+		final PageInfo pageInfo = new PageInfo(page, isDone);
+
+		return new PageResponse<>(chatMessageReadDtoList, pageInfo);
+	}
+
 	private ChatRoom getChatRoomById(Long chatRoomId) {
 		return chatRoomRepository.findById(chatRoomId)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_CHAT_ROOM_NOT_FOUND));
@@ -119,14 +126,5 @@ public class ChatMessageReadService {
 	private Member getMemberByNickname(String nickname) {
 		return memberRepository.findByNickname(nickname)
 			.orElseThrow(() -> new NotFoundException(ErrorCode.FAIL_MEMBER_NOT_FOUND));
-	}
-
-	private PageResponse<ChatMessageReadDto> createPageResponse(List<ChatMessageReadDto> chatMessageReadDtoList,
-		int page, int size
-	) {
-		final boolean isDone = chatMessageReadDtoList.size() < size;
-		final PageInfo pageInfo = new PageInfo(page, isDone);
-
-		return new PageResponse<>(chatMessageReadDtoList, pageInfo);
 	}
 }
