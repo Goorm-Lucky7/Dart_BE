@@ -2,6 +2,9 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,10 +36,22 @@ public class ChatMessageService {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final Member member = getMemberByNickname(chatMessageCreateDto.sender());
 		final ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
-		chatMessageRepository.save(chatMessage);
 
 		final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
+	}
+
+	@Scheduled(fixedRate = 300000)
+	public void batchSaveMessages() {
+		final List<ChatMessage> chatMessageList = chatRedisRepository.getAllBatchMessages();
+		saveMessagesIfNotEmpty(chatMessageList);
+	}
+
+	private void saveMessagesIfNotEmpty(List<ChatMessage> chatMessageList) {
+		if (!chatMessageList.isEmpty()) {
+			chatMessageRepository.saveAll(chatMessageList);
+			chatRedisRepository.clearBatchMessages();
+		}
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {
