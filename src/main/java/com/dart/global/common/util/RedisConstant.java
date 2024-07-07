@@ -12,9 +12,9 @@ public class RedisConstant {
 	public static final String REDIS_REFRESH_TOKEN_PREFIX = "token:refresh:";
 	public static final String REDIS_BLACKLIST_TOKEN_PREFIX = "token:blacklist:";
 	public static final String REDIS_EMAIL_PREFIX = "email:";
-	public static final String REDIS_GALLERY_PREFIX = "gallery:";
 	public static final String REDIS_PAYMENT_PREFIX = "payment:";
 	public static final String REDIS_CHAT_MESSAGE_PREFIX = "chatMessage:";
+	public static final String REDIS_BATCH_PREFIX = "batch:chatMessages";
 	public static final String REDIS_NICKNAME_PREFIX = "nickname:";
 	public static final String REDIS_COUPON_PREFIX = "coupon:";
 	public static final String REDIS_COUPON_COUNT_PREFIX = "coupon_count:";
@@ -25,9 +25,6 @@ public class RedisConstant {
 
 	public static final String REDIS_SESSION_EMAIL_PREFIX = "session-email:";
 	public static final String REDIS_SESSION_NICKNAME_PREFIX = "session-nickname:";
-
-	public final static long LIST_START_INDEX = 0;
-	public final static long LIST_END_INDEX_ALL = -1;
 
 	public static final String CODE = "code";
 	public static final String RESERVED = "reserved";
