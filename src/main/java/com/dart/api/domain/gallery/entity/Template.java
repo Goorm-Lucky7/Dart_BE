@@ -13,7 +13,8 @@ public enum Template {
 	ONE("one"),
 	TWO("two"),
 	THREE("three"),
-	FOUR("four");
+	FOUR("four"),
+	FIVE("five");
 
 	private final String value;
 
