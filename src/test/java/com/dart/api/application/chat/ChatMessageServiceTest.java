@@ -3,6 +3,7 @@ package com.dart.api.application.chat;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -99,5 +100,42 @@ class ChatMessageServiceTest {
 			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("BATCH SAVE MESSAGES(⭕️ SUCCESS): REDIS에 저장된 배치 메시지를 데이터베이스에 저장했습니다.")
+	void batchSaveMessages_void_success() {
+		// GIVEN
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
+		Member member = MemberFixture.createMemberEntity();
+		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+		ChatMessage chatMessage = ChatFixture.createChatMessageEntity(chatRoom, member, chatMessageCreateDto);
+
+		List<ChatMessage> chatMessageList = List.of(chatMessage);
+
+		when(chatRedisRepository.getAllBatchMessages()).thenReturn(chatMessageList);
+
+		// WHEN
+		chatMessageService.batchSaveMessages();
+
+		// THEN
+		verify(chatMessageRepository, times(1)).saveAll(chatMessageList);
+		verify(chatRedisRepository, times(1)).clearBatchMessages();
+	}
+
+	@Test
+	@DisplayName("BATCH SAVE MESSAGES(⭕️ SUCCESS): REDIS에 저장된 메시지가 없어 데이터베이스에 저장하지 않습니다.")
+	void batchSaveMessages_noMessages_void_success() {
+		// GIVEN
+		List<ChatMessage> chatMessageList = List.of();
+
+		when(chatRedisRepository.getAllBatchMessages()).thenReturn(chatMessageList);
+
+		// WHEN
+		chatMessageService.batchSaveMessages();
+
+		// THEN
+		verify(chatMessageRepository, times(0)).saveAll(anyList());
+		verify(chatRedisRepository, times(0)).clearBatchMessages();
 	}
 }
