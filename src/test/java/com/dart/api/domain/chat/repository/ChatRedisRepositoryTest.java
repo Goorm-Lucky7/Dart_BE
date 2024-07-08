@@ -10,12 +10,14 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.dart.api.domain.chat.entity.ChatMessage;
+import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageResponse;
@@ -42,8 +44,7 @@ class ChatRedisRepositoryTest {
 	void saveChatMessage_void_success() throws JsonProcessingException {
 		// GIVEN
 		ChatMessageSendDto chatMessageSendDto = ChatFixture.createChatMessageSendDto(
-			1L, 1L, "Hello 👋🏻", LocalDateTime.now(), true
-		);
+			1L, 1L, "Hello 👋🏻", LocalDateTime.now(), true);
 		Member member = MemberFixture.createMemberEntity();
 
 		when(objectMapper.writeValueAsString(any(ChatMessageReadDto.class))).thenReturn("JSONValue");
@@ -52,17 +53,9 @@ class ChatRedisRepositoryTest {
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
 
 		// THEN
-		ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<Long> expiryCaptor = ArgumentCaptor.forClass(Long.class);
-
-		verify(listRedisRepository).addElementWithExpiry(
-			keyCaptor.capture(), valueCaptor.capture(), expiryCaptor.capture()
-		);
-
-		assertEquals(REDIS_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId(), keyCaptor.getValue());
-		assertEquals("JSONValue", valueCaptor.getValue());
-		assertEquals(chatMessageSendDto.expirySeconds(), expiryCaptor.getValue());
+		String expectedKey = REDIS_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId();
+		verify(listRedisRepository).addElementWithExpiry(expectedKey, "JSONValue", chatMessageSendDto.expirySeconds());
+		verify(listRedisRepository).addElement(REDIS_BATCH_PREFIX, "JSONValue");
 	}
 
 	@Test
@@ -81,14 +74,43 @@ class ChatRedisRepositoryTest {
 			.thenReturn(new ChatMessageReadDto("sender2", "content2", LocalDateTime.now(), false, "profileImageURL2"));
 
 		// WHEN
-		PageResponse<ChatMessageReadDto> pageResponse = chatRedisRepository.getChatMessageReadDto(chatRoomId, page,
-			size);
+		PageResponse<ChatMessageReadDto> pageResponse = chatRedisRepository.getChatMessageReadDto(
+			chatRoomId, page, size);
 
 		// THEN
 		assertEquals(2, pageResponse.pages().size());
 		assertEquals("sender1", pageResponse.pages().get(0).sender());
 		assertEquals("sender2", pageResponse.pages().get(1).sender());
 		assertTrue(pageResponse.pageInfo().isDone());
+	}
+
+	@Test
+	@DisplayName("GET ALL BATCH CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 BATCH 채팅 메시지를 조회했습니다.")
+	void getAllBatchMessages_void_success() throws JsonProcessingException {
+		// GIVEN
+		List<Object> batchMessageValues = List.of("JSONValue1", "JSONValue2");
+
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
+
+		Member member1 = MemberFixture.createMemberEntityWithEmailAndNickname("sender1@example.com", "sender1");
+		Member member2 = MemberFixture.createMemberEntityWithEmailAndNickname("sender2@example.com", "sender2");
+
+		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+
+		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom, member1, chatMessageCreateDto);
+		ChatMessage chatMessage2 = ChatFixture.createChatMessageEntity(chatRoom, member2, chatMessageCreateDto);
+
+		when(listRedisRepository.getRange(eq(REDIS_BATCH_PREFIX), eq(0L), eq(-1L))).thenReturn(batchMessageValues);
+		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessage.class))).thenReturn(chatMessage1);
+		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessage.class))).thenReturn(chatMessage2);
+
+		// WHEN
+		List<ChatMessage> batchChatMessageList = chatRedisRepository.getAllBatchMessages();
+
+		// THEN
+		assertEquals(2, batchChatMessageList.size());
+		assertEquals("Hello 👋🏻", batchChatMessageList.get(0).getContent());
+		assertEquals("Hello 👋🏻", batchChatMessageList.get(1).getContent());
 	}
 
 	@Test
@@ -102,5 +124,15 @@ class ChatRedisRepositoryTest {
 
 		// THEN
 		verify(listRedisRepository, times(1)).deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
+	}
+
+	@Test
+	@DisplayName("CLEAR BATCH MESSAGES(⭕️ SUCCESS): 성공적으로 배치 메시지를 삭제했습니다.")
+	void clearBatchMessages_void_success() {
+		// WHEN
+		chatRedisRepository.clearBatchMessages();
+
+		// THEN
+		verify(listRedisRepository, times(1)).deleteAllElements(REDIS_BATCH_PREFIX);
 	}
 }
