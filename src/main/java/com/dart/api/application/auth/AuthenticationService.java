@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dart.api.domain.auth.repository.SessionRedisRepository;
 import com.dart.api.domain.auth.repository.TokenRedisRepository;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.domain.member.repository.MemberRepository;
@@ -33,6 +34,7 @@ public class AuthenticationService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProviderService jwtProviderService;
 	private final TokenRedisRepository tokenRedisRepository;
+	private final SessionRedisRepository sessionRedisRepository;
 
 	private final CookieUtil cookieUtil;
 
@@ -43,9 +45,24 @@ public class AuthenticationService {
 		String clientInfo = extractClientInfo(request);
 
 		validatePasswordMatch(loginReqDto.password(), member.getPassword());
-		deleteAllTokensAndCookie(response, email);
 
 		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), member.getEmail(),
+			member.getNickname(), member.getProfileImageUrl(), clientInfo);
+		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
+		tokenRedisRepository.saveBlacklistToken(email, accessToken);
+
+		saveTokensInResponse(response, accessToken, refreshToken);
+
+		return new LoginResDto(accessToken, member.getEmail(), member.getNickname(), member.getProfileImageUrl());
+	}
+
+	public LoginResDto socialLogin(String sessionId, HttpServletRequest request, HttpServletResponse response) {
+		final String email = sessionRedisRepository.getSessionLoginMapping(sessionId);
+		final Member member = findByMemberEmail(email);
+
+		String clientInfo = extractClientInfo(request);
+
+		final String accessToken = jwtProviderService.generateAccessToken(member.getId(), email,
 			member.getNickname(), member.getProfileImageUrl(), clientInfo);
 		final String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
 		tokenRedisRepository.saveBlacklistToken(email, accessToken);
@@ -80,13 +97,11 @@ public class AuthenticationService {
 			validateBlacklist(email, accessToken);
 
 			tokenRedisRepository.deleteBlacklistToken(email);
-			deleteRefreshToken(email);
 
 			String newAccessToken = generateAccessToken(accessToken, clientInfo);
-			String newRefreshToken = jwtProviderService.generateRefreshToken(email);
 
 			tokenRedisRepository.saveBlacklistToken(email, newAccessToken);
-			saveTokensInResponse(response, newAccessToken, newRefreshToken);
+			saveAccessTokenInResponse(response, newAccessToken);
 			return new TokenResDto(newAccessToken);
 
 		} catch (Exception e) {
@@ -130,10 +145,6 @@ public class AuthenticationService {
 		String ipAddress = request.getRemoteAddr();
 		String userAgent = request.getHeader("User-Agent");
 		return ipAddress + "|" + userAgent;
-	}
-
-	public void deleteRefreshToken(String email) {
-		tokenRedisRepository.deleteRefreshToken(email);
 	}
 
 	private void validatePasswordMatch(String password, String encodedPassword) {
