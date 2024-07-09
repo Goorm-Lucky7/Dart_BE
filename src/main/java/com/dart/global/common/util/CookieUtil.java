@@ -23,7 +23,7 @@ public class CookieUtil {
 
 	public void setCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
 		boolean isLocal = isLocalActiveProfile();
-		String domain = isLocal ? LOCAL_DOMAIN : COOKIE_DOMAIN;
+		String domain = isLocal ? LOCAL_DOMAIN : DEPLOY_DOMAIN;
 
 		ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, value)
 			.httpOnly(true)
@@ -63,7 +63,7 @@ public class CookieUtil {
 
 	public void deleteCookie(HttpServletResponse response, String name) {
 		boolean isLocal = isLocalActiveProfile();
-		String domain = isLocal ? LOCAL_DOMAIN : COOKIE_DOMAIN;
+		String domain = isLocal ? LOCAL_DOMAIN : DEPLOY_DOMAIN;
 
 		ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, null)
 			.httpOnly(true)

@@ -22,6 +22,14 @@ public class SessionRedisRepository {
 		valueRedisRepository.saveValueWithExpiry(REDIS_SESSION_NICKNAME_PREFIX + sessionId, nickname, SESSION_NICKNAME_EXPIRATION_TIME_SECONDS);
 	}
 
+	public void saveSessionLoginMapping(String sessionId, String email) {
+		valueRedisRepository.saveValue(REDIS_SESSION_LOGIN_PREFIX + sessionId, email);
+	}
+
+	public String getSessionLoginMapping(String sessionId) {
+		return valueRedisRepository.getValue(REDIS_SESSION_LOGIN_PREFIX + sessionId);
+	}
+
 	public String findEmailBySessionId(String sessionId) {
 		return valueRedisRepository.getValue(REDIS_SESSION_EMAIL_PREFIX + sessionId);
 	}
@@ -36,5 +44,9 @@ public class SessionRedisRepository {
 
 	public void deleteSessionNicknameMapping(String sessionId) {
 		valueRedisRepository.deleteValue(REDIS_SESSION_NICKNAME_PREFIX + sessionId);
+	}
+
+	public void deleteSessionLoginMapping(String sessionId) {
+		valueRedisRepository.deleteValue(REDIS_SESSION_LOGIN_PREFIX + sessionId);
 	}
 }

@@ -18,13 +18,12 @@ public class CustomOAuth2User implements OAuth2User {
 
 	private final OAuth2User oauth2User;
 	private final String oauthProvider;
-	private final Member member;
-	private final boolean isNewUser;
+	private final String email;
 
 	@Override
 	public Map<String, Object> getAttributes() {
 		Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
-		attributes.put("member", member);
+		attributes.put("email", email);
 		attributes.put("oauthProvider", oauthProvider);
 		return attributes;
 	}

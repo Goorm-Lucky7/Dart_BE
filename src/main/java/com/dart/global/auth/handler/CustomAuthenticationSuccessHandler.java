@@ -1,18 +1,17 @@
 package com.dart.global.auth.handler;
 
+import static com.dart.global.common.util.GlobalConstant.*;
+
 import java.io.IOException;
+import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import com.dart.api.application.auth.JwtProviderService;
 import com.dart.api.domain.auth.entity.CustomOAuth2User;
-import com.dart.api.domain.auth.repository.TokenRedisRepository;
-import com.dart.api.domain.member.entity.Member;
-import com.dart.api.dto.auth.response.TokenResDto;
-import com.dart.global.common.util.CookieUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.dart.api.domain.auth.repository.SessionRedisRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-	private final ObjectMapper objectMapper;
-	private final JwtProviderService jwtProviderService;
-	private final TokenRedisRepository tokenRedisRepository;
-	private final CookieUtil cookieUtil;
+	private final SessionRedisRepository sessionRedisRepository;
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -33,36 +29,15 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
 		CustomOAuth2User customOAuth2User = (CustomOAuth2User)authentication.getPrincipal();
 
-		Member member = customOAuth2User.getMember();
-		String accessToken = generateAccessToken(member, request);
-		generateBlacklistToken(member, accessToken);
-		generateRefreshTokenAndCookie(member, response);
+		String email = customOAuth2User.getEmail();
+		String sessionId = UUID.randomUUID().toString();
+		sessionRedisRepository.saveSessionLoginMapping(sessionId, email);
 
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-		response.getWriter().write(objectMapper.writeValueAsString(new TokenResDto(accessToken)));
+		String redirectUrl = UriComponentsBuilder.fromUriString(DEPLOY_DOMAIN)
+			.path("/api/oauth2/callback")
+			.queryParam("session", sessionId)
+			.build().toUriString();
 
-		if(customOAuth2User.isNewUser()) response.setStatus(HttpServletResponse.SC_CREATED);
-		else response.setStatus(HttpServletResponse.SC_OK);
-	}
-
-	private String generateAccessToken(Member member, HttpServletRequest request) {
-		return jwtProviderService.generateAccessToken(member.getId(), member.getEmail(), member.getNickname(),
-			member.getProfileImageUrl(), extractClientInfo(request));
-	}
-
-	private void generateBlacklistToken(Member member, String accessToken) {
-		tokenRedisRepository.saveBlacklistToken(member.getEmail(), accessToken);
-	}
-
-	private String extractClientInfo(HttpServletRequest request) {
-		String ipAddress = request.getRemoteAddr();
-		String userAgent = request.getHeader("User-Agent");
-		return ipAddress + "|" + userAgent;
-	}
-
-	private void generateRefreshTokenAndCookie(Member member, HttpServletResponse response) {
-		String refreshToken = jwtProviderService.generateRefreshToken(member.getEmail());
-		cookieUtil.setRefreshCookie(response, refreshToken);
+		response.sendRedirect(redirectUrl);
 	}
 }

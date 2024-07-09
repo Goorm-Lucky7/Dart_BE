@@ -10,7 +10,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.dart.api.domain.auth.entity.CustomOAuth2User;
-import com.dart.api.domain.member.entity.Member;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +27,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			String oauthProvider = userRequest.getClientRegistration().getRegistrationId();
 
 			Map<String, Object> loginResponse = oauthLoginService.socialLogin(oauth2User, oauthProvider);
-			boolean isNewUser = (Boolean) loginResponse.get("isNewUser");
-			Member member = (Member) loginResponse.get("member");
+			String email = (String)loginResponse.get("email");
 
-			return new CustomOAuth2User(oauth2User, oauthProvider, member, isNewUser);
+			return new CustomOAuth2User(oauth2User, oauthProvider, email);
 		} catch (Exception e) {
 			throw e;
 		}
