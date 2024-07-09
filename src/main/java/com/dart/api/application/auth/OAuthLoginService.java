@@ -31,21 +31,17 @@ public class OAuthLoginService {
 	@Transactional
 	public Map<String, Object> socialLogin(OAuth2User oauth2User, String oauthProvider) {
 		Map<String, String> extractedAttributes = extractAttributesByProvider(oauth2User, oauthProvider);
-
 		String email = extractedAttributes.get("email");
-		boolean isNewUser = false;
 
 		if (!isMemberSignedUp(email)) {
 			String nickname = extractedAttributes.get("nickname");
 			String profileImage = extractedAttributes.get("profileImage");
 
 			signUp(email, nickname, profileImage);
-			isNewUser = true;
 		}
 
 		Map<String, Object> responseMap = new HashMap<>();
-		responseMap.put("isNewUser", isNewUser);
-		responseMap.put("member", findMember(email));
+		responseMap.put("email", email);
 
 		return responseMap;
 	}
