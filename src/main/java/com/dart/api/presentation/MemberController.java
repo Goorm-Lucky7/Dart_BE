@@ -57,6 +57,13 @@ public class MemberController {
 		return ResponseEntity.ok(authenticationService.login(loginReqDto, request, response));
 	}
 
+	@GetMapping("/login/social")
+	@ResponseStatus(HttpStatus.OK)
+	public ResponseEntity<LoginResDto> socialLogin(
+		@RequestParam String sessionId, HttpServletRequest request, HttpServletResponse response) {
+		return ResponseEntity.ok(authenticationService.socialLogin(sessionId, request, response));
+	}
+
 	@PostMapping("/logout")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
