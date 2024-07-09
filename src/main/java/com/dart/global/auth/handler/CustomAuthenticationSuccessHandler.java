@@ -35,7 +35,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
 		String redirectUrl = UriComponentsBuilder.fromUriString(DEPLOY_DOMAIN)
 			.path("/api/oauth2/callback")
-			.queryParam("session", sessionId)
+			.queryParam("sessionId", sessionId)
 			.build().toUriString();
 
 		response.sendRedirect(redirectUrl);
