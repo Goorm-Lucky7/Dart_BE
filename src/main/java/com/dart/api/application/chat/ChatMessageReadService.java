@@ -50,8 +50,6 @@ public class ChatMessageReadService {
 		final List<ChatMessageReadDto> chatMessageReadDtoList = fetchChatMessagesFromDBAndUpdateMembers(
 			chatRoomId, page, size);
 
-		cachingChatMessages(getChatRoomById(chatRoomId), chatMessageReadDtoList);
-
 		return createPageResponse(chatMessageReadDtoList, page, size);
 	}
 
@@ -65,7 +63,12 @@ public class ChatMessageReadService {
 			.map(ChatMessage::toChatMessageReadDto)
 			.toList();
 
-		return updateMembersInChatMessages(mySQLChatMessageReadDtoList);
+		final List<ChatMessageReadDto> updatedChatMessageReadDtoList = updateMembersInChatMessages(
+			mySQLChatMessageReadDtoList);
+
+		cachingChatMessages(chatRoom, mySQLChatMessageReadDtoList);
+
+		return updatedChatMessageReadDtoList;
 	}
 
 	public List<ChatMessageReadDto> updateMembersInChatMessages(List<ChatMessageReadDto> chatMessageReadDtoList) {
