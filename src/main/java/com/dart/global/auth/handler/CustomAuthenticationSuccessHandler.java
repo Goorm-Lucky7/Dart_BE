@@ -34,7 +34,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 		sessionRedisRepository.saveSessionLoginMapping(sessionId, email);
 
 		String redirectUrl = UriComponentsBuilder.fromUriString("https://" + DEPLOY_DOMAIN)
-			.path("/oauth2/callback")
+			.path("/api/oauth2/callback")
 			.queryParam("session", sessionId)
 			.build().toUriString();
 
