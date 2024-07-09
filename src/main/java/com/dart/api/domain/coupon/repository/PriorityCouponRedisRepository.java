@@ -69,4 +69,8 @@ public class PriorityCouponRedisRepository {
 		final String couponCountKey = REDIS_COUPON_COUNT_PREFIX + couponId.toString();
 		valueRedisRepository.increment(couponCountKey, count);
 	}
+
+	public void deleteCouponCount(String key) {
+		valueRedisRepository.deleteValue(REDIS_COUPON_COUNT_PREFIX + key);
+	}
 }
