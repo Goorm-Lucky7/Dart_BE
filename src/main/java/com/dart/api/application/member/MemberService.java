@@ -78,9 +78,9 @@ public class MemberService {
 
 		Member member = findMemberByEmail(authUser.email());
 		validateNickname(memberUpdateDto.nickname(), member.getNickname(), sessionId);
-		String newProfileImageUrl = handleProfileImageUpdate(profileImage, member.getProfileImageUrl());
+		handleProfileImageUpdate(profileImage, member);
 
-		member.updateProfile(memberUpdateDto, newProfileImageUrl);
+		member.updateProfile(memberUpdateDto);
 		handleNicknameUpdate(memberUpdateDto.nickname(), member.getNickname(), sessionId);
 
 		return new MemberSimpleProfileResDto(member.getEmail(), member.getNickname(), member.getProfileImageUrl());
@@ -99,15 +99,15 @@ public class MemberService {
 		}
 	}
 
-	private String handleProfileImageUpdate(MultipartFile profileImage, String savedProfileImage) {
-		if (profileImage == null || profileImage.isEmpty()) return null;
+	private void handleProfileImageUpdate(MultipartFile profileImage, Member member) {
+		if (profileImage == null || profileImage.isEmpty()) return;
 
+		String savedProfileImage = member.getProfileImageUrl();
 		String newProfileImageUrl = s3Service.uploadFile(profileImage);
 		if (savedProfileImage != null) {
 			s3Service.deleteFile(savedProfileImage);
 		}
-
-		return newProfileImageUrl;
+		member.updateProfileImage(newProfileImageUrl);
 	}
 
 	private void handleNicknameUpdate(String newNickname, String currentNickname, String sessionId) {
