@@ -26,7 +26,7 @@ public class ChatRedisRepository {
 	private final ObjectMapper objectMapper;
 
 	public void saveChatMessage(ChatMessageSendDto chatMessageSendDto, Member member) {
-		final String key = REDIS_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId();
+		final String key = REDIS_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId().toString();
 		final ChatMessageReadDto chatMessageReadDto = createChatMessageReadDto(chatMessageSendDto, member);
 		final String messageValue = convertToJson(chatMessageReadDto);
 
@@ -37,8 +37,8 @@ public class ChatRedisRepository {
 		final long end = -1 - ((long)page * size);
 		final long start = end - size + 1;
 
-		final List<Object> messageValues = listRedisRepository
-			.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId, start, end);
+		final List<Object> messageValues = listRedisRepository.getRange(
+			REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString(), start, end);
 
 		final List<ChatMessageReadDto> chatMessageReadDtoList = messageValues.stream()
 			.map(this::parseMessageValues)
@@ -51,7 +51,7 @@ public class ChatRedisRepository {
 	}
 
 	public void deleteChatMessages(Long chatRoomId) {
-		listRedisRepository.deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
+		listRedisRepository.deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString());
 	}
 
 	private ChatMessageReadDto createChatMessageReadDto(ChatMessageSendDto chatMessageSendDto, Member member) {
