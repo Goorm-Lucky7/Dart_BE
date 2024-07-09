@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,10 +42,13 @@ public class RedisConfig {
 
 		redisTemplate.setConnectionFactory(redisConnectionFactory);
 
-		Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
-		redisTemplate.setKeySerializer(jackson2JsonRedisSerializer);
+		StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+		redisTemplate.setKeySerializer(stringRedisSerializer);
+		redisTemplate.setHashKeySerializer(stringRedisSerializer);
+
+		Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(
+			Object.class);
 		redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
-		redisTemplate.setHashKeySerializer(jackson2JsonRedisSerializer);
 		redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
 
 		redisTemplate.setEnableTransactionSupport(true);
