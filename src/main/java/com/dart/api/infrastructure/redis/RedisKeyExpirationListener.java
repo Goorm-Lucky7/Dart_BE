@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
+import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.entity.Hashtag;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
@@ -31,19 +32,22 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 	private final ImageService imageService;
 	private final HashtagRepository hashtagRepository;
 	private final ChatRoomRepository chatRoomRepository;
+	private final PriorityCouponRedisRepository priorityCouponRedisRepository;
 
 	public RedisKeyExpirationListener(
 		RedisMessageListenerContainer listenerContainer,
 		GalleryRepository galleryRepository,
 		ImageService imageService,
 		HashtagRepository hashtagRepository,
-		ChatRoomRepository chatRoomRepository
+		ChatRoomRepository chatRoomRepository,
+		PriorityCouponRedisRepository priorityCouponRedisRepository
 	) {
 		super(listenerContainer);
 		this.galleryRepository = galleryRepository;
 		this.imageService = imageService;
 		this.hashtagRepository = hashtagRepository;
 		this.chatRoomRepository = chatRoomRepository;
+		this.priorityCouponRedisRepository = priorityCouponRedisRepository;
 	}
 
 	@Override
@@ -56,6 +60,9 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 			handleExpiredGallery(galleryId);
 		} else if (isChatMessageKey(expiredKey)) {
 			log.info("[✅ LOGGER] REDIS KEY FOR CHAT MESSAGES EXPIRED: {}", expiredKey);
+		} else if (isPriorityCouponKey(expiredKey)) {
+			final String priorityCouponId = expiredKey.replace(REDIS_COUPON_PREFIX, "");
+			priorityCouponRedisRepository.deleteCouponCount(priorityCouponId);
 		}
 	}
 
@@ -79,5 +86,9 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 
 	private boolean isChatMessageKey(String str) {
 		return str.contains(REDIS_CHAT_MESSAGE_PREFIX);
+	}
+
+	private boolean isPriorityCouponKey(String str) {
+		return str.contains(REDIS_COUPON_PREFIX);
 	}
 }
