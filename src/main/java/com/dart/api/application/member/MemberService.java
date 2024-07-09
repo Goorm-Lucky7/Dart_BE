@@ -60,6 +60,7 @@ public class MemberService {
 		cleanUpSessionData(sessionId, signUpDto.email(), signUpDto.nickname());
 	}
 
+	@Transactional(readOnly = true)
 	public MemberProfileResDto getMemberProfile(String nickname, AuthUser authUser) {
 		validateMemberExists(nickname);
 		if(isOwnProfile(authUser, nickname)) {
