@@ -54,12 +54,11 @@ public class SecurityConfig {
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations())
 			.requestMatchers("/h2-console/**")
 			.requestMatchers("/api/login")
-			.requestMatchers("/api/login/social/*")
+			.requestMatchers("/api/login/social/**")
 			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
 			.requestMatchers("/api/payment/kakao/**");
-			//.requestMatchers("/api/oauth2/callback/*");
 	}
 
 	@Bean
