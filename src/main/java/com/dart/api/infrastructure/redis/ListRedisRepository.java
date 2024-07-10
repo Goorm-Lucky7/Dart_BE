@@ -1,11 +1,15 @@
 package com.dart.api.infrastructure.redis;
 
+import static com.dart.global.common.util.GlobalConstant.*;
 import static java.util.Objects.*;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Repository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +33,20 @@ public class ListRedisRepository {
 
 	public List<Object> getRange(String key, long start, long end) {
 		return redisTemplate.opsForList().range(requireNonNull(key), start, end);
+	}
+
+	public List<Long> getActiveChatRoomIds(String keyPrefix) {
+		List<Long> chatRoomIds = new ArrayList<>();
+		ScanOptions scanOptions = ScanOptions.scanOptions().match(keyPrefix + "*").count(1000).build();
+		try (Cursor<byte[]> cursor = redisTemplate.getConnectionFactory().getConnection().scan(scanOptions)) {
+			while (cursor.hasNext()) {
+				String key = new String(cursor.next());
+				String chatRoomId = key.replace(keyPrefix, BLANK);
+				chatRoomIds.add(Long.parseLong(chatRoomId));
+			}
+		}
+
+		return chatRoomIds;
 	}
 
 	public void removeElement(String key, Object value) {
