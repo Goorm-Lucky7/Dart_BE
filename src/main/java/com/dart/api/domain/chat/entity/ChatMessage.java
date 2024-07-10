@@ -52,7 +52,7 @@ public class ChatMessage {
 	private ChatMessage(String content, LocalDateTime createdAt, boolean isAuthor, ChatRoom chatRoom, Member member) {
 		this.content = content;
 		this.isAuthor = isAuthor;
-		this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+		this.createdAt = createdAt;
 		this.chatRoom = chatRoom;
 		this.member = member;
 	}
@@ -65,7 +65,7 @@ public class ChatMessage {
 		return ChatMessage.builder()
 			.content(chatMessageCreateDto.content())
 			.isAuthor(chatMessageCreateDto.isAuthor())
-			.createdAt(chatMessageCreateDto.createdAt() != null ? chatMessageCreateDto.createdAt() : LocalDateTime.now())
+			.createdAt(chatMessageCreateDto.createdAt())
 			.chatRoom(chatRoom)
 			.member(member)
 			.build();
