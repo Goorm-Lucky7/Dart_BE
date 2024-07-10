@@ -60,7 +60,7 @@ public class MemberController {
 	@PostMapping("/login/social")
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<LoginResDto> socialLogin(
-		@RequestParam String sessionId, HttpServletRequest request, HttpServletResponse response) {
+		@RequestParam(name = "session-id") String sessionId, HttpServletRequest request, HttpServletResponse response) {
 		return ResponseEntity.ok(authenticationService.socialLogin(sessionId, request, response));
 	}
 
