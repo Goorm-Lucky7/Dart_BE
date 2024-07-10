@@ -34,6 +34,14 @@ public class ChatRedisRepository {
 		listRedisRepository.addElementWithExpiry(key, messageValue, chatMessageSendDto.expirySeconds());
 	}
 
+	public void saveBatchChatMessage(ChatMessageSendDto chatMessageSendDto, Member member) {
+		final String key = REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId().toString();
+		final ChatMessageReadDto chatMessageReadDto = createChatMessageReadDto(chatMessageSendDto, member);
+		final String messageValue = convertToJson(chatMessageReadDto);
+
+		listRedisRepository.addElement(key, messageValue);
+	}
+
 	public PageResponse<ChatMessageReadDto> getChatMessageReadDto(Long chatRoomId, int page, int size) {
 		final long end = -1 - ((long)page * size);
 		final long start = end - size + 1;
@@ -52,8 +60,8 @@ public class ChatRedisRepository {
 	}
 
 	public List<ChatMessageCreateDto> getAllBatchMessages(Long chatRoomId) {
-		return listRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString(), REDIS_BATCH_START_INDEX,
-				REDIS_BATCH_END_INDEX - 1).stream()
+		return listRedisRepository.getRange(REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatRoomId.toString(),
+				REDIS_BATCH_START_INDEX, REDIS_BATCH_END_INDEX - 1).stream()
 			.map(this::parseChatMessageCreatedDto)
 			.toList();
 	}
@@ -64,6 +72,10 @@ public class ChatRedisRepository {
 
 	public void deleteChatMessages(Long chatRoomId) {
 		listRedisRepository.deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString());
+	}
+
+	public void deleteBatchChatMessages(Long chatRoomId) {
+		listRedisRepository.deleteAllElements(REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatRoomId.toString());
 	}
 
 	private ChatMessageReadDto createChatMessageReadDto(ChatMessageSendDto chatMessageSendDto, Member member) {

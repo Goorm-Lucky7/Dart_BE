@@ -14,8 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.dart.api.domain.chat.entity.ChatMessage;
-import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.member.entity.Member;
 import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
@@ -58,6 +56,24 @@ class ChatRedisRepositoryTest {
 	}
 
 	@Test
+	@DisplayName("SAVE BATCH CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 BATCH REDIS에 채팅 메시지를 저장했습니다.")
+	void saveBatchChatMessage_void_success() throws JsonProcessingException {
+		// GIVEN
+		ChatMessageSendDto chatMessageSendDto = ChatFixture.createChatMessageSendDto(
+			1L, 1L, "Hello 👋🏻", LocalDateTime.now(), true);
+		Member member = MemberFixture.createMemberEntity();
+
+		when(objectMapper.writeValueAsString(any(ChatMessageReadDto.class))).thenReturn("JSONValue");
+
+		// WHEN
+		chatRedisRepository.saveBatchChatMessage(chatMessageSendDto, member);
+
+		// THEN
+		String expectedKey = REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatMessageSendDto.chatRoomId();
+		verify(listRedisRepository).addElement(expectedKey, "JSONValue");
+	}
+
+	@Test
 	@DisplayName("GET CHAT MESSAGE READ DTO(⭕️ SUCCESS): 성공적으로 REDIS에 존재하는 채팅 메시지를 조회했습니다.")
 	void getChatMessageReadDto_void_success() throws JsonProcessingException {
 		// GIVEN
@@ -95,11 +111,13 @@ class ChatRedisRepositoryTest {
 		ChatMessageCreateDto chatMessageCreateDto2 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		when(listRedisRepository.getRange(
-			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString()),
+			eq(REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatRoomId.toString()),
 			eq((long)REDIS_BATCH_START_INDEX),
 			eq((long)(REDIS_BATCH_END_INDEX - 1)))).thenReturn(batchMessageValues);
-		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessageCreateDto.class))).thenReturn(chatMessageCreateDto1);
-		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessageCreateDto.class))).thenReturn(chatMessageCreateDto2);
+		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessageCreateDto.class))).thenReturn(
+			chatMessageCreateDto1);
+		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessageCreateDto.class))).thenReturn(
+			chatMessageCreateDto2);
 
 		// WHEN
 		List<ChatMessageCreateDto> batchChatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
@@ -114,9 +132,9 @@ class ChatRedisRepositoryTest {
 	@DisplayName("GET ACTIVE CHAT ROOM IDS(⭕️ SUCCESS): 성공적으로 활성 채팅방 ID 목록을 조회했습니다.")
 	void getActiveChatRoomIds_void_success() {
 		// GIVEN
-		String chatRoomId = "123";
+		Long chatRoomId = 1L;
 
-		List<Long> expectedChatRoomIds = List.of(Long.parseLong(chatRoomId));
+		List<Long> expectedChatRoomIds = List.of(chatRoomId);
 
 		when(listRedisRepository.getActiveChatRoomIds(REDIS_CHAT_MESSAGE_PREFIX)).thenReturn(expectedChatRoomIds);
 
@@ -138,5 +156,18 @@ class ChatRedisRepositoryTest {
 
 		// THEN
 		verify(listRedisRepository, times(1)).deleteAllElements(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId);
+	}
+
+	@Test
+	@DisplayName("DELETE BATCH CHAT MESSAGES(⭕️ SUCCESS): 성공적으로 BATCH REDIS에 존재하는 모든 채팅 메시지를 삭제했습니다.")
+	void deleteBatchChatMessages_void_success() {
+		// GIVEN
+		Long chatRoomId = 1L;
+
+		// WHEN
+		chatRedisRepository.deleteBatchChatMessages(chatRoomId);
+
+		// THEN
+		verify(listRedisRepository, times(1)).deleteAllElements(REDIS_BATCH_CHAT_MESSAGE_PREFIX + chatRoomId);
 	}
 }
