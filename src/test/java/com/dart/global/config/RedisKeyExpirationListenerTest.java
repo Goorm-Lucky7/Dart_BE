@@ -22,6 +22,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.dart.api.application.gallery.ImageService;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatRoomRepository;
+import com.dart.api.domain.coupon.repository.PriorityCouponRedisRepository;
 import com.dart.api.domain.gallery.entity.Gallery;
 import com.dart.api.domain.gallery.repository.GalleryRepository;
 import com.dart.api.domain.gallery.repository.HashtagRepository;
@@ -51,6 +52,9 @@ class RedisKeyExpirationListenerTest {
 	@Mock
 	private RedisMessageListenerContainer redisMessageListenerContainer;
 
+	@Mock
+	private PriorityCouponRedisRepository priorityCouponRedisRepository;
+
 	@BeforeEach
 	void setUp() {
 		redisKeyExpirationListener = new RedisKeyExpirationListener(
@@ -58,7 +62,8 @@ class RedisKeyExpirationListenerTest {
 			galleryRepository,
 			imageService,
 			hashtagRepository,
-			chatRoomRepository
+			chatRoomRepository,
+			priorityCouponRedisRepository
 		);
 	}
 

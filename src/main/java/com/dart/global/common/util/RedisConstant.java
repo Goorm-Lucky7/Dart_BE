@@ -16,8 +16,8 @@ public class RedisConstant {
 	public static final String REDIS_PAYMENT_PREFIX = "payment:";
 	public static final String REDIS_CHAT_MESSAGE_PREFIX = "chatMessage:";
 	public static final String REDIS_NICKNAME_PREFIX = "nickname:";
-	public static final String REDIS_COUPON_PREFIX = "coupon:";
-	public static final String REDIS_COUPON_COUNT_PREFIX = "coupon_count:";
+	public static final String REDIS_COUPON_PREFIX = "priority_coupon:";
+	public static final String REDIS_COUPON_COUNT_PREFIX = "priority_coupon_count:";
 	public static final String REDIS_TITLE_PREFIX = "title:";
 	public static final String REDIS_AUTHOR_PREFIX = "author:";
 	public static final String REDIS_HASHTAG_PREFIX = "hashtag:";
