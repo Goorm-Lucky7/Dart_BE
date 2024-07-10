@@ -14,7 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.dart.api.domain.chat.entity.ChatMessage;
+import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageResponse;
@@ -78,6 +81,56 @@ class ChatRedisRepositoryTest {
 		assertEquals("sender1", pageResponse.pages().get(0).sender());
 		assertEquals("sender2", pageResponse.pages().get(1).sender());
 		assertTrue(pageResponse.pageInfo().isDone());
+	}
+
+	@Test
+	@DisplayName("GET ALL BATCH CHAT MESSAGE(⭕️ SUCCESS): 성공적으로 BATCH 채팅 메시지를 조회했습니다.")
+	void getAllBatchMessages_void_success() throws JsonProcessingException {
+		// GIVEN
+		List<Object> batchMessageValues = List.of("JSONValue1", "JSONValue2");
+
+		Long chatRoomId = 1L;
+		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
+
+		Member member1 = MemberFixture.createMemberEntityWithEmailAndNickname("sender1@example.com", "sender1");
+		Member member2 = MemberFixture.createMemberEntityWithEmailAndNickname("sender2@example.com", "sender2");
+
+		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+
+		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom, member1, chatMessageCreateDto);
+		ChatMessage chatMessage2 = ChatFixture.createChatMessageEntity(chatRoom, member2, chatMessageCreateDto);
+
+		when(listRedisRepository.getRange(
+			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString()),
+			eq((long)REDIS_BATCH_START_INDEX),
+			eq((long)(REDIS_BATCH_END_INDEX - 1)))).thenReturn(batchMessageValues);
+		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessage.class))).thenReturn(chatMessage1);
+		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessage.class))).thenReturn(chatMessage2);
+
+		// WHEN
+		List<ChatMessage> batchChatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
+
+		// THEN
+		assertEquals(2, batchChatMessageList.size());
+		assertEquals("Hello 👋🏻", batchChatMessageList.get(0).getContent());
+		assertEquals("Hello 👋🏻", batchChatMessageList.get(1).getContent());
+	}
+
+	@Test
+	@DisplayName("GET ACTIVE CHAT ROOM IDS(⭕️ SUCCESS): 성공적으로 활성 채팅방 ID 목록을 조회했습니다.")
+	void getActiveChatRoomIds_void_success() {
+		// GIVEN
+		String chatRoomId = "123";
+
+		List<Long> expectedChatRoomIds = List.of(Long.parseLong(chatRoomId));
+
+		when(listRedisRepository.getActiveChatRoomIds(REDIS_CHAT_MESSAGE_PREFIX)).thenReturn(expectedChatRoomIds);
+
+		// WHEN
+		List<Long> actualChatRoomIds = chatRedisRepository.getActiveChatRoomIds();
+
+		// THEN
+		assertEquals(expectedChatRoomIds, actualChatRoomIds);
 	}
 
 	@Test
