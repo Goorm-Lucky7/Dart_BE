@@ -37,4 +37,6 @@ public class RedisConstant {
 	public static final long NICKNAME_VERIFICATION_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 	public static final int SESSION_EMAIL_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
 	public static final int SESSION_NICKNAME_EXPIRATION_TIME_SECONDS = THIRTY_MINUTES;
+	public static final int REDIS_BATCH_START_INDEX = 0;
+	public static final int REDIS_BATCH_END_INDEX = 100;
 }
