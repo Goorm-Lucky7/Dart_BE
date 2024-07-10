@@ -38,6 +38,10 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			.queryParam("session-id", sessionId)
 			.build().toUriString();
 
-		response.sendRedirect(redirectUrl);
+		try {
+			response.sendRedirect(redirectUrl);
+		} catch (IOException e) {
+			response.sendRedirect(redirectUrl);
+		}
 	}
 }
