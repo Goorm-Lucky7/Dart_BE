@@ -48,15 +48,23 @@ public class ChatMessageService {
 
 		activeChatRoomIds.stream()
 			.map(chatRoomId -> {
-				List<ChatMessage> chatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
-				return new AbstractMap.SimpleEntry<>(chatRoomId, chatMessageList);
+				List<ChatMessageCreateDto> messageCreateDtoList = chatRedisRepository.getAllBatchMessages(chatRoomId);
+				return new AbstractMap.SimpleEntry<>(chatRoomId, messageCreateDtoList);
 			})
 			.filter(entry -> !entry.getValue().isEmpty())
 			.forEach(entry -> saveMessagesIfNotEmpty(entry.getValue(), entry.getKey()));
 	}
 
-	private void saveMessagesIfNotEmpty(List<ChatMessage> chatMessageList, Long chatRoomId) {
-		if (!chatMessageList.isEmpty()) {
+	private void saveMessagesIfNotEmpty(List<ChatMessageCreateDto> chatMessageCreateDtoList, Long chatRoomId) {
+		if (!chatMessageCreateDtoList.isEmpty()) {
+			final ChatRoom chatRoom = getChatRoomById(chatRoomId);
+			List<ChatMessage> chatMessageList = chatMessageCreateDtoList.stream()
+				.map(chatMessageCreateDto -> {
+					final Member member = getMemberByNickname(chatMessageCreateDto.sender());
+					return ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
+				})
+				.toList();
+
 			chatMessageRepository.saveAll(chatMessageList);
 			chatRedisRepository.deleteChatMessages(chatRoomId);
 		}
