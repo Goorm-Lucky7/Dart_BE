@@ -40,6 +40,7 @@ public class ChatMessageService {
 
 		final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
+		chatRedisRepository.saveBatchChatMessage(chatMessageSendDto, member);
 	}
 
 	@Scheduled(cron = CHAT_BATCH_SAVE_INTERVAL)
@@ -66,7 +67,7 @@ public class ChatMessageService {
 				.toList();
 
 			chatMessageRepository.saveAll(chatMessageList);
-			chatRedisRepository.deleteChatMessages(chatRoomId);
+			chatRedisRepository.deleteBatchChatMessages(chatRoomId);
 		}
 	}
 
