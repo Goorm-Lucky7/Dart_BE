@@ -22,7 +22,9 @@ import com.dart.global.error.exception.NotFoundException;
 import com.dart.global.error.model.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService {
@@ -34,9 +36,12 @@ public class ChatMessageService {
 
 	@Transactional
 	public void saveChatMessage(Long chatRoomId, ChatMessageCreateDto chatMessageCreateDto) {
+		log.info("Saving chat message with createdAt: {}", chatMessageCreateDto.createdAt());
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final Member member = getMemberByNickname(chatMessageCreateDto.sender());
 		final ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
+
+		log.info("Converted chat message with createdAt: {}", chatMessage.getCreatedAt());
 
 		final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
