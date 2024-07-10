@@ -2,6 +2,10 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.util.AbstractMap;
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,10 +37,29 @@ public class ChatMessageService {
 		final ChatRoom chatRoom = getChatRoomById(chatRoomId);
 		final Member member = getMemberByNickname(chatMessageCreateDto.sender());
 		final ChatMessage chatMessage = ChatMessage.chatMessageFromCreateDto(chatRoom, member, chatMessageCreateDto);
-		chatMessageRepository.save(chatMessage);
 
 		final ChatMessageSendDto chatMessageSendDto = chatMessage.toChatMessageSendDto(CHAT_MESSAGE_EXPIRY_SECONDS);
 		chatRedisRepository.saveChatMessage(chatMessageSendDto, member);
+	}
+
+	@Scheduled(cron = CHAT_BATCH_SAVE_INTERVAL)
+	public void batchSaveMessages() {
+		List<Long> activeChatRoomIds = chatRedisRepository.getActiveChatRoomIds();
+
+		activeChatRoomIds.stream()
+			.map(chatRoomId -> {
+				List<ChatMessage> chatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
+				return new AbstractMap.SimpleEntry<>(chatRoomId, chatMessageList);
+			})
+			.filter(entry -> !entry.getValue().isEmpty())
+			.forEach(entry -> saveMessagesIfNotEmpty(entry.getValue(), entry.getKey()));
+	}
+
+	private void saveMessagesIfNotEmpty(List<ChatMessage> chatMessageList, Long chatRoomId) {
+		if (!chatMessageList.isEmpty()) {
+			chatMessageRepository.saveAll(chatMessageList);
+			chatRedisRepository.deleteChatMessages(chatRoomId);
+		}
 	}
 
 	private ChatRoom getChatRoomById(Long chatRoomId) {

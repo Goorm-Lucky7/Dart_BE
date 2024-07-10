@@ -124,9 +124,10 @@ class ChatMessageReadServiceTest {
 		// THEN
 		assertThat(actualPageResponse).isEqualTo(expectedPageResponse);
 		verify(chatRedisRepository, times(1)).getChatMessageReadDto(chatRoomId, page, size);
-		verify(chatRoomRepository, times(1)).findById(chatRoomId);
+		verify(chatRoomRepository, times(2)).findById(chatRoomId);
 		verify(chatMessageRepository, times(1)).findByChatRoomOrderByCreatedAtDesc(any(ChatRoom.class),
 			any(Pageable.class));
+		verify(memberRepository, times(1)).findByEmailIn(anyList());
 	}
 
 	@Test
@@ -171,8 +172,6 @@ class ChatMessageReadServiceTest {
 		when(chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(any(ChatRoom.class), any(Pageable.class)))
 			.thenReturn(chatMessagePage);
 		when(memberRepository.findByEmailIn(anyList())).thenReturn(Arrays.asList(member1, member2));
-		when(memberRepository.findByNickname(member1.getNickname())).thenReturn(Optional.of(member1));
-		when(memberRepository.findByNickname(member2.getNickname())).thenReturn(Optional.of(member2));
 
 		// WHEN
 		List<ChatMessageReadDto> actualChatMessageReadDtoList =
@@ -189,7 +188,6 @@ class ChatMessageReadServiceTest {
 		verify(chatMessageRepository, times(1)).findByChatRoomOrderByCreatedAtDesc(
 			any(ChatRoom.class), any(Pageable.class));
 		verify(memberRepository, times(1)).findByEmailIn(anyList());
-		verify(memberRepository, times(2)).findByNickname(anyString());
 	}
 
 	@Test
