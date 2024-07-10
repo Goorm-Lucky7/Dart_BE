@@ -1,6 +1,7 @@
 package com.dart.api.infrastructure.redis;
 
 import static com.dart.global.common.util.ChatConstant.*;
+import static com.dart.global.common.util.RedisConstant.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -14,8 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 
 @ExtendWith(MockitoExtension.class)
 class ListRedisRepositoryTest {
@@ -25,6 +30,15 @@ class ListRedisRepositoryTest {
 
 	@Mock
 	private ListOperations<String, Object> listOperations;
+
+	@Mock
+	private RedisConnection redisConnection;
+
+	@Mock
+	private RedisConnectionFactory redisConnectionFactory;
+
+	@Mock
+	private Cursor<byte[]> cursor;
 
 	@InjectMocks
 	private ListRedisRepository listRedisRepository;
@@ -80,6 +94,29 @@ class ListRedisRepositoryTest {
 
 		// THEN
 		assertEquals(expectedValues, actualValues);
+	}
+
+	@Test
+	@DisplayName("GET ACTIVE CHAT ROOM IDS(⭕️ SUCCESS): 성공적으로 활성 채팅방 ID 목록을 조회했습니다.")
+	void getActiveChatRoomIds_void_success() {
+		// GIVEN
+		String chatRoomId = "123";
+		String key = REDIS_CHAT_MESSAGE_PREFIX + chatRoomId;
+
+		List<Long> expectedChatRoomIds = List.of(Long.parseLong(chatRoomId));
+
+		when(redisTemplate.getConnectionFactory()).thenReturn(redisConnectionFactory);
+		when(redisConnectionFactory.getConnection()).thenReturn(redisConnection);
+		when(redisConnection.scan(any(ScanOptions.class))).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(true, false);
+		when(cursor.next()).thenReturn(key.getBytes());
+
+		// WHEN
+		List<Long> actualChatRoomIds = listRedisRepository.getActiveChatRoomIds(REDIS_CHAT_MESSAGE_PREFIX);
+
+		// THEN
+		assertEquals(expectedChatRoomIds, actualChatRoomIds);
+		verify(cursor, times(1)).close();
 	}
 
 	@Test
