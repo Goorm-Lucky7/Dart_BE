@@ -61,6 +61,7 @@ class ChatMessageServiceTest {
 
 		// THEN
 		verify(chatRedisRepository, times(1)).saveChatMessage(any(ChatMessageSendDto.class), any(Member.class));
+		verify(chatRedisRepository, times(1)).saveBatchChatMessage(any(ChatMessageSendDto.class), any(Member.class));
 	}
 
 	@Test
@@ -128,8 +129,8 @@ class ChatMessageServiceTest {
 
 		// THEN
 		verify(chatMessageRepository, times(2)).saveAll(anyList());
-		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
-		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId2);
+		verify(chatRedisRepository, times(1)).deleteBatchChatMessages(chatRoomId1);
+		verify(chatRedisRepository, times(1)).deleteBatchChatMessages(chatRoomId2);
 	}
 
 	@Test
@@ -158,8 +159,8 @@ class ChatMessageServiceTest {
 
 		// THEN
 		verify(chatMessageRepository, times(1)).saveAll(anyList());
-		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
-		verify(chatRedisRepository, never()).deleteChatMessages(chatRoomId2);
+		verify(chatRedisRepository, times(1)).deleteBatchChatMessages(chatRoomId1);
+		verify(chatRedisRepository, never()).deleteBatchChatMessages(chatRoomId2);
 	}
 
 	@Test
@@ -182,6 +183,6 @@ class ChatMessageServiceTest {
 
 		// THEN
 		verify(chatMessageRepository, never()).saveAll(anyList());
-		verify(chatRedisRepository, never()).deleteChatMessages(anyLong());
+		verify(chatRedisRepository, never()).deleteBatchChatMessages(anyLong());
 	}
 }
