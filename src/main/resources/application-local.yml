@@ -25,6 +25,8 @@ spring:
             client-id: ${google.client-id}
             client-secret: ${google.client-secret}
             redirect-uri: ${google.redirect-uri}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
             scope: profile, email
         provider:
           kakao:
@@ -32,6 +34,11 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
   h2:
     console:
