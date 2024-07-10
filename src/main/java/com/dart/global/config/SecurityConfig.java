@@ -58,8 +58,8 @@ public class SecurityConfig {
 			.requestMatchers("/api/signup/**")
 			.requestMatchers("/api/email/**")
 			.requestMatchers("/api/nickname/check")
-			.requestMatchers("/api/payment/kakao/**")
-			.requestMatchers("/api/oauth2/callback/*");
+			.requestMatchers("/api/payment/kakao/**");
+			//.requestMatchers("/api/oauth2/callback/*");
 	}
 
 	@Bean
