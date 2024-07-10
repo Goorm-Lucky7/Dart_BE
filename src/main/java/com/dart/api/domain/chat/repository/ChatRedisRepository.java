@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
-import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.member.entity.Member;
+import com.dart.api.dto.chat.request.ChatMessageCreateDto;
 import com.dart.api.dto.chat.request.ChatMessageSendDto;
 import com.dart.api.dto.chat.response.ChatMessageReadDto;
 import com.dart.api.dto.page.PageInfo;
@@ -51,10 +51,10 @@ public class ChatRedisRepository {
 		return new PageResponse<>(chatMessageReadDtoList, pageInfo);
 	}
 
-	public List<ChatMessage> getAllBatchMessages(Long chatRoomId) {
+	public List<ChatMessageCreateDto> getAllBatchMessages(Long chatRoomId) {
 		return listRedisRepository.getRange(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString(), REDIS_BATCH_START_INDEX,
 				REDIS_BATCH_END_INDEX - 1).stream()
-			.map(this::parseChatMessage)
+			.map(this::parseChatMessageCreatedDto)
 			.toList();
 	}
 
@@ -80,9 +80,9 @@ public class ChatRedisRepository {
 		}
 	}
 
-	private ChatMessage parseChatMessage(Object messageValue) {
+	private ChatMessageCreateDto parseChatMessageCreatedDto(Object messageValue) {
 		try {
-			return objectMapper.readValue(messageValue.toString(), ChatMessage.class);
+			return objectMapper.readValue(messageValue.toString(), ChatMessageCreateDto.class);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("[✅ LOGGER] FAILED TO PROCESS JSON", e);
 		}
