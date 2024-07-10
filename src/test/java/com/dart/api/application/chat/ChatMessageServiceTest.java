@@ -53,17 +53,14 @@ class ChatMessageServiceTest {
 
 		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 		Member member = MemberFixture.createMemberEntity();
-		ChatMessage chatMessage = ChatFixture.createChatMessageEntity(chatRoom, member, chatMessageCreateDto);
 
 		when(chatRoomRepository.findById(anyLong())).thenReturn(Optional.of(chatRoom));
 		when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
-		when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(chatMessage);
 
 		// WHEN
 		chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto);
 
 		// THEN
-		verify(chatMessageRepository, times(1)).save(any(ChatMessage.class));
 		verify(chatRedisRepository, times(1)).saveChatMessage(any(ChatMessageSendDto.class), any(Member.class));
 	}
 
@@ -100,5 +97,90 @@ class ChatMessageServiceTest {
 			() -> chatMessageService.saveChatMessage(chatRoomId, chatMessageCreateDto))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("[❎ ERROR] 요청하신 회원을 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("BATCH SAVE MESSAGES(⭕️ SUCCESS): 성공적으로 활성화된 채팅방이 2개일 때 배치 채팅 메시지를 저장했습니다.")
+	void batchSaveMessages_twoActiveChatRooms_success() {
+		// GIVEN
+		Long chatRoomId1 = 1L;
+		Long chatRoomId2 = 2L;
+
+		ChatRoom chatRoom1 = ChatFixture.createChatRoomEntity();
+		ChatRoom chatRoom2 = ChatFixture.createChatRoomEntity();
+		Member member = MemberFixture.createMemberEntity();
+		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom1, member, chatMessageCreateDto);
+		ChatMessage chatMessage2 = ChatFixture.createChatMessageEntity(chatRoom2, member, chatMessageCreateDto);
+
+		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
+		List<ChatMessage> batchMessages1 = List.of(chatMessage1);
+		List<ChatMessage> batchMessages2 = List.of(chatMessage2);
+
+		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId2)).thenReturn(batchMessages2);
+
+		// WHEN
+		chatMessageService.batchSaveMessages();
+
+		// THEN
+		verify(chatMessageRepository, times(1)).saveAll(batchMessages1);
+		verify(chatMessageRepository, times(1)).saveAll(batchMessages2);
+		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
+		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId2);
+	}
+
+	@Test
+	@DisplayName("BATCH SAVE MESSAGES(⭕️ SUCCESS): 성공적으로 활성화된 채팅방이 1개일 때 배치 채팅 메시지를 저장했습니다.")
+	void batchSaveMessages_oneActiveChatRoom_success() {
+		// GIVEN
+		Long chatRoomId1 = 1L;
+		Long chatRoomId2 = 2L;
+
+		ChatRoom chatRoom1 = ChatFixture.createChatRoomEntity();
+		Member member = MemberFixture.createMemberEntity();
+		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom1, member, chatMessageCreateDto);
+
+		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
+		List<ChatMessage> batchMessages1 = List.of(chatMessage1);
+		List<ChatMessage> batchMessages2 = List.of();
+
+		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId2)).thenReturn(batchMessages2);
+
+		// WHEN
+		chatMessageService.batchSaveMessages();
+
+		// THEN
+		verify(chatMessageRepository, times(1)).saveAll(batchMessages1);
+		verify(chatMessageRepository, never()).saveAll(batchMessages2);
+		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
+		verify(chatRedisRepository, never()).deleteChatMessages(chatRoomId2);
+	}
+
+	@Test
+	@DisplayName("BATCH SAVE MESSAGES(⭕️ SUCCESS): 성공적으로 활성화된 채팅방이 없을 때 배치 채팅 메시지를 저장했습니다.")
+	void batchSaveMessages_noActiveChatRooms_success() {
+		// GIVEN
+		Long chatRoomId1 = 1L;
+		Long chatRoomId2 = 2L;
+
+		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
+		List<ChatMessage> batchMessages1 = List.of();
+		List<ChatMessage> batchMessages2 = List.of();
+
+		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
+		when(chatRedisRepository.getAllBatchMessages(chatRoomId2)).thenReturn(batchMessages2);
+
+		// WHEN
+		chatMessageService.batchSaveMessages();
+
+		// THEN
+		verify(chatMessageRepository, never()).saveAll(anyList());
+		verify(chatRedisRepository, never()).deleteChatMessages(anyLong());
 	}
 }
