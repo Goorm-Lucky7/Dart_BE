@@ -155,7 +155,7 @@ public class AuthenticationService {
 
 	protected void validateRefreshToken(String email) {
 		if(!tokenRedisRepository.checkRefreshTokenExists(email)) {
-			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_TOKEN);
+			throw new UnauthorizedException(ErrorCode.FAIL_INVALID_REFRESH_TOKEN);
 		}
 	}
 
