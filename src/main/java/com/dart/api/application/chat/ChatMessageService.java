@@ -2,6 +2,7 @@ package com.dart.api.application.chat;
 
 import static com.dart.global.common.util.ChatConstant.*;
 
+import java.util.AbstractMap;
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,10 +47,12 @@ public class ChatMessageService {
 		List<Long> activeChatRoomIds = chatRedisRepository.getActiveChatRoomIds();
 
 		activeChatRoomIds.stream()
-			.map(chatRedisRepository::getAllBatchMessages)
-			.filter(chatMessageList -> !chatMessageList.isEmpty())
-			.forEach(chatMessageList -> saveMessagesIfNotEmpty(
-				chatMessageList, chatMessageList.get(0).getChatRoom().getId()));
+			.map(chatRoomId -> {
+				List<ChatMessage> chatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
+				return new AbstractMap.SimpleEntry<>(chatRoomId, chatMessageList);
+			})
+			.filter(entry -> !entry.getValue().isEmpty())
+			.forEach(entry -> saveMessagesIfNotEmpty(entry.getValue(), entry.getKey()));
 	}
 
 	private void saveMessagesIfNotEmpty(List<ChatMessage> chatMessageList, Long chatRoomId) {
