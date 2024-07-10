@@ -90,30 +90,24 @@ class ChatRedisRepositoryTest {
 		List<Object> batchMessageValues = List.of("JSONValue1", "JSONValue2");
 
 		Long chatRoomId = 1L;
-		ChatRoom chatRoom = ChatFixture.createChatRoomEntity();
 
-		Member member1 = MemberFixture.createMemberEntityWithEmailAndNickname("sender1@example.com", "sender1");
-		Member member2 = MemberFixture.createMemberEntityWithEmailAndNickname("sender2@example.com", "sender2");
-
-		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-
-		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom, member1, chatMessageCreateDto);
-		ChatMessage chatMessage2 = ChatFixture.createChatMessageEntity(chatRoom, member2, chatMessageCreateDto);
+		ChatMessageCreateDto chatMessageCreateDto1 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+		ChatMessageCreateDto chatMessageCreateDto2 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		when(listRedisRepository.getRange(
 			eq(REDIS_CHAT_MESSAGE_PREFIX + chatRoomId.toString()),
 			eq((long)REDIS_BATCH_START_INDEX),
 			eq((long)(REDIS_BATCH_END_INDEX - 1)))).thenReturn(batchMessageValues);
-		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessage.class))).thenReturn(chatMessage1);
-		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessage.class))).thenReturn(chatMessage2);
+		when(objectMapper.readValue(eq("JSONValue1"), eq(ChatMessageCreateDto.class))).thenReturn(chatMessageCreateDto1);
+		when(objectMapper.readValue(eq("JSONValue2"), eq(ChatMessageCreateDto.class))).thenReturn(chatMessageCreateDto2);
 
 		// WHEN
-		List<ChatMessage> batchChatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
+		List<ChatMessageCreateDto> batchChatMessageList = chatRedisRepository.getAllBatchMessages(chatRoomId);
 
 		// THEN
 		assertEquals(2, batchChatMessageList.size());
-		assertEquals("Hello 👋🏻", batchChatMessageList.get(0).getContent());
-		assertEquals("Hello 👋🏻", batchChatMessageList.get(1).getContent());
+		assertEquals(chatMessageCreateDto1, batchChatMessageList.get(0));
+		assertEquals(chatMessageCreateDto2, batchChatMessageList.get(1));
 	}
 
 	@Test

@@ -13,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.dart.api.domain.chat.entity.ChatMessage;
 import com.dart.api.domain.chat.entity.ChatRoom;
 import com.dart.api.domain.chat.repository.ChatMessageRepository;
 import com.dart.api.domain.chat.repository.ChatRedisRepository;
@@ -109,24 +108,26 @@ class ChatMessageServiceTest {
 		ChatRoom chatRoom1 = ChatFixture.createChatRoomEntity();
 		ChatRoom chatRoom2 = ChatFixture.createChatRoomEntity();
 		Member member = MemberFixture.createMemberEntity();
-		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom1, member, chatMessageCreateDto);
-		ChatMessage chatMessage2 = ChatFixture.createChatMessageEntity(chatRoom2, member, chatMessageCreateDto);
+		ChatMessageCreateDto chatMessageCreateDto1 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
+		ChatMessageCreateDto chatMessageCreateDto2 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
-		List<ChatMessage> batchMessages1 = List.of(chatMessage1);
-		List<ChatMessage> batchMessages2 = List.of(chatMessage2);
+		List<ChatMessageCreateDto> batchMessages1 = List.of(chatMessageCreateDto1);
+		List<ChatMessageCreateDto> batchMessages2 = List.of(chatMessageCreateDto2);
 
 		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
 		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
 		when(chatRedisRepository.getAllBatchMessages(chatRoomId2)).thenReturn(batchMessages2);
+		when(chatRoomRepository.findById(chatRoomId1)).thenReturn(Optional.of(chatRoom1));
+		when(chatRoomRepository.findById(chatRoomId2)).thenReturn(Optional.of(chatRoom2));
+		when(memberRepository.findByNickname(chatMessageCreateDto1.sender())).thenReturn(Optional.of(member));
+		when(memberRepository.findByNickname(chatMessageCreateDto2.sender())).thenReturn(Optional.of(member));
 
 		// WHEN
 		chatMessageService.batchSaveMessages();
 
 		// THEN
-		verify(chatMessageRepository, times(1)).saveAll(batchMessages1);
-		verify(chatMessageRepository, times(1)).saveAll(batchMessages2);
+		verify(chatMessageRepository, times(2)).saveAll(anyList());
 		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
 		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId2);
 	}
@@ -140,23 +141,23 @@ class ChatMessageServiceTest {
 
 		ChatRoom chatRoom1 = ChatFixture.createChatRoomEntity();
 		Member member = MemberFixture.createMemberEntity();
-		ChatMessageCreateDto chatMessageCreateDto = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
-		ChatMessage chatMessage1 = ChatFixture.createChatMessageEntity(chatRoom1, member, chatMessageCreateDto);
+		ChatMessageCreateDto chatMessageCreateDto1 = ChatFixture.createChatMessageEntityForChatMessageCreateDto();
 
 		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
-		List<ChatMessage> batchMessages1 = List.of(chatMessage1);
-		List<ChatMessage> batchMessages2 = List.of();
+		List<ChatMessageCreateDto> batchMessages1 = List.of(chatMessageCreateDto1);
+		List<ChatMessageCreateDto> batchMessages2 = List.of();
 
 		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
 		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
 		when(chatRedisRepository.getAllBatchMessages(chatRoomId2)).thenReturn(batchMessages2);
+		when(chatRoomRepository.findById(chatRoomId1)).thenReturn(Optional.of(chatRoom1));
+		when(memberRepository.findByNickname(chatMessageCreateDto1.sender())).thenReturn(Optional.of(member));
 
 		// WHEN
 		chatMessageService.batchSaveMessages();
 
 		// THEN
-		verify(chatMessageRepository, times(1)).saveAll(batchMessages1);
-		verify(chatMessageRepository, never()).saveAll(batchMessages2);
+		verify(chatMessageRepository, times(1)).saveAll(anyList());
 		verify(chatRedisRepository, times(1)).deleteChatMessages(chatRoomId1);
 		verify(chatRedisRepository, never()).deleteChatMessages(chatRoomId2);
 	}
@@ -169,8 +170,8 @@ class ChatMessageServiceTest {
 		Long chatRoomId2 = 2L;
 
 		List<Long> activeChatRoomIds = List.of(chatRoomId1, chatRoomId2);
-		List<ChatMessage> batchMessages1 = List.of();
-		List<ChatMessage> batchMessages2 = List.of();
+		List<ChatMessageCreateDto> batchMessages1 = List.of();
+		List<ChatMessageCreateDto> batchMessages2 = List.of();
 
 		when(chatRedisRepository.getActiveChatRoomIds()).thenReturn(activeChatRoomIds);
 		when(chatRedisRepository.getAllBatchMessages(chatRoomId1)).thenReturn(batchMessages1);
