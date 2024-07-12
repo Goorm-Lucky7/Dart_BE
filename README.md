@@ -1,5 +1,29 @@
 # 🎨 WEB 프로젝트 D'ART
 
+<a href="https://www.dartgallery.site/">![Mock Up](https://github.com/Goorm-Lucky7/Dart_FE/assets/110087099/22bbf4a6-da3f-4570-b29b-604a7d6ff1d8)
+</a>
+<br/>
+
+**프로젝트 기간** : 2024.05.22 ~ 2024.07.11
+
+🔗 [D'art 서비스 둘러보기](https://www.dartgallery.site/) (데스크탑/태블릿/모바일 환경에서 이용 가능)
+
+🎬 [시연 영상 보러가기 ](https://youtu.be/LgmalP5JhsU?si=Y01aDQO0KPlpHMpP)
+<br/>
+<br/>
+
+## ✨ 프로젝트 소개
+
+### 예술의 X. D'art
+
+- D'art는 누구나 참여가능한 **작품 전시 플랫폼**입니다.
+- 디자이너가 아니더라도 누구나 자신이 평소에 공유하고 싶어하는 작업물, 취미 기록 등을 전시 형태로 남기실 수 있습니다.
+- 전시는 여러 사용자들이 관람 뿐 아니라 채팅을 통해 서로 의사소통 가능합니다.
+- 전시 작가는 다양한 템플릿으로 전시를 할 수 있습니다.
+- 오프라인 뿐 아니라 온라인에서도 홍보를 하고싶어 할 경우에 유용한 플랫폼입니다.
+  <br/>
+  <br/>
+<br/>
 
 ## 🧑‍🧑‍🧒‍🧒 BACKEND TEAMMATE 소개
 | ![박창민](https://github.com/ChangMinPark2.png)        | ![강솔문](https://github.com/solmoonkang.png) | ![이지수](https://github.com/leedidoo.png) | ![심예은](https://github.com/hesener.png) |
