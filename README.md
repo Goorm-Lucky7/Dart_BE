@@ -3,6 +3,9 @@
 <a href="https://www.dartgallery.site/">![Mock Up](https://github.com/Goorm-Lucky7/Dart_FE/assets/110087099/22bbf4a6-da3f-4570-b29b-604a7d6ff1d8)
 </a>
 <br/>
+<br/>
+
+### 🌤️[구름x인프런] 자바 스프링 & 리액트 풀스택 개발자 성장과정 우수상 프로젝트
 
 **프로젝트 기간** : 2024.05.22 ~ 2024.07.11
 
@@ -65,7 +68,3 @@
 
 ### PR 템플릿
 <img src="readme-image/pull-request-template.png" width="1118" height="526" alt="pull-request-template.png"/>
-
-
-## 시연 영상
-추후 업로드할 예정입니다.
