@@ -3,7 +3,7 @@ name: Build for Push & PR
 on:
   pull_request:
     types: [ "opened", "synchronize" ]
-    branches: [ "develop" ]
+    branches: [ "develop", "main" ]
 
 permissions:
   contents: read
